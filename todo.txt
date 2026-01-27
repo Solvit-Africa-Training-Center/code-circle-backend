@@ -1,0 +1,67 @@
+1. SETUP THE PROJECT
+
+2. AUTHENTICATION & AUTHORIZATION MODULE
+Tasks
+User registration (creator / member / Admin)
+
+Secure password hashing (bcrypt)
+
+JWT access & refresh tokens
+
+Role-based authorization middleware
+
+OAuth login (Google & gitHub)
+
+Email verification workflow
+
+Password reset with expiring tokens
+
+Token blacklist / logout handling
+
+typeorm Models
+User
+
+Role
+
+UserRole
+
+RefreshToken
+
+PasswordResetToken
+
+EmailVerificationToken
+
+APIs
+POST /auth/register POST /auth/login POST /auth/oauth/google POST /auth/oauth/facebook POST /auth/refresh-token POST /auth/verify-email POST /auth/forgot-password POST /auth/reset-password POST /auth/logout
+Enhancements
+2FA (TOTP)
+
+Login attempt throttling
+
+Device/session tracking
+
+3. USER & PROFILE MANAGEMENT
+Tasks
+CRUD operations for users
+
+Update personal profile info
+
+Assign & revoke roles
+
+Activate / deactivate accounts
+
+Block / unblock users
+
+Track last login & account status
+
+Profile completion calculation
+
+TypeOrm Models
+UserProfile
+
+UserSettings
+
+UserActivityLog
+
+APIs
+GET /users GET /users/:id PATCH /users/:id PATCH /users/:id/status DELETE /users/:id
