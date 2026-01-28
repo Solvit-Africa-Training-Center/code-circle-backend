@@ -1,5 +1,67 @@
 1. SETUP THE PROJECT
 
+Checklist: Project Setup (Backend)
+
+1. Framework & Language
+
+ NestJS (structured backend framework)
+
+ TypeScript (strong typing)
+
+2. Database
+
+ PostgreSQL
+
+ TypeORM (entities and migrations)
+
+ Database configuration (DataSource or ormconfig)
+
+3. API Documentation
+
+ Swagger (auto-generated API docs)
+
+ API versioning (optional for future scalability)
+
+4. Responses & Error Handling
+
+ Response Interceptor (normalize API responses)
+
+ HttpException Filter (centralized error handling)
+
+ Global ValidationPipe (validate DTOs automatically)
+
+ Centralized logging (e.g., Winston or Pino)
+
+5. Quality & DevOps
+
+ CircleCI (CI/CD pipeline)
+
+ Test coverage (Jest)
+
+ Linting / Prettier (code standardization)
+
+ Husky + Commitlint (commit conventions enforcement)
+
+6. Security & Configuration
+
+ ConfigModule + dotenv (environment variable management)
+
+ Rate limiting / Helmet (endpoint security)
+
+ CORS setup
+
+7. Optional / Future Enhancements
+
+ Dockerfile / Docker Compose (simplified deployment)
+
+ Swagger Auth Guard (for protected routes)
+
+ Monitoring / Metrics (e.g., Prometheus)
+
+ Feature flags (manage dev/prod features)
+
+ Mailer / Notifications (future functionality)
+
 2. AUTHENTICATION & AUTHORIZATION MODULE
 Tasks
 User registration (creator / member / Admin)
@@ -19,6 +81,7 @@ Password reset with expiring tokens
 Token blacklist / logout handling
 
 typeorm Models
+
 User
 
 Role

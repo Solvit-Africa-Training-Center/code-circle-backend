@@ -1,0 +1,51 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/node:20.11
+    working_directory: ~/project
+
+    steps:
+      - checkout
+
+      # Restore cached dependencies
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package-lock.json" }}
+            - v1-deps-
+
+      # Install dependencies
+      - run:
+          name: Install dependencies
+          command: |
+            if [ -f yarn.lock ]; then
+              yarn install --frozen-lockfile
+            else
+              npm ci
+            fi
+
+      # Save cache
+      - save_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+
+      # Test
+      - run:
+          name: Run tests
+          command: |
+            if npm run | grep -q test; then
+              npm test
+            else
+              echo "No test script found"
+            fi
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-and-test
