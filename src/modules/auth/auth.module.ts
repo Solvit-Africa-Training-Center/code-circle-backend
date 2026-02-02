@@ -107,6 +107,12 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthLoggerMiddleware, AuthMiddleware)
+      .exclude(
+        'auth/login',
+        'auth/register',
+        'auth/refresh',
+        'auth/oauth/(.*)',
+      )
       .forRoutes('auth');
   }
 }
