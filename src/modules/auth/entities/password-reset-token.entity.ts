@@ -33,7 +33,7 @@ export class PasswordResetToken {
   @Column({ name: 'used_at', type: 'timestamp', nullable: true })
   usedAt?: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })

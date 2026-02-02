@@ -4,6 +4,7 @@ import {
   PrimaryColumn,
   JoinColumn,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
@@ -26,4 +27,10 @@ export class RolePermission {
 
   @CreateDateColumn({ name: 'assigned_at' })
   assignedAt: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

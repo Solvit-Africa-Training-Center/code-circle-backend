@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   Index,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Role } from './role.entity';
@@ -29,4 +30,10 @@ export class UserRole {
 
     @CreateDateColumn({ name: 'assigned_at' })
     assignedAt: Date;
+
+    @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt: Date;
 }

@@ -75,10 +75,10 @@ export class User {
 
     @OneToMany(() => PasswordResetToken, (prt) => prt.user)
     passwordResetTokens: PasswordResetToken[];
-    
-    @CreateDateColumn()
+
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

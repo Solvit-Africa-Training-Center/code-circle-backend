@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { User } from "../../users/entities/user.entity";
 import { Permission } from "./permission.entity";
 
@@ -31,4 +31,10 @@ export class UserPermission {
 
   @CreateDateColumn({ name: 'assigned_at' })
   assignedAt: Date;
+  
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+  
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
