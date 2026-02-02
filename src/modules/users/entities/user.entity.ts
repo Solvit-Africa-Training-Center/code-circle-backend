@@ -29,8 +29,8 @@ export class User {
     @Column({ unique: true })
     email: string;
 
-    @Column({ name: 'password_hash', nullable: true })
-    passwordHash: string | null;
+    @Column({ type: 'text', nullable: false })
+    passwordHash: string;
 
     @Column({ name: 'is_active', default: true })
     isActive: boolean;
@@ -38,7 +38,7 @@ export class User {
     @Column({ name: 'email_verified', default: false })
     emailVerified: boolean;
 
-    @Column({ name: 'email_verification_token_hash', nullable: true })
+    @Column({ name: 'email_verification_token_hash', type: 'text', nullable: true })
     emailVerificationTokenHash: string | null;
 
     @Column({
@@ -52,7 +52,7 @@ export class User {
     @Column({ name: 'last_login_at', type: 'timestamp', nullable: true })
     lastLoginAt: Date | null;
 
-    @Column({ name: 'current_device_id', nullable: true })
+    @Column({ name: 'current_device_id', type: 'text', nullable: true })
     currentDeviceId: string | null;
 
     @Column({ name: 'two_factor_enabled', default: false })

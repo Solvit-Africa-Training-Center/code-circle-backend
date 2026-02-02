@@ -6,6 +6,7 @@ import { User } from '../../users/entities/user.entity';
 import { AuthProvider } from '../enums/auth-provider';
 import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class OAuthAuthService {
@@ -22,6 +23,8 @@ export class OAuthAuthService {
 
     @InjectRepository(Role)
     private readonly roleRepo: Repository<Role>,
+
+    private readonly tokenService: TokenService,
   ) {}
   
   async loginOrRegister(oauthUser: {
@@ -202,5 +205,43 @@ export class OAuthAuthService {
     });
 
     return count > 0;
+  }
+
+
+  async handleOAuthCallback(
+    provider: AuthProvider,
+    profile: any,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    if (!profile || !profile.id) {
+      throw new BadRequestException(`${provider} did not return a valid profile`);
+    }
+
+    const email = profile.emails?.[0]?.value || profile.username || null;
+    if (!email) {
+      throw new BadRequestException(`${provider} did not provide an email`);
+    }
+
+    let firstName = profile.name?.givenName || '';
+    let lastName = profile.name?.familyName || '';
+    if (!firstName && !lastName && profile.displayName) {
+      const parts = profile.displayName.split(' ');
+      firstName = parts[0];
+      lastName = parts.slice(1).join(' ');
+    }
+
+    const user = await this.loginOrRegister({
+      provider,
+      providerId: profile.id,
+      email,
+      firstName,
+      lastName,
+      accessToken: profile.accessToken,
+      refreshToken: profile.refreshToken,
+    });
+
+    const tokens = await this.tokenService.issueRefreshToken(user);
+
+    this.logger.log(`${provider} OAuth callback successful for user ${user.id}`);
+    return tokens;
   }
 }

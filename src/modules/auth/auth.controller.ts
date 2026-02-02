@@ -1,3 +1,4 @@
+export class CreateAuthDto {}
 import {
   Body,
   Controller,
@@ -5,19 +6,24 @@ import {
   Get,
   Query,
   Req,
+  Res,
   UseGuards,
   Param,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { AuthProvider } from './enums/auth-provider';
 import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
 import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
-import { Request } from 'express';
 import { User } from '../users/entities/user.entity';
 import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';
+import { ConfigService } from '@nestjs/config';
+
+// Import all DTOs
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { LoginResponseDto } from './dto/login-respons.dto';
 import { Enable2FADto } from './dto/enable-2fa.dto';
@@ -35,7 +41,12 @@ import { LinkOAuthDto } from './dto/link-oauth.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /* ==================== LOCAL AUTHENTICATION ==================== */
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -68,6 +79,7 @@ export class AuthController {
       verificationToken,
     };
   }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -127,6 +139,8 @@ export class AuthController {
     };
   }
 
+  /* ==================== EMAIL VERIFICATION ==================== */
+
   @Get('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -179,6 +193,8 @@ export class AuthController {
   async resendVerification(@Body('email') email: string): Promise<{ message: string }> {
     return this.authService.resendVerificationEmail(email);
   }
+
+  /* ==================== PASSWORD MANAGEMENT ==================== */
 
   @Post('request-password-reset')
   @HttpCode(HttpStatus.OK)
@@ -240,6 +256,8 @@ export class AuthController {
   ): Promise<{ message: string }> {
     return this.authService.changePassword(user, dto.oldPassword, dto.newPassword);
   }
+
+  /* ==================== TWO-FACTOR AUTHENTICATION ==================== */
 
   @Post('2fa/setup')
   @HttpCode(HttpStatus.OK)
@@ -322,12 +340,14 @@ export class AuthController {
     return this.authService.disableTwoFactor(user, dto.code);
   }
 
+  /* ==================== OAUTH - DIRECT API (Mobile/SPA) ==================== */
+
   @Post('oauth/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'OAuth login/register',
+    summary: 'OAuth login/register (Direct API)',
     description:
-      'Login or register user via OAuth provider. Previous sessions are logged out (single device policy).',
+      'For mobile/SPA apps that handle OAuth client-side. Accepts OAuth provider data and returns tokens.',
   })
   @ApiBody({ type: OAuthLoginDto })
   @ApiResponse({
@@ -396,6 +416,141 @@ export class AuthController {
     return this.authService.unlinkOAuth(user, provider);
   }
 
+  /* ==================== OAUTH - SERVER-SIDE REDIRECT (Web Apps) ==================== */
+
+  @Get('oauth/google')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({
+    summary: 'Initiate Google OAuth (Server-side)',
+    description: 'For web apps. Redirects to Google login page.',
+  })
+  googleAuth() {
+    // Passport handles the redirect
+  }
+
+  @Get('oauth/callback/google')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({
+    summary: 'Google OAuth callback',
+    description: 'Handles Google redirect. Called by Google after authentication.',
+  })
+  async googleCallback(@Req() req: any, @Res() res: Response) {
+    try {
+      const { profile } = req.user;
+
+      // Use existing OAuth service
+      const { accessToken, refreshToken } = await this.authService.oauthLogin({
+        provider: AuthProvider.GOOGLE,
+        providerId: profile.id,
+        email: profile.emails[0].value,
+        firstName: profile.name?.givenName,
+        lastName: profile.name?.familyName,
+        accessToken: profile.accessToken,
+        refreshToken: profile.refreshToken,
+      });
+
+      // Redirect to frontend with tokens
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&success=true`;
+
+      return res.redirect(redirectUrl);
+    } catch (error) {
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?error=google_oauth_failed&success=false`;
+      return res.redirect(redirectUrl);
+    }
+  }
+
+  @Get('oauth/github')
+  @UseGuards(AuthGuard('github'))
+  @ApiOperation({
+    summary: 'Initiate GitHub OAuth (Server-side)',
+    description: 'For web apps. Redirects to GitHub login page.',
+  })
+  githubAuth() {
+    // Passport handles the redirect
+  }
+
+  @Get('oauth/callback/github')
+  @UseGuards(AuthGuard('github'))
+  async githubCallback(@Req() req: any, @Res() res: Response) {
+    try {
+      const { profile } = req.user;
+
+      const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
+      if (!email) {
+        throw new Error('GitHub did not provide email');
+      }
+
+      const nameParts = profile.displayName?.split(' ') || [];
+      const firstName = nameParts[0] || profile.username;
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const { accessToken, refreshToken } = await this.authService.oauthLogin({
+        provider: AuthProvider.GITHUB,
+        providerId: profile.id,
+        email,
+        firstName,
+        lastName,
+        accessToken: profile.accessToken,
+        refreshToken: profile.refreshToken,
+      });
+
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&success=true`;
+
+      return res.redirect(redirectUrl);
+    } catch (error) {
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?error=github_oauth_failed&success=false`;
+      return res.redirect(redirectUrl);
+    }
+  }
+
+  @Get('oauth/linkedin')
+  @UseGuards(AuthGuard('linkedin'))
+  @ApiOperation({
+    summary: 'Initiate LinkedIn OAuth (Server-side)',
+    description: 'For web apps. Redirects to LinkedIn login page.',
+  })
+  linkedinAuth() {
+    // Passport handles the redirect
+  }
+
+  @Get('oauth/callback/linkedin')
+  @UseGuards(AuthGuard('linkedin'))
+  async linkedinCallback(@Req() req: any, @Res() res: Response) {
+    try {
+      const { profile } = req.user;
+
+      const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
+      if (!email) {
+        throw new Error('LinkedIn did not provide email');
+      }
+
+      const { accessToken, refreshToken } = await this.authService.oauthLogin({
+        provider: AuthProvider.LINKEDIN,
+        providerId: profile.id,
+        email,
+        firstName: profile.name?.givenName,
+        lastName: profile.name?.familyName,
+        accessToken: profile.accessToken,
+        refreshToken: profile.refreshToken,
+      });
+
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&success=true`;
+
+      return res.redirect(redirectUrl);
+    } catch (error) {
+      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+      const redirectUrl = `${frontendUrl}/auth/callback?error=linkedin_oauth_failed&success=false`;
+      return res.redirect(redirectUrl);
+    }
+  }
+
+  /* ==================== TOKEN REFRESH ==================== */
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -412,8 +567,7 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Invalid or expired refresh token',
   })
-  async refreshTokens(@Body()
-  dto: RefreshTokenDto, p0?: any): Promise<{
+  async refreshTokens(@Body() dto: RefreshTokenDto): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
