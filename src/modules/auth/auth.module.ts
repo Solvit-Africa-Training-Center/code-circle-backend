@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,6 +17,9 @@ import { TwoFactorService } from './services/two-factor.service';
 import { EmailService } from './services/email.service';
 import { TokenService } from './services/token.service';
 import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
+import { AuthLoggerMiddleware } from './middleware/auth-logger.middleware';
+import { AuthMiddleware } from './middleware/auth.middleware';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -30,7 +33,13 @@ import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
       Role,
       UserRole,
     ]),
-    JwtModule.register({}),
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '15m' },
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AuthController],
   providers: [
@@ -43,4 +52,10 @@ import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
     TwoFactorGuard
   ],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthLoggerMiddleware, AuthMiddleware)
+      .forRoutes('auth'); 
+  }
+}
