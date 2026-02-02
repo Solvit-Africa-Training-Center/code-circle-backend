@@ -1,9 +1,46 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { OAuthAccount } from './entities/oauth-account.entity';
+import { TwoFactorSecret } from './entities/two-factor-secret';
+import { Role } from './entities/role.entity';
+import { UserRole } from './entities/user-role.entity';
+import { JwtModule } from '@nestjs/jwt';
+import { LocalAuthService } from './services/local-auth.service';
+import { OAuthAuthService } from './services/oauth-auth.service';
+import { TwoFactorService } from './services/two-factor.service';
+import { EmailService } from './services/email.service';
+import { TokenService } from './services/token.service';
+import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
 
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      RefreshToken,
+      EmailVerificationToken,
+      PasswordResetToken,
+      OAuthAccount,
+      TwoFactorSecret,
+      Role,
+      UserRole,
+    ]),
+    JwtModule.register({}),
+  ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    LocalAuthService,
+    OAuthAuthService,
+    TwoFactorService,
+    EmailService,
+    TokenService,
+    TwoFactorGuard
+  ],
 })
 export class AuthModule {}
