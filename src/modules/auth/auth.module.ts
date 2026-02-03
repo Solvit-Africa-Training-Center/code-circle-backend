@@ -1,9 +1,126 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+
+import ms from 'ms';
+
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { OAuthCallbackController } from './oauth.controller';
+
+import { User } from '../users/entities/user.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { OAuthAccount } from './entities/oauth-account.entity';
+import { TwoFactorSecret } from './entities/two-factor-secret';
+
+import { Role } from './entities/role.entity';
+import { UserRole } from './entities/user-role.entity';
+
+import { LocalAuthService } from './services/local-auth.service';
+import { OAuthAuthService } from './services/oauth-auth.service';
+import { TwoFactorService } from './services/two-factor.service';
+import { EmailService } from './services/email.service';
+import { TokenService } from './services/token.service';
+
+import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
+
+import { GithubStrategy } from './strategies/github.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
+
+import { AuthLoggerMiddleware } from './middleware/auth-logger.middleware';
+import { AuthMiddleware } from './middleware/auth.middleware';
+import { AuditService } from './services/audit.service';
+import { AuditLog } from './entities/audit.entity';
+import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
+import { RevokedToken } from './entities/revoke-token';
 
 @Module({
-  controllers: [AuthController],
-  providers: [AuthService],
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      RefreshToken,
+      EmailVerificationToken,
+      PasswordResetToken,
+      OAuthAccount,
+      TwoFactorSecret,
+      Role,
+      UserRole,
+      AuditLog,
+      RevokedToken
+    ]),
+    MailerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          host: config.get<string>('SMTP_HOST'),
+          port: Number(config.get<number>('SMTP_PORT')),
+          secure: false,
+          auth: {
+            user: config.get<string>('SMTP_USER'),
+            pass: config.get<string>('SMTP_PASS'),
+          },
+        },
+        defaults: {
+          from: '"CodeCircle" <no-reply@codecircle.com>',
+        },
+      }),
+    }),
+
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): JwtModuleOptions => {
+        const expiresIn =
+          configService.get<string>('JWT_EXPIRES_IN') ?? '15m';
+
+        return {
+          secret:
+            configService.get<string>('JWT_SECRET') ?? 'defaultsecret',
+          signOptions: {
+            expiresIn: expiresIn as unknown as Parameters<typeof ms>[0],
+          },
+        };
+      },
+    }),
+  ],
+
+  controllers: [AuthController, OAuthCallbackController],
+
+  providers: [
+    JwtAuthGuard,
+    AuthService,
+    LocalAuthService,
+    OAuthAuthService,
+    TwoFactorService,
+    EmailService,
+    TokenService,
+    TwoFactorGuard,
+    GithubStrategy,
+    GoogleStrategy,
+    JwtStrategy,
+    AuditService
+  ],
+
+  exports: [JwtModule, TwoFactorService, TypeOrmModule, AuthService, JwtAuthGuard],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthLoggerMiddleware, AuthMiddleware)
+      .exclude(
+        { path: 'auth/login', method: RequestMethod.POST },
+        { path: 'auth/register', method: RequestMethod.POST },
+        { path: 'auth/refresh', method: RequestMethod.POST },
+        { path: 'auth/verify-email', method: RequestMethod.GET },
+        { path: 'auth/resend-verification', method: RequestMethod.POST },
+        { path: 'auth/forgot-password', method: RequestMethod.POST },
+        { path: 'auth/reset-password', method: RequestMethod.POST },
+        { path: 'auth/oauth/(.*)', method: RequestMethod.ALL },
+      )
+      .forRoutes('auth');
+  }
+}

@@ -35,6 +35,7 @@
     "db:refresh": "npm run migration:revert && npm run migration:run && npm run seed:run"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -44,6 +45,7 @@
     "@nestjs/swagger": "^11.2.5",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.0",
+    "@otplib/preset-default": "^12.0.1",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.2.8",
     "cache-manager-redis-store": "^3.0.1",
@@ -52,12 +54,19 @@
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.1.0",
+    "ms": "^2.1.3",
+    "otplib": "^13.2.1",
     "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "passport-linkedin-oauth2": "^2.0.0",
     "pg": "^8.17.2",
+    "qrcode": "^1.5.4",
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "speakeasy": "^2.0.0",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28"
   },
@@ -72,7 +81,10 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
+    "@types/passport-linkedin-oauth2": "^1.5.6",
+    "@types/qrcode": "^1.5.6",
     "@types/redis": "^4.0.10",
+    "@types/speakeasy": "^2.0.10",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^9.39.2",
@@ -107,6 +119,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@circle-backend/(.*)$": "<rootDir>/$1"
+    }
   }
 }

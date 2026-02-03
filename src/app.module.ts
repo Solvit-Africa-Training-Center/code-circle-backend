@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import databaseConfig from './config/database.config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AuthController } from './modules/auth/auth.controller';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     // Configuration Module
     ConfigModule.forRoot({
       isGlobal: true,
@@ -26,5 +29,6 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
       inject: [ConfigService],
     }),
   ],
+  controllers: [],
 })
 export class AppModule {}
