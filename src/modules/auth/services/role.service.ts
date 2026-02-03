@@ -1,13 +1,18 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Role } from "../entities/role.entity";
-import { Repository, In, DataSource } from "typeorm";
-import { RolePermission } from "../entities/role-permission.entity";
-import { UserRole } from "../entities/user-role.entity";
-import { CreateRoleDto } from "../dto/create-role.dto";
-import { AuditService } from "./audit.service";
-import { Permission } from "../entities/permission.entity";
-import { scopeInterface } from "../enums/scope.enum";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Role } from '../entities/role.entity';
+import { Repository, In, DataSource } from 'typeorm';
+import { RolePermission } from '../entities/role-permission.entity';
+import { UserRole } from '../entities/user-role.entity';
+import { CreateRoleDto } from '../dto/create-role.dto';
+import { AuditService } from './audit.service';
+import { Permission } from '../entities/permission.entity';
+import { scopeInterface } from '../enums/scope.enum';
 
 @Injectable()
 export class RoleService {
@@ -164,9 +169,14 @@ export class RoleService {
         await manager.save(RolePermission, rolePermissions);
       }
 
-      await this.auditService.log('ROLE_PERMISSIONS_ASSIGNED', assignedBy, roleId, {
-        permissionIds,
-      });
+      await this.auditService.log(
+        'ROLE_PERMISSIONS_ASSIGNED',
+        assignedBy,
+        roleId,
+        {
+          permissionIds,
+        },
+      );
 
       this.logger.log(
         `Assigned ${permissionIds.length} permissions to role ${roleId}`,
@@ -209,9 +219,14 @@ export class RoleService {
 
       await manager.save(RolePermission, rolePermissions);
 
-      await this.auditService.log('ROLE_PERMISSIONS_ADDED', assignedBy, roleId, {
-        permissionIds: toAdd,
-      });
+      await this.auditService.log(
+        'ROLE_PERMISSIONS_ADDED',
+        assignedBy,
+        roleId,
+        {
+          permissionIds: toAdd,
+        },
+      );
 
       this.logger.log(`Added ${toAdd.length} permissions to role ${roleId}`);
 
@@ -288,11 +303,9 @@ export class RoleService {
   }
 
   async getUsersWithRole(roleId: string): Promise<UserRole[]> {
-    return this.dataSource
-      .getRepository(UserRole)
-      .find({
-        where: { role: { id: roleId } },
-        relations: ['user'],
-      });
+    return this.dataSource.getRepository(UserRole).find({
+      where: { role: { id: roleId } },
+      relations: ['user'],
+    });
   }
 }

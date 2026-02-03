@@ -1,4 +1,9 @@
-import { ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 
 export type OAuthProvider = 'google' | 'github' | 'linkedin';
@@ -19,7 +24,9 @@ export const OAuthGuard = (provider: OAuthProvider) => {
           `OAuth login failed for ${provider}: ${info?.message || err?.message || 'Unknown error'}`,
         );
 
-        throw err || new UnauthorizedException(`${provider} OAuth login failed`);
+        throw (
+          err || new UnauthorizedException(`${provider} OAuth login failed`)
+        );
       }
 
       return user;

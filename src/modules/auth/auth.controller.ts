@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 export class CreateAuthDto {}
 import {
   Body,
@@ -14,7 +15,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiBody,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { AuthProvider } from './enums/auth-provider';
 import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
@@ -62,7 +70,7 @@ export class AuthController {
     description: 'Email already in use or validation failed',
   })
   async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
-    const { user, verificationToken } = await this.authService.register(
+    const result = await this.authService.register(
       dto.email,
       dto.password,
       dto.firstName,
@@ -70,10 +78,9 @@ export class AuthController {
     );
 
     return {
-      message: 'Registration successful. Please check your email to verify your account.',
-      userId: user.id,
-      email: user.email,
-      verificationToken,
+      message:
+        'Registration successful. Please check your email to verify your account.',
+      ...result,
     };
   }
 
@@ -99,16 +106,15 @@ export class AuthController {
     description: 'Account disabled or email not verified',
   })
   async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
-    const { accessToken, refreshToken } = await this.authService.login(
+    const result = await this.authService.login(
       dto.email,
       dto.password,
       dto.twoFactorCode,
     );
 
     return {
-      accessToken,
-      refreshToken,
       message: 'Login successful. Previous sessions have been logged out.',
+      ...result,
     };
   }
 
@@ -128,13 +134,18 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Not authenticated',
   })
-  async logout(@Req() req, @CurrentUser() user: User): Promise<{ success: boolean; message: string }> {
-      const token = req.headers.authorization?.split(' ')[1];
-      await this.authService.logout(user.id, token);  
-      return {
-        success: true,
-        message: 'Logged out successfully',
-      };
+  async logout(
+    @Req() req,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean; message: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const token = req.headers.authorization?.split(' ')[1];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await this.authService.logout(user.id, token);
+    return {
+      success: true,
+      message: 'Logged out successfully',
+    };
   }
 
   @Get('verify-email')
@@ -143,7 +154,11 @@ export class AuthController {
     summary: 'Verify email address',
     description: 'Verifies user email using the token sent via email',
   })
-  @ApiQuery({ name: 'token', type: String, description: 'Email verification token' })
+  @ApiQuery({
+    name: 'token',
+    type: String,
+    description: 'Email verification token',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Email verified successfully',
@@ -153,14 +168,15 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid or expired token',
   })
-  async verifyEmail(@Query('token') token: string): Promise<VerifyEmailResponseDto> {
-    const user = await this.authService.verifyEmail(token);
+  async verifyEmail(
+    @Query('token') token: string,
+  ): Promise<VerifyEmailResponseDto> {
+    const result = await this.authService.verifyEmail(token);
 
     return {
       success: true,
       message: 'Email verified successfully',
-      userId: user.id,
-      email: user.email,
+      ...result,
     };
   }
 
@@ -186,8 +202,8 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Email already verified or user not found',
   })
-  async resendVerification(@Body('email') email: string): Promise<{ message: string }> {
-    return this.authService.resendVerificationEmail(email);
+  async resendVerification(@Body('email') email: string): Promise<void> {
+    await this.authService.resendVerificationEmail(email);
   }
 
   @Post('request-password-reset')
@@ -203,7 +219,7 @@ export class AuthController {
   })
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     return this.authService.requestPasswordReset(dto.email);
   }
 
@@ -211,7 +227,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset password',
-    description: 'Resets user password using token from email. All sessions will be logged out.',
+    description:
+      'Resets user password using token from email. All sessions will be logged out.',
   })
   @ApiBody({ type: ResetPasswordDto })
   @ApiResponse({
@@ -222,7 +239,7 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid or expired token',
   })
-  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
@@ -247,8 +264,12 @@ export class AuthController {
   async changePassword(
     @CurrentUser() user: User,
     @Body() dto: ChangePasswordDto,
-  ): Promise<{ message: string }> {
-    return this.authService.changePassword(user, dto.oldPassword, dto.newPassword);
+  ): Promise<void> {
+    await this.authService.changePassword(
+      user,
+      dto.oldPassword,
+      dto.newPassword,
+    );
   }
 
   @Post('2fa/setup')
@@ -283,7 +304,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Enable 2FA',
-    description: 'Enables 2FA after verifying the setup code. Returns backup codes.',
+    description:
+      'Enables 2FA after verifying the setup code. Returns backup codes.',
   })
   @ApiBody({ type: Enable2FADto })
   @ApiResponse({
@@ -304,7 +326,7 @@ export class AuthController {
   async enableTwoFactor(
     @CurrentUser() user: User,
     @Body() dto: Enable2FADto,
-  ): Promise<{ message: string; backupCodes?: string[] }> {
+  ): Promise<{ backupCodes?: string[] }> {
     return this.authService.enableTwoFactor(user, dto.code);
   }
 
@@ -328,7 +350,7 @@ export class AuthController {
   async disableTwoFactor(
     @CurrentUser() user: User,
     @Body() dto: Disable2FADto,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     return this.authService.disableTwoFactor(user, dto.code);
   }
 
@@ -346,12 +368,12 @@ export class AuthController {
     type: LoginResponseDto,
   })
   async oauthLogin(@Body() dto: OAuthLoginDto): Promise<LoginResponseDto> {
-    const { accessToken, refreshToken } = await this.authService.oauthLogin(dto);
+    const result = await this.authService.oauthLogin(dto);
 
     return {
-      accessToken,
-      refreshToken,
-      message: 'OAuth login successful. Previous sessions have been logged out.',
+      ...result,
+      message:
+        'OAuth login successful. Previous sessions have been logged out.',
     };
   }
 
@@ -376,7 +398,14 @@ export class AuthController {
     @Param('provider') provider: AuthProvider,
     @Body() dto: LinkOAuthDto,
   ): Promise<{ success: boolean; message: string }> {
-    return this.authService.linkOAuth(user, { ...dto, provider });
+    const result = await this.authService.linkOAuth(user, {
+      ...dto,
+      provider,
+    });
+    return {
+      success: result.success,
+      message: 'OAuth account linked successfully',
+    };
   }
 
   @Post('oauth/unlink/:provider')
@@ -403,14 +432,20 @@ export class AuthController {
     @CurrentUser() user: User,
     @Param('provider') provider: AuthProvider,
   ): Promise<{ success: boolean; message: string }> {
-    return this.authService.unlinkOAuth(user, provider);
+    const result = await this.authService.unlinkOAuth(user, provider);
+
+    return {
+      success: result.success,
+      message: 'OAuth account unlinked successfully',
+    };
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Refresh access token',
-    description: 'Issues new access and refresh tokens using a valid refresh token',
+    description:
+      'Issues new access and refresh tokens using a valid refresh token',
   })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
@@ -429,3 +464,39 @@ export class AuthController {
     return this.authService.refreshTokens(dto.refreshToken);
   }
 }
+
+// function resendVerification(arg0: any, email: any, string: any) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function changePassword(arg0: any, user: any, User: typeof User, arg3: any, dto: any, ChangePasswordDto: typeof ChangePasswordDto) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function setup2FA(arg0: any, user: any, User: typeof User) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function enableTwoFactor(arg0: any, user: any, User: typeof User, arg3: any, dto: any, Enable2FADto: typeof Enable2FADto) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function disableTwoFactor(arg0: any, user: any, User: typeof User, arg3: any, dto: any, Disable2FADto: typeof Disable2FADto) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function oauthLogin(arg0: any, dto: any, OAuthLoginDto: typeof OAuthLoginDto) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function linkOAuth(arg0: any, user: any, User: typeof User, arg3: any, provider: any, AuthProvider: typeof AuthProvider, arg6: any, dto: any, LinkOAuthDto: typeof LinkOAuthDto) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function unlinkOAuth(arg0: any, user: any, User: typeof User, arg3: any, provider: any, AuthProvider: typeof AuthProvider) {
+//   throw new Error('Function not implemented.');
+// }
+
+// function refreshTokens(arg0: any, dto: any, RefreshTokenDto: typeof RefreshTokenDto) {
+//   throw new Error('Function not implemented.');
+// }

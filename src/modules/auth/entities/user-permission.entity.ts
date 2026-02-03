@@ -1,9 +1,20 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
-import { User } from "../../users/entities/user.entity";
-import { Permission } from "./permission.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Permission } from './permission.entity';
 
 @Entity('user_permissions')
-@Index('IDX_user_permissions_user_permission', ['userId', 'permissionId'], { unique: true })
+@Index('IDX_user_permissions_user_permission', ['userId', 'permissionId'], {
+  unique: true,
+})
 export class UserPermission {
   @PrimaryColumn('uuid', { name: 'user_id' })
   userId: string;
@@ -11,7 +22,9 @@ export class UserPermission {
   @PrimaryColumn('uuid', { name: 'permission_id' })
   permissionId: string;
 
-  @ManyToOne(() => User, (user) => user.userPermissions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.userPermissions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
@@ -31,10 +44,10 @@ export class UserPermission {
 
   @CreateDateColumn({ name: 'assigned_at' })
   assignedAt: Date;
-  
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
-  
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

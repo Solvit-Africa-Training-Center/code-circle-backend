@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, ForbiddenException, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+  BadRequestException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../users/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -52,7 +59,9 @@ export class LocalAuthService {
 
     await this.userRepo.save(user);
 
-    const memberRole = await this.roleRepo.findOne({ where: { name: 'MEMBER' } });
+    const memberRole = await this.roleRepo.findOne({
+      where: { name: 'MEMBER' },
+    });
     if (!memberRole) {
       this.logger.error('Default role MEMBER not found in database');
       throw new Error('Default role MEMBER not found');
@@ -116,7 +125,9 @@ export class LocalAuthService {
     }
 
     if (!user.emailVerified) {
-      throw new ForbiddenException('Email not verified. Please check your inbox.');
+      throw new ForbiddenException(
+        'Email not verified. Please check your inbox.',
+      );
     }
 
     if (!user.passwordHash) {
@@ -135,7 +146,10 @@ export class LocalAuthService {
         throw new UnauthorizedException('2FA code required');
       }
 
-      const is2FAValid = await this.twoFactorService.validateToken(user, twoFactorCode);
+      const is2FAValid = await this.twoFactorService.validateToken(
+        user,
+        twoFactorCode,
+      );
       if (!is2FAValid) {
         this.logger.warn(`Invalid 2FA code for user: ${email}`);
         throw new UnauthorizedException('Invalid 2FA code');
@@ -154,7 +168,6 @@ export class LocalAuthService {
 
     return { success: true, message: 'Logged out successfully' };
   }
-
 
   async getUserByEmail(email: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { email } });
@@ -189,7 +202,10 @@ export class LocalAuthService {
       throw new BadRequestException('User has no password set');
     }
 
-    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    const isOldPasswordValid = await bcrypt.compare(
+      oldPassword,
+      user.passwordHash,
+    );
     if (!isOldPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }

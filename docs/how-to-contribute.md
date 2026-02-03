@@ -1,4 +1,4 @@
-# A2SV Project Phase Git Workflow Guide
+# Project Phase Git Workflow Guide
 
 Welcome to the Git Usage Guideline. This comprehensive document will provide you with a clear and effective workflow for using Git. By following these guidelines, you'll be able to collaborate seamlessly, manage version control, and contribute effectively to the project.
 

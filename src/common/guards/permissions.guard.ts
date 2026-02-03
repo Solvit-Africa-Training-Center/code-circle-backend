@@ -1,11 +1,17 @@
-import { PermissionResolverService } from "@circle-backend/modules/auth/services/permission-resolver.service";
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { PERMISSIONS_KEY } from "../decorators/require-permissions.decorator";
-import { scopeInterface } from "@circle-backend/modules/auth/enums/scope.enum";
-import { PermissionKey } from "@circle-backend/modules/auth/constants/permissions";
-import { CurrentUserPayload } from "@circle-backend/modules/auth/strategies/jwt.strategy";
-
+import { PermissionResolverService } from '@circle-backend/modules/auth/services/permission-resolver.service';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
+import { scopeInterface } from '@circle-backend/modules/auth/enums/scope.enum';
+import { PermissionKey } from '@circle-backend/modules/auth/constants/permissions';
+import { CurrentUserPayload } from '@circle-backend/modules/auth/strategies/jwt.strategy';
 
 interface RequestWithUser extends Request {
   user: CurrentUserPayload;
@@ -31,10 +37,9 @@ export class PermissionGuard implements CanActivate {
   }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<PermissionKey[]>(PERMISSIONS_KEY, [
-      ctx.getHandler(),
-      ctx.getClass(),
-    ]);
+    const requiredPermissions = this.reflector.getAllAndOverride<
+      PermissionKey[]
+    >(PERMISSIONS_KEY, [ctx.getHandler(), ctx.getClass()]);
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
@@ -55,10 +60,11 @@ export class PermissionGuard implements CanActivate {
     );
 
     const missingPermissions = requiredPermissions.filter((perm) => {
-      return ![...userPermissions].some(userPerm => {
+      return ![...userPermissions].some((userPerm) => {
         return (
-          userPerm === '*' || 
-          (userPerm.endsWith(':*') && perm.startsWith(userPerm.split(':')[0] + ':')) ||
+          userPerm === '*' ||
+          (userPerm.endsWith(':*') &&
+            perm.startsWith(userPerm.split(':')[0] + ':')) ||
           userPerm === perm
         );
       });

@@ -1,16 +1,15 @@
-import { Injectable, Logger, Scope } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { UserRole } from "../entities/user-role.entity";
-import { RolePermission } from "../entities/role-permission.entity";
-import { UserPermission } from "../entities/user-permission.entity";
-import { scopeInterface } from "../enums/scope.enum";
+import { Injectable, Logger, Scope } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserRole } from '../entities/user-role.entity';
+import { RolePermission } from '../entities/role-permission.entity';
+import { UserPermission } from '../entities/user-permission.entity';
+import { scopeInterface } from '../enums/scope.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PermissionResolverService {
   private readonly logger = new Logger(PermissionResolverService.name);
   private readonly cache = new Map<string, Set<string>>();
-
 
   constructor(
     @InjectRepository(UserRole)
@@ -20,7 +19,7 @@ export class PermissionResolverService {
     private readonly rolePermRepo: Repository<RolePermission>,
 
     @InjectRepository(UserPermission)
-    private readonly userPermRepo: Repository<UserPermission>
+    private readonly userPermRepo: Repository<UserPermission>,
   ) {}
 
   private async getRolePermissionsForUser(
@@ -110,7 +109,7 @@ export class PermissionResolverService {
 
     return allPermissions;
   }
-  
+
   async resolveForRole(
     roleName: string,
     scope: scopeInterface = scopeInterface.GLOBAL,

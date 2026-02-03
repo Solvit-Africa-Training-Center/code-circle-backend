@@ -44,7 +44,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     }
 
     const firstName = profile.displayName || profile.username || '';
-    const lastName = ''; 
+    const lastName = '';
 
     const user = await this.authService.validateOAuthLogin({
       provider: AuthProvider.GITHUB,

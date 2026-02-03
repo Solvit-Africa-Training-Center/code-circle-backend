@@ -2,10 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterResponseDto {
   @ApiProperty({
-    example: 'Registration successful. Please check your email to verify your account.',
+    example:
+      'Registration successful. Please check your email to verify your account.',
     description: 'Status message',
   })
-  message: string;
+  message?: string;
 
   @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174000',

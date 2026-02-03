@@ -14,13 +14,13 @@ export function setupSwagger(app: INestApplication): void {
     configService.get('SWAGGER_DESCRIPTION') || 'API Documentation';
 
   const apiVersion = configService.get('SWAGGER_VERSION') || '1.0';
-  const apiPrefix = configService.get('API_PREFIX') || 'api';
+  //const apiPrefix = configService.get('API_PREFIX') || 'api';
 
   const options = new DocumentBuilder()
     .setTitle(appName)
     .setDescription(appDescription)
     .setVersion(apiVersion)
-    .addServer(`/${apiPrefix}`, 'API')
+    .addServer('/', 'Root')
     .addBearerAuth(
       {
         type: 'http',
@@ -33,7 +33,7 @@ export function setupSwagger(app: INestApplication): void {
       'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
     )
     .addTag('health', 'Health checks')
-    .addTag('auth', 'Authentication endpoints')
+    .addTag('Auth', 'Authentication endpoints')
     .addTag('users', 'User management')
     .addApiKey(
       {

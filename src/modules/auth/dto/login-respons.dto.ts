@@ -17,5 +17,5 @@ export class LoginResponseDto {
     example: 'Login successful. Previous sessions have been logged out.',
     description: 'Status message',
   })
-  message: string;
+  message?: string;
 }

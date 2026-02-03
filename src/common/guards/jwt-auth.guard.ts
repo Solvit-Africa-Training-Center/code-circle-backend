@@ -1,6 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { TokenService } from '@circle-backend/modules/auth/services/token.service';
-import { Injectable, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
-import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';;
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
+import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class JwtAuthGuard extends PassportAuthGuard('jwt') {
@@ -20,7 +27,7 @@ export class JwtAuthGuard extends PassportAuthGuard('jwt') {
 
     const can = await super.canActivate(context);
 
-    return can as boolean; 
+    return can as boolean;
   }
 
   handleRequest<TUser = any>(

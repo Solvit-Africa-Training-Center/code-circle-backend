@@ -15,7 +15,10 @@ export class EmailVerificationToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.emailVerified, { onDelete: 'CASCADE', eager: true })
+  @ManyToOne(() => User, (user) => user.emailVerified, {
+    onDelete: 'CASCADE',
+    eager: true,
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
@@ -33,7 +36,7 @@ export class EmailVerificationToken {
   @Column({ name: 'used_at', type: 'timestamp', nullable: true })
   usedAt?: Date;
 
-  @CreateDateColumn({ name: 'created_at'})
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })

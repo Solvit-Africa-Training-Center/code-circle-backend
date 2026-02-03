@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as qrcode from 'qrcode';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,18 +29,26 @@ export class TwoFactorService {
     private readonly configService: ConfigService,
   ) {
     this.appName = this.configService.get<string>('APP_NAME') || 'MyApp';
-    this.backupCodeCount = this.configService.get<number>('BACKUP_CODE_COUNT') || 8;
+    this.backupCodeCount =
+      this.configService.get<number>('BACKUP_CODE_COUNT') || 8;
   }
 
   async setup(user: User): Promise<TwoFactorSetup> {
     try {
-      await this.twoFactorRepo.delete({ user: { id: user.id }, enabled: false });
+      await this.twoFactorRepo.delete({
+        user: { id: user.id },
+        enabled: false,
+      });
 
       const secret = authenticator.generateSecret();
       const otpauth = authenticator.keyuri(user.email, this.appName, secret);
       const qrCodeDataUrl = await qrcode.toDataURL(otpauth);
 
-      const secretEntry = this.twoFactorRepo.create({ user, secret, enabled: false });
+      const secretEntry = this.twoFactorRepo.create({
+        user,
+        secret,
+        enabled: false,
+      });
       await this.twoFactorRepo.save(secretEntry);
 
       this.logger.log(`2FA secret generated for user ${user.id}`);
@@ -83,7 +97,10 @@ export class TwoFactorService {
     };
   }
 
-  private async generateBackupCodes(user: User, manager?: Repository<TwoFactorSecret>): Promise<string[]> {
+  private async generateBackupCodes(
+    user: User,
+    manager?: Repository<TwoFactorSecret>,
+  ): Promise<string[]> {
     const repo = manager || this.twoFactorRepo;
     const crypto = require('crypto');
     const codes: string[] = [];
@@ -92,13 +109,19 @@ export class TwoFactorService {
       codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
     }
 
-    const secretEntry = await repo.findOne({ where: { user: { id: user.id }, enabled: true } });
+    const secretEntry = await repo.findOne({
+      where: { user: { id: user.id }, enabled: true },
+    });
     if (!secretEntry) throw new BadRequestException('No active 2FA found');
 
-    secretEntry.backupCodes = codes.map((c) => crypto.createHash('sha256').update(c).digest('hex'));
+    secretEntry.backupCodes = codes.map((c) =>
+      crypto.createHash('sha256').update(c).digest('hex'),
+    );
     await repo.save(secretEntry);
 
-    this.logger.log(`Generated ${codes.length} backup codes for user ${user.id}`);
+    this.logger.log(
+      `Generated ${codes.length} backup codes for user ${user.id}`,
+    );
     return codes;
   }
 

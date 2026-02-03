@@ -1,4 +1,11 @@
-import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import {
+  Injectable,
+  BadRequestException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -11,17 +18,13 @@ import { PasswordResetToken } from '../entities/password-reset-token.entity';
 
 @Injectable()
 export class EmailService {
-
   private readonly logger = new Logger(EmailService.name);
   private readonly frontendUrl: string;
 
-  private readonly EMAIL_VERIFICATION_EXPIRY = 24 * 60 * 60 * 1000; 
-  private readonly PASSWORD_RESET_EXPIRY = 60 * 60 * 1000; 
+  private readonly EMAIL_VERIFICATION_EXPIRY = 24 * 60 * 60 * 1000;
+  private readonly PASSWORD_RESET_EXPIRY = 60 * 60 * 1000;
   protected hashToken(token: string): string {
-    return crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
   constructor(
     @InjectRepository(EmailVerificationToken)
@@ -29,14 +32,15 @@ export class EmailService {
 
     @InjectRepository(PasswordResetToken)
     private readonly passwordResetRepo: Repository<PasswordResetToken>,
-    
+
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
   ) {
-    this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    this.frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
   }
 
   async generateEmailVerificationToken(user: User): Promise<string> {
@@ -62,6 +66,7 @@ export class EmailService {
     const verificationUrl = `${this.frontendUrl}/verify-email?token=${token}`;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await this.mailerService.sendMail({
         to: user.email,
         subject: 'Verify Your Email Address',
@@ -85,7 +90,10 @@ export class EmailService {
 
       this.logger.log(`Verification email sent to ${user.email}`);
     } catch (error) {
-      this.logger.error(`Failed to send verification email to ${user.email}`, error.stack);
+      this.logger.error(
+        `Failed to send verification email to ${user.email}`,
+        error.stack,
+      );
       throw new BadRequestException('Failed to send verification email');
     }
   }
@@ -122,7 +130,8 @@ export class EmailService {
   async resendVerificationEmail(email: string): Promise<void> {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
-    if (user.emailVerified) throw new BadRequestException('Email already verified');
+    if (user.emailVerified)
+      throw new BadRequestException('Email already verified');
 
     const token = await this.generateEmailVerificationToken(user);
     await this.sendVerificationEmail(user, token);
@@ -182,15 +191,17 @@ export class EmailService {
     }
   }
 
-
   async sendPasswordResetEmail(email: string): Promise<void> {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
 
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
 
-    const expiresAt = new Date(Date.now() + 3600000); 
+    const expiresAt = new Date(Date.now() + 3600000);
     const resetToken = this.passwordResetRepo.create({
       tokenHash,
       user,
@@ -225,7 +236,11 @@ export class EmailService {
       });
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${email}`, error.stack);
+      this.logger.error(
+        `Failed to send password reset email to ${email}`,
+
+        error.stack,
+      );
       throw new BadRequestException('Failed to send password reset email');
     }
   }

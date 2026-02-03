@@ -31,19 +31,21 @@ export const PERMISSIONS = {
   SYSTEM_ADMIN: 'system:admin',
   SYSTEM_SETTINGS: 'system:settings',
 
-  // club 
+  // club
   CLUB_CREATE: 'club:create',
   CLUB_READ: 'club:read',
   CLUB_UPDATE: 'club:update',
-  CLUB_DELETE: 'club:delete'
+  CLUB_DELETE: 'club:delete',
 } as const;
 
-export type PermissionKey = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const getAllPermissions = (): PermissionKey[] => {
   return Object.values(PERMISSIONS);
 };
 
-export const isValidPermission = (permission: string): permission is PermissionKey => {
+export const isValidPermission = (
+  permission: string,
+): permission is PermissionKey => {
   return Object.values(PERMISSIONS).includes(permission as PermissionKey);
 };

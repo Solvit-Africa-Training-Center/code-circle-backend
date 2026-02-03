@@ -1,7 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { AuditLog } from "../entities/audit.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { Injectable, Logger } from '@nestjs/common';
+import { AuditLog } from '../entities/audit.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuditService {
@@ -28,18 +29,12 @@ export class AuditService {
 
       return await this.auditLogRepo.save(auditLog);
     } catch (error) {
-      this.logger.error(
-        `Failed to log audit event: ${action}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to log audit event: ${action}`, error.stack);
       return null;
     }
   }
 
-  async getLogsForActor(
-    actorId: string,
-    limit = 100,
-  ): Promise<AuditLog[]> {
+  async getLogsForActor(actorId: string, limit = 100): Promise<AuditLog[]> {
     return this.auditLogRepo.find({
       where: { actorId },
       order: { createdAt: 'DESC' },
@@ -47,10 +42,7 @@ export class AuditService {
     });
   }
 
-  async getLogsForTarget(
-    targetId: string,
-    limit = 100,
-  ): Promise<AuditLog[]> {
+  async getLogsForTarget(targetId: string, limit = 100): Promise<AuditLog[]> {
     return this.auditLogRepo.find({
       where: { targetId },
       order: { createdAt: 'DESC' },

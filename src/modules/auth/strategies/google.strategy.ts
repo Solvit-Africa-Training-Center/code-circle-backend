@@ -1,10 +1,12 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { PassportStrategy } from "@nestjs/passport";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-google-oauth20';
-import { AuthProvider } from "../enums/auth-provider";
-import { AuthService } from "../auth.service";
-import { User } from "../../users/entities/user.entity";
+import { AuthProvider } from '../enums/auth-provider';
+import { AuthService } from '../auth.service';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -13,6 +15,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private readonly authService: AuthService,
   ) {
     super({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       clientID: config.get('GOOGLE_CLIENT_ID'),
       clientSecret: config.get('GOOGLE_CLIENT_SECRET'),
       callbackURL: config.get('GOOGLE_CALLBACK_URL'),

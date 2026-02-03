@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -51,35 +56,51 @@ import { RevokedToken } from './entities/revoke-token';
       Role,
       UserRole,
       AuditLog,
-      RevokedToken
+      RevokedToken,
     ]),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     MailerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        transport: {
-          host: config.get<string>('SMTP_HOST'),
-          port: Number(config.get<number>('SMTP_PORT')),
-          secure: false,
-          auth: {
-            user: config.get<string>('SMTP_USER'),
-            pass: config.get<string>('SMTP_PASS'),
+      useFactory: (config: ConfigService) => {
+        // Debug logging
+        console.log('📧 SMTP Configuration:');
+        console.log('- Host:', config.get('SMTP_HOST'));
+        console.log('- Port:', config.get('SMTP_PORT'));
+        console.log('- User:', config.get('SMTP_USER'));
+        console.log('- Has Password:', !!config.get('SMTP_PASS'));
+        console.log('- Secure:', config.get('SMTP_SECURE'));
+
+        return {
+          transport: {
+            host: config.get<string>('SMTP_HOST'),
+            port: Number(config.get<number>('SMTP_PORT')),
+            secure: config.get<boolean>('SMTP_SECURE', true), // ← Utilisez SMTP_SECURE
+            auth: {
+              user: config.get<string>('SMTP_USER'),
+              pass: config.get<string>('SMTP_PASS'),
+            },
+            // Options pour Gmail
+            tls: {
+              rejectUnauthorized: false, // Important pour éviter les erreurs de certificat
+            },
           },
-        },
-        defaults: {
-          from: '"CodeCircle" <no-reply@codecircle.com>',
-        },
-      }),
+          defaults: {
+            from: config.get<string>(
+              'EMAIL_FROM',
+              '"CodeCircle" <stephanemugisho24@gmail.com>',
+            ),
+          },
+        };
+      },
     }),
 
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): JwtModuleOptions => {
-        const expiresIn =
-          configService.get<string>('JWT_EXPIRES_IN') ?? '15m';
+        const expiresIn = configService.get<string>('JWT_EXPIRES_IN') ?? '15m';
 
         return {
-          secret:
-            configService.get<string>('JWT_SECRET') ?? 'defaultsecret',
+          secret: configService.get<string>('JWT_SECRET') ?? 'defaultsecret',
           signOptions: {
             expiresIn: expiresIn as unknown as Parameters<typeof ms>[0],
           },
@@ -102,10 +123,16 @@ import { RevokedToken } from './entities/revoke-token';
     GithubStrategy,
     GoogleStrategy,
     JwtStrategy,
-    AuditService
+    AuditService,
   ],
 
-  exports: [JwtModule, TwoFactorService, TypeOrmModule, AuthService, JwtAuthGuard],
+  exports: [
+    JwtModule,
+    TwoFactorService,
+    TypeOrmModule,
+    AuthService,
+    JwtAuthGuard,
+  ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

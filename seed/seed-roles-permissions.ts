@@ -26,8 +26,20 @@ async function bootstrap() {
     username: configService.get<string>('DB_USERNAME') || 'postgres',
     password: configService.get<string>('DB_PASSWORD') || '',
     database: configService.get<string>('DB_NAME') || 'code-circle',
-    entities: [Role, Permission, RolePermission, UserRole, UserPermission, User, OAuthAccount, RefreshToken, EmailVerificationToken, TwoFactorSecret, PasswordResetToken],
-    synchronize: true, 
+    entities: [
+      Role,
+      Permission,
+      RolePermission,
+      UserRole,
+      UserPermission,
+      User,
+      OAuthAccount,
+      RefreshToken,
+      EmailVerificationToken,
+      TwoFactorSecret,
+      PasswordResetToken,
+    ],
+    synchronize: true,
   });
 
   try {
@@ -66,7 +78,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+void bootstrap();
 
 //first run
 //npm i tsconfig-paths -D

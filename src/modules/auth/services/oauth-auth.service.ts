@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from '../entities/oauth-account.entity';
@@ -26,7 +32,7 @@ export class OAuthAuthService {
 
     private readonly tokenService: TokenService,
   ) {}
-  
+
   async loginOrRegister(oauthUser: {
     provider: AuthProvider;
     providerId: string;
@@ -36,8 +42,15 @@ export class OAuthAuthService {
     accessToken?: string;
     refreshToken?: string;
   }): Promise<User> {
-    const { provider, providerId, email, firstName, lastName, accessToken, refreshToken } =
-      oauthUser;
+    const {
+      provider,
+      providerId,
+      email,
+      firstName,
+      lastName,
+      accessToken,
+      refreshToken,
+    } = oauthUser;
 
     let oauthAccount = await this.oauthRepo.findOne({
       where: { provider, providerId },
@@ -67,12 +80,14 @@ export class OAuthAuthService {
         firstName,
         lastName,
         isActive: true,
-        emailVerified: true, 
+        emailVerified: true,
       });
 
       await this.userRepo.save(user);
 
-      const memberRole = await this.roleRepo.findOne({ where: { name: 'MEMBER' } });
+      const memberRole = await this.roleRepo.findOne({
+        where: { name: 'MEMBER' },
+      });
       if (memberRole) {
         await this.userRoleRepo.save(
           this.userRoleRepo.create({
@@ -90,7 +105,9 @@ export class OAuthAuthService {
       }
 
       if (!user) {
-        throw new Error('Invariant violation: user must exist before OAuth linking');
+        throw new Error(
+          'Invariant violation: user must exist before OAuth linking',
+        );
       }
       this.logger.log(`New user created via OAuth: ${user.id} (${email})`);
     }
@@ -155,7 +172,10 @@ export class OAuthAuthService {
       `OAuth account linked: ${provider}:${oauthData.providerId} -> User ${user.id}`,
     );
 
-    return { success: true, message: `${provider} account linked successfully` };
+    return {
+      success: true,
+      message: `${provider} account linked successfully`,
+    };
   }
 
   async unlinkAccount(
@@ -185,11 +205,12 @@ export class OAuthAuthService {
 
     await this.oauthRepo.remove(account);
 
-    this.logger.log(
-      `OAuth account unlinked: ${provider} from User ${user.id}`,
-    );
+    this.logger.log(`OAuth account unlinked: ${provider} from User ${user.id}`);
 
-    return { success: true, message: `${provider} account unlinked successfully` };
+    return {
+      success: true,
+      message: `${provider} account unlinked successfully`,
+    };
   }
 
   async getLinkedAccounts(userId: string): Promise<OAuthAccount[]> {
@@ -207,13 +228,14 @@ export class OAuthAuthService {
     return count > 0;
   }
 
-
   async handleOAuthCallback(
     provider: AuthProvider,
     profile: any,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     if (!profile || !profile.id) {
-      throw new BadRequestException(`${provider} did not return a valid profile`);
+      throw new BadRequestException(
+        `${provider} did not return a valid profile`,
+      );
     }
 
     const email = profile.emails?.[0]?.value || profile.username || null;
@@ -241,7 +263,9 @@ export class OAuthAuthService {
 
     const tokens = await this.tokenService.issueRefreshToken(user);
 
-    this.logger.log(`${provider} OAuth callback successful for user ${user.id}`);
+    this.logger.log(
+      `${provider} OAuth callback successful for user ${user.id}`,
+    );
     return tokens;
   }
 }

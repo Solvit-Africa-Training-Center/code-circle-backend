@@ -46,7 +46,9 @@ export class TwoFactorGuard implements CanActivate {
     return token;
   }
 
-  private extract2FAToken(header: string | string[] | undefined): string | null {
+  private extract2FAToken(
+    header: string | string[] | undefined,
+  ): string | null {
     if (!header) {
       return null;
     }
@@ -54,9 +56,7 @@ export class TwoFactorGuard implements CanActivate {
     return Array.isArray(header) ? header[0] : header;
   }
 
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
-
     const request = context.switchToHttp().getRequest<AuthRequest>();
     const token = this.extractToken(request.headers['authorization']);
 
@@ -101,6 +101,5 @@ export class TwoFactorGuard implements CanActivate {
     request.user = user;
 
     return true;
-
   }
 }

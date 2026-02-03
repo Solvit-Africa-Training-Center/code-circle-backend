@@ -31,12 +31,13 @@ export class OAuthCallbackController {
     private readonly oauthService: OAuthAuthService,
   ) {}
 
-
-   private getFrontendRedirectUrl(params: Record<string, any>): string {
-      const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
-      const query = new URLSearchParams(params).toString();
-      return `${frontendUrl}/auth/callback?${query}`;
-    }
+  private getFrontendRedirectUrl(params: Record<string, any>): string {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const frontendUrl =
+      this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
+    const query = new URLSearchParams(params).toString();
+    return `${frontendUrl}/auth/callback?${query}`;
+  }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -60,15 +61,35 @@ export class OAuthCallbackController {
     status: HttpStatus.FOUND,
     description: 'Redirects to frontend with tokens',
   })
-  @ApiExcludeEndpoint() 
+  @ApiExcludeEndpoint()
   async googleCallback(@Req() req: any, @Res() res: Response) {
     try {
-      const tokens = await this.oauthService.handleOAuthCallback(AuthProvider.GOOGLE, req.user.profile);
-      await this.auditService.log( 'oauth_login', req.user.profile.id, undefined, {provider: AuthProvider.GOOGLE, success: true } );
-      return res.redirect(this.getFrontendRedirectUrl({ ...tokens, success: true }));
+      const tokens = await this.oauthService.handleOAuthCallback(
+        AuthProvider.GOOGLE,
+        req.user.profile,
+      );
+      await this.auditService.log(
+        'oauth_login',
+        req.user.profile.id,
+        undefined,
+        { provider: AuthProvider.GOOGLE, success: true },
+      );
+      return res.redirect(
+        this.getFrontendRedirectUrl({ ...tokens, success: true }),
+      );
     } catch (error) {
-      await this.auditService.log( 'oauth_login', req.user.profile.id, undefined, {provider: AuthProvider.GOOGLE, success: false} );
-      return res.redirect(this.getFrontendRedirectUrl({ success: false, error: 'google_oauth_failed' }));
+      await this.auditService.log(
+        'oauth_login',
+        req.user.profile.id,
+        undefined,
+        { provider: AuthProvider.GOOGLE, success: false },
+      );
+      return res.redirect(
+        this.getFrontendRedirectUrl({
+          success: false,
+          error: 'google_oauth_failed',
+        }),
+      );
     }
   }
 
@@ -97,12 +118,32 @@ export class OAuthCallbackController {
   @ApiExcludeEndpoint()
   async githubCallback(@Req() req: any, @Res() res: Response) {
     try {
-      const tokens = await this.oauthService.handleOAuthCallback(AuthProvider.GITHUB, req.user.profile);
-      await this.auditService.log( 'oauth_login', req.user.profile.id, undefined, {provider: AuthProvider.GITHUB, success: true} );
-      return res.redirect(this.getFrontendRedirectUrl({ ...tokens, success: true }));
+      const tokens = await this.oauthService.handleOAuthCallback(
+        AuthProvider.GITHUB,
+        req.user.profile,
+      );
+      await this.auditService.log(
+        'oauth_login',
+        req.user.profile.id,
+        undefined,
+        { provider: AuthProvider.GITHUB, success: true },
+      );
+      return res.redirect(
+        this.getFrontendRedirectUrl({ ...tokens, success: true }),
+      );
     } catch (error) {
-      await this.auditService.log( 'oauth_login', req.user.profile.id, undefined, {provider: AuthProvider.GITHUB, success: false} );
-      return res.redirect(this.getFrontendRedirectUrl({ success: false, error: 'github_oauth_failed' }));
+      await this.auditService.log(
+        'oauth_login',
+        req.user.profile.id,
+        undefined,
+        { provider: AuthProvider.GITHUB, success: false },
+      );
+      return res.redirect(
+        this.getFrontendRedirectUrl({
+          success: false,
+          error: 'github_oauth_failed',
+        }),
+      );
     }
   }
 }
