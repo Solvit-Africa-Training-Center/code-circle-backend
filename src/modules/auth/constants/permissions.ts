@@ -30,6 +30,12 @@ export const PERMISSIONS = {
   // System Administration
   SYSTEM_ADMIN: 'system:admin',
   SYSTEM_SETTINGS: 'system:settings',
+
+  // club 
+  CLUB_CREATE: 'club:create',
+  CLUB_READ: 'club:read',
+  CLUB_UPDATE: 'club:update',
+  CLUB_DELETE: 'club:delete'
 } as const;
 
 export type PermissionKey = typeof PERMISSIONS[keyof typeof PERMISSIONS];

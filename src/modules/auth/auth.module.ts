@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -36,6 +36,8 @@ import { AuthLoggerMiddleware } from './middleware/auth-logger.middleware';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuditService } from './services/audit.service';
 import { AuditLog } from './entities/audit.entity';
+import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
+import { RevokedToken } from './entities/revoke-token';
 
 @Module({
   imports: [
@@ -48,7 +50,8 @@ import { AuditLog } from './entities/audit.entity';
       TwoFactorSecret,
       Role,
       UserRole,
-      AuditLog
+      AuditLog,
+      RevokedToken
     ]),
     MailerModule.forRootAsync({
       inject: [ConfigService],
@@ -88,6 +91,7 @@ import { AuditLog } from './entities/audit.entity';
   controllers: [AuthController, OAuthCallbackController],
 
   providers: [
+    JwtAuthGuard,
     AuthService,
     LocalAuthService,
     OAuthAuthService,
@@ -101,17 +105,21 @@ import { AuditLog } from './entities/audit.entity';
     AuditService
   ],
 
-  exports: [JwtModule, TwoFactorService, TypeOrmModule],
+  exports: [JwtModule, TwoFactorService, TypeOrmModule, AuthService, JwtAuthGuard],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthLoggerMiddleware, AuthMiddleware)
       .exclude(
-        'auth/login',
-        'auth/register',
-        'auth/refresh',
-        'auth/oauth/(.*)',
+        { path: 'auth/login', method: RequestMethod.POST },
+        { path: 'auth/register', method: RequestMethod.POST },
+        { path: 'auth/refresh', method: RequestMethod.POST },
+        { path: 'auth/verify-email', method: RequestMethod.GET },
+        { path: 'auth/resend-verification', method: RequestMethod.POST },
+        { path: 'auth/forgot-password', method: RequestMethod.POST },
+        { path: 'auth/reset-password', method: RequestMethod.POST },
+        { path: 'auth/oauth/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes('auth');
   }

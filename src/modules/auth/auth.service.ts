@@ -232,12 +232,12 @@ export class AuthService {
     return this.tokenService.refresh(rawToken);
   }
 
-  async logout(userId: string): Promise<{ success: boolean }> {
-    await this.tokenService.revokeAllForUser(userId);
-
-    this.logger.log(`User logged out: ${userId}`);
-
-    return { success: true };
+  async logout(userId: string, token?: string): Promise<void> {
+    await this.tokenService.revokeAllForUser(userId); 
+    if (token) {
+      this.logger.log(`User logged out: ${userId}`);
+      await this.tokenService.blacklistAccessToken(token); 
+    }
   }
 
   async logoutDevice(rawToken: string): Promise<{ success: boolean }> {

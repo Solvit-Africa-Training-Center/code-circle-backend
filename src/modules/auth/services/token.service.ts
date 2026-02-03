@@ -6,6 +6,7 @@ import { JwtService } from "@nestjs/jwt";
 import { LessThan, Repository } from "typeorm";
 import { User } from "@circle-backend/modules/users/entities/user.entity";
 import { ConfigService } from "@nestjs/config";
+import { RevokedToken } from "../entities/revoke-token";
 
 type JwtExpiry = string | number;
 @Injectable()
@@ -13,6 +14,8 @@ export class TokenService {
     private readonly logger = new Logger(TokenService.name);
     private readonly accessTokenExpiry: JwtExpiry;
     private readonly refreshTokenExpiry: number;
+    @InjectRepository(RevokedToken)
+    private readonly revokedTokenRepo: Repository<RevokedToken>;
     protected hashToken(token: string): string {
         return crypto
         .createHash('sha256')
@@ -208,5 +211,17 @@ export class TokenService {
           order: { createdAt: 'DESC' },
           select: ['id', 'deviceInfo', 'ipAddress', 'createdAt', 'expiresAt'],
         });
+    }
+
+    async isBlacklisted(token: string): Promise<boolean> {
+        const entry = await this.revokedTokenRepo.findOne({ where: { token } });
+        return !!entry;
+    }
+
+    async blacklistAccessToken(token: string) {
+        const decoded = this.jwtService.decode(token) as any;
+        const expiresAt = new Date(decoded.exp * 1000);
+        const entry = this.revokedTokenRepo.create({ token, expiresAt });
+        await this.revokedTokenRepo.save(entry);
     }
 }

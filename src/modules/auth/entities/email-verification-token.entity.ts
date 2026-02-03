@@ -27,7 +27,7 @@ export class EmailVerificationToken {
   @Column({ name: 'expires_at', type: 'timestamp' })
   expiresAt: Date;
 
-  @Column({ name: 'used_at', default: false })
+  @Column({ name: 'used', default: false })
   used: boolean;
 
   @Column({ name: 'used_at', type: 'timestamp', nullable: true })

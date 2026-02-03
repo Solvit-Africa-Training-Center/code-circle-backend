@@ -29,7 +29,7 @@ export class User {
     @Column({ unique: true })
     email: string;
 
-    @Column({ type: 'text', nullable: false })
+    @Column({ type: 'text', nullable: true })
     passwordHash: string;
 
     @Column({ name: 'is_active', default: true })

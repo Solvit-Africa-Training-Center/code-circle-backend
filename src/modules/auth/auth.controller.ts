@@ -128,12 +128,13 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Not authenticated',
   })
-  async logout(@CurrentUser() user: User): Promise<{ success: boolean; message: string }> {
-    await this.authService.logout(user.id);
-    return {
-      success: true,
-      message: 'Logged out successfully',
-    };
+  async logout(@Req() req, @CurrentUser() user: User): Promise<{ success: boolean; message: string }> {
+      const token = req.headers.authorization?.split(' ')[1];
+      await this.authService.logout(user.id, token);  
+      return {
+        success: true,
+        message: 'Logged out successfully',
+      };
   }
 
   @Get('verify-email')
