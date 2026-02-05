@@ -8,7 +8,7 @@ import {
 import { Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from '../entities/oauth-account.entity';
-import { User } from '../../users/entities/user.entity';
+import { User, GlobalStatus } from '../../users/entities/user.entity';
 import { AuthProvider } from '../enums/auth-provider';
 import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
@@ -77,10 +77,8 @@ export class OAuthAuthService {
     if (!user) {
       user = this.userRepo.create({
         email,
-        firstName,
-        lastName,
-        isActive: true,
-        emailVerified: true,
+        name: [firstName, lastName].filter(Boolean).join(' '),
+        globalStatus: GlobalStatus.ACTIVE,
       });
 
       await this.userRepo.save(user);
@@ -197,7 +195,7 @@ export class OAuthAuthService {
       },
     });
 
-    if (!user.passwordHash && otherOAuthAccounts === 0) {
+    if (!user.password && otherOAuthAccounts === 0) {
       throw new BadRequestException(
         'Cannot unlink the only authentication method. Please set a password first.',
       );
@@ -230,7 +228,15 @@ export class OAuthAuthService {
 
   async handleOAuthCallback(
     provider: AuthProvider,
-    profile: any,
+    profile: {
+      id?: string;
+      emails?: { value?: string }[];
+      username?: string;
+      name?: { givenName?: string; familyName?: string };
+      displayName?: string;
+      accessToken?: string;
+      refreshToken?: string;
+    },
   ): Promise<{ accessToken: string; refreshToken: string }> {
     if (!profile || !profile.id) {
       throw new BadRequestException(
@@ -238,7 +244,12 @@ export class OAuthAuthService {
       );
     }
 
-    const email = profile.emails?.[0]?.value || profile.username || null;
+    let email: string | null = null;
+    if (Array.isArray(profile.emails) && profile.emails[0]?.value) {
+      email = profile.emails[0].value;
+    } else if (typeof profile.username === 'string') {
+      email = profile.username;
+    }
     if (!email) {
       throw new BadRequestException(`${provider} did not provide an email`);
     }

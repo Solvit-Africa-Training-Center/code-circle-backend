@@ -7,7 +7,8 @@ import { ApproveCreatorDto } from './dto/approve-creator.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import type { CreatorStatus } from './entities/user.entity';
+import { GlobalStatus } from './entities/user.entity';
+import { Membership } from './entities/membership.entity';
 import { EmailService } from '../auth/services/email.service';
 import { hash } from 'bcryptjs';
 
@@ -16,8 +17,23 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(Membership)
+    private readonly membershipRepo: Repository<Membership>,
     private readonly emailService: EmailService,
   ) {}
+
+  async getUserMemberships(userId: string) {
+    const memberships = await this.membershipRepo.find({
+      where: { user: { id: userId } },
+    });
+    return memberships.map((m) => ({
+      membershipId: m.id,
+      role: m.role,
+      status: m.status,
+      joinedAt: m.joinedAt,
+      updatedAt: m.updatedAt,
+    }));
+  }
 
   async create(createUserDto: CreateUserDto) {
     const user = this.userRepo.create(createUserDto);
@@ -42,17 +58,28 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 
-  async approveCreator(dto: ApproveCreatorDto) {
+  async approveCreator(dto: ApproveCreatorDto & { adminId: string }) {
+    const admin: User | null = await this.userRepo.findOne({
+      where: { id: dto.adminId },
+    });
+    // Check if admin has ADMIN role via userRoles
+    const isAdmin =
+      admin && admin.userRoles?.some((ur) => ur.role?.name === 'ADMIN');
+    if (!isAdmin) {
+      return { success: false, message: 'Only ADMIN can approve creators.' };
+    }
     const user: User | null = await this.userRepo.findOne({
       where: { id: dto.userId },
     });
     if (!user) {
       return { success: false, message: 'User not found' };
     }
-    if (user.role !== 'CREATOR') {
+    // Check if user is a CREATOR via userRoles
+    const isCreator = user.userRoles?.some((ur) => ur.role?.name === 'CREATOR');
+    if (!isCreator) {
       return { success: false, message: 'User is not a creator' };
     }
-    if (user.creatorStatus === 'APPROVED') {
+    if (user.globalStatus === GlobalStatus.ACTIVE) {
       return { success: false, message: 'Creator already approved' };
     }
 
@@ -61,11 +88,8 @@ export class UsersService {
       hash as (data: string, salt: number) => Promise<string>
     )(password, 10);
 
-    user.passwordHash = passwordHash;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    user.creatorStatus = 'APPROVED' as CreatorStatus;
-    user.rejectionReason = null;
-    user.isActive = true;
+    user.password = passwordHash;
+    user.globalStatus = GlobalStatus.ACTIVE;
 
     await this.userRepo.save(user);
 

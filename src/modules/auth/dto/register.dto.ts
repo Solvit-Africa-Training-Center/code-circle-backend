@@ -54,4 +54,13 @@ export class RegisterDto {
   @IsString()
   @MaxLength(50)
   lastName?: string;
+
+  @ApiProperty({
+    example: 'Admin',
+    description: 'User role (Admin, MEMBER, etc). Only use for special cases.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  role?: string;
 }

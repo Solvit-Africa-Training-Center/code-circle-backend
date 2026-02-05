@@ -15,7 +15,7 @@ export class EmailVerificationToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.emailVerified, {
+  @ManyToOne(() => User, (user) => user.id, {
     onDelete: 'CASCADE',
     eager: true,
   })

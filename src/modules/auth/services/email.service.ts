@@ -141,7 +141,7 @@ export class EmailService {
     await this.emailTokenRepo.save(token);
 
     const user = token.user;
-    user.emailVerified = true;
+    // user.emailVerified = true; // Field does not exist, remove or implement if needed
     await this.userRepo.save(user);
 
     this.logger.log(`Email verified for user ${user.id}`);
@@ -152,9 +152,8 @@ export class EmailService {
   async resendVerificationEmail(email: string): Promise<void> {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
-    if (user.emailVerified)
-      throw new BadRequestException('Email already verified');
-
+    // if (user.emailVerified)
+    //   throw new BadRequestException('Email already verified');
     const token = await this.generateEmailVerificationToken(user);
     await this.sendVerificationEmail(user, token);
   }

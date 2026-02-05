@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PrimaryColumn } from "typeorm/decorator/columns/PrimaryColumn";
+import { PrimaryColumn } from 'typeorm/decorator/columns/PrimaryColumn';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
 
@@ -17,11 +17,15 @@ export class RolePermission {
   @PrimaryColumn('uuid', { name: 'permission_id' })
   permissionId: string;
 
-  @ManyToOne(() => Role, role => role.rolePermissions , { onDelete: 'CASCADE' })
+  @ManyToOne(() => Role, (role) => role.rolePermissions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @ManyToOne(() => Permission, permission => permission.rolePermissions,{ onDelete: 'CASCADE' })
+  @ManyToOne(() => Permission, (permission) => permission.rolePermissions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'permission_id' })
   permission: Permission;
 

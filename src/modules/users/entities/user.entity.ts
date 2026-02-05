@@ -4,110 +4,71 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
   Index,
 } from 'typeorm';
 import { UserRole } from '../../auth/entities/user-role.entity';
-import { RefreshToken } from '@circle-backend/modules/auth/entities/refresh-token.entity';
-import { OAuthAccount } from '@circle-backend/modules/auth/entities/oauth-account.entity';
-import { PasswordResetToken } from '@circle-backend/modules/auth/entities/password-reset-token.entity';
-import { TwoFactorSecret } from '@circle-backend/modules/auth/entities/two-factor-secret';
+import { RefreshToken } from '../../auth/entities/refresh-token.entity';
+import { OAuthAccount } from '../../auth/entities/oauth-account.entity';
+import { PasswordResetToken } from '../../auth/entities/password-reset-token.entity';
+import { TwoFactorSecret } from '../../auth/entities/two-factor-secret';
 import { UserPermission } from '../../auth/entities/user-permission.entity';
 
-export enum UserRoleType {
-  ADMIN = 'ADMIN',
-  CREATOR = 'CREATOR',
-  MEMBER = 'MEMBER',
-}
+import { OneToMany } from 'typeorm';
 
-export enum CreatorStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+export enum GlobalStatus {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  REJECTED = 'rejected',
 }
 
 @Entity('users')
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({ name: 'first_name' })
-    firstName: string;
+  @Column()
+  name: string;
 
-    @Column({ name: 'last_name' })
-    lastName: string;
+  @Index('IDX_users_email')
+  @Column({ unique: true })
+  email: string;
 
-    @Index('IDX_users_email')
-    @Column({ unique: true })
-    email: string;
+  @Column({ type: 'text' })
+  password: string;
 
-    @Column({ type: 'text', nullable: true })
-    passwordHash: string;
+  @Column({
+    type: 'enum',
+    enum: GlobalStatus,
+    default: GlobalStatus.PENDING,
+  })
+  globalStatus: GlobalStatus;
 
-    @Column({ name: 'is_active', default: true })
-    isActive: boolean;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-    @Column({
-      type: 'enum',
-      enum: UserRoleType,
-      default: UserRoleType.MEMBER,
-    })
-    role: UserRoleType;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-    @Column({
-      type: 'enum',
-      enum: CreatorStatus,
-      default: CreatorStatus.PENDING,
-    })
-    creatorStatus: CreatorStatus;
+  // Relations
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  userRoles: UserRole[];
 
-    @Column({ type: 'text', nullable: true })
-    rejectionReason: string | null;
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 
-    @Column({ name: 'email_verified', default: false })
-    emailVerified: boolean;
+  @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
+  oauthAccounts: OAuthAccount[];
 
-    @Column({ name: 'email_verification_token_hash', type: 'text', nullable: true })
-    emailVerificationTokenHash: string | null;
+  @OneToMany(
+    () => PasswordResetToken,
+    (passwordResetToken) => passwordResetToken.user,
+  )
+  passwordResetTokens: PasswordResetToken[];
 
-    @Column({
-      name: 'email_verification_expires_at',
-      type: 'timestamp',
-      nullable: true,
-    })
-    emailVerificationExpiresAt: Date | null;
+  @OneToMany(() => TwoFactorSecret, (twoFactorSecret) => twoFactorSecret.user)
+  twoFactorSecrets: TwoFactorSecret[];
 
-    @Index('IDX_users_last_login_at')
-    @Column({ name: 'last_login_at', type: 'timestamp', nullable: true })
-    lastLoginAt: Date | null;
-
-    @Column({ name: 'current_device_id', type: 'text', nullable: true })
-    currentDeviceId: string | null;
-
-    @Column({ name: 'two_factor_enabled', default: false })
-    twoFactorEnabled: boolean;
-
-    @OneToMany(() => UserRole, (ur) => ur.user)
-    userRoles: UserRole[];
-
-    @OneToMany(() => UserPermission, (up) => up.user)
-    userPermissions: UserPermission[];
-
-    @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
-    refreshTokens: RefreshToken[];  
-
-    @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-    oauthAccounts: OAuthAccount[];
-
-    @OneToMany(() => TwoFactorSecret, (tfs) => tfs.user)
-    twoFactorSecrets: TwoFactorSecret[];
-
-    @OneToMany(() => PasswordResetToken, (prt) => prt.user)
-    passwordResetTokens: PasswordResetToken[];
-
-    @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date;
-
-    @UpdateDateColumn({ name: 'updated_at' })
-    updatedAt: Date;
+  @OneToMany(() => UserPermission, (userPermission) => userPermission.user)
+  userPermissions: UserPermission[];
+  // role is handled by userRoles relation
 }

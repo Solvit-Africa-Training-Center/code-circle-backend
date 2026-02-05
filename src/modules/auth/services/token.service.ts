@@ -86,7 +86,7 @@ export class TokenService {
 
     await this.refreshTokenRepo.save(refreshToken);
 
-    user.lastLoginAt = new Date();
+    // user.lastLoginAt = new Date(); // Field does not exist, remove or implement if needed
     await this.userRepo.save(user);
 
     this.logger.log(`Issued new token pair for user ${user.id}`);

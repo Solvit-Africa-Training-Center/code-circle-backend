@@ -23,7 +23,7 @@
     "db:create": "ts-node src/scripts/create-database.ts",
     "migration:create": "typeorm migration:create",
     "migration:generate": "node src/scripts/generate-migration.js",
-    "migration:run": "node src/scripts/run-migration.js",
+    "migration:run": "ts-node src/scripts/run-migration.ts",
     "migration:revert": "node src/scripts/revert-migration.js",
     "migration:show": "typeorm migration:show -d src/config/typeorm-cli.config.js",
     "migration:list": "ts-node src/scripts/list-migrations.ts",

@@ -1,11 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class InitialSchema1770222348578 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
+module.exports = class InitialSchema1770222348578 {
+    async up(queryRunner) {
+        // Migration logic here
     }
-
-    public async down(queryRunner: QueryRunner): Promise<void> {
+    async down(queryRunner) {
+        // Revert logic here
     }
-
 }

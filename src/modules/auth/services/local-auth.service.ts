@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../users/entities/user.entity';
+import { User, GlobalStatus } from '../../users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from '../entities/user-role.entity';
@@ -40,41 +40,43 @@ export class LocalAuthService {
     password: string,
     firstName?: string,
     lastName?: string,
+    role?: string,
   ): Promise<User> {
     const existing = await this.userRepo.findOne({ where: { email } });
     if (existing) {
       throw new BadRequestException('Email already in use');
     }
 
-    const passwordHash = await bcrypt.hash(password, this.BCRYPT_ROUNDS);
-
+    const passwordHashed = await bcrypt.hash(password, this.BCRYPT_ROUNDS);
     const user = this.userRepo.create({
       email,
-      passwordHash,
-      firstName,
-      lastName,
-      emailVerified: false,
-      isActive: true,
+      password: passwordHashed,
+      name: [firstName, lastName].filter(Boolean).join(' '),
+      globalStatus: GlobalStatus.ACTIVE,
     });
 
     await this.userRepo.save(user);
 
-    const memberRole = await this.roleRepo.findOne({
-      where: { name: 'MEMBER' },
+    let assignedRoleName = 'MEMBER';
+    if (role && typeof role === 'string' && role.toUpperCase() === 'ADMIN') {
+      assignedRoleName = 'ADMIN';
+    }
+    const assignedRole = await this.roleRepo.findOne({
+      where: { name: assignedRoleName },
     });
-    if (!memberRole) {
-      this.logger.error('Default role MEMBER not found in database');
-      throw new Error('Default role MEMBER not found');
+    if (!assignedRole) {
+      this.logger.error(`Role ${assignedRoleName} not found in database`);
+      throw new Error(`Role ${assignedRoleName} not found`);
     }
 
     await this.userRoleRepo.save(
       this.userRoleRepo.create({
         user,
-        role: memberRole,
+        role: assignedRole,
       }),
     );
 
-    this.logger.log(`New user registered: ${user.id} (${email})`);
+    this.logger.log(`New user registered: ${user.id} (${email}) with role ${assignedRoleName}`);
 
     return user;
   }
@@ -89,18 +91,18 @@ export class LocalAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.passwordHash) {
+    if (!user.password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       this.logger.warn(`Failed login attempt for user: ${email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.isActive) {
-      throw new ForbiddenException('Account has been disabled');
+    if (user.globalStatus !== 'active') {
+      throw new ForbiddenException('Account is not active');
     }
 
     return user;
@@ -120,21 +122,15 @@ export class LocalAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.isActive) {
-      throw new ForbiddenException('Account has been disabled');
+    if (user.globalStatus !== 'active') {
+      throw new ForbiddenException('Account is not active');
     }
 
-    if (!user.emailVerified) {
-      throw new ForbiddenException(
-        'Email not verified. Please check your inbox.',
-      );
-    }
-
-    if (!user.passwordHash) {
+    if (!user.password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       this.logger.warn(`Failed login attempt for user: ${email}`);
       throw new UnauthorizedException('Invalid credentials');
@@ -187,7 +183,7 @@ export class LocalAuthService {
   }
 
   async updatePassword(user: User, newPassword: string): Promise<void> {
-    user.passwordHash = await bcrypt.hash(newPassword, this.BCRYPT_ROUNDS);
+    user.password = await bcrypt.hash(newPassword, this.BCRYPT_ROUNDS);
     await this.userRepo.save(user);
 
     this.logger.log(`Password updated for user: ${user.id}`);
@@ -198,13 +194,13 @@ export class LocalAuthService {
     oldPassword: string,
     newPassword: string,
   ): Promise<void> {
-    if (!user.passwordHash) {
+    if (!user.password) {
       throw new BadRequestException('User has no password set');
     }
 
     const isOldPasswordValid = await bcrypt.compare(
       oldPassword,
-      user.passwordHash,
+      user.password,
     );
     if (!isOldPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
