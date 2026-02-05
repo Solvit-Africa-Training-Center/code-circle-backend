@@ -18,6 +18,28 @@ import { PasswordResetToken } from '../entities/password-reset-token.entity';
 
 @Injectable()
 export class EmailService {
+  /**
+   * Send a generic email using the mailer service.
+   * @param options - { to, subject, html, text }
+   */
+  async sendEmail(options: {
+    to: string;
+    subject: string;
+    html?: string;
+    text?: string;
+  }): Promise<void> {
+    try {
+      await this.mailerService.sendMail(options);
+      this.logger.log(
+        `Email sent to ${options.to} with subject: ${options.subject}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send email to ${options.to}: ${error.message}`,
+      );
+      throw new BadRequestException('Failed to send email');
+    }
+  }
   private readonly logger = new Logger(EmailService.name);
   private readonly frontendUrl: string;
 

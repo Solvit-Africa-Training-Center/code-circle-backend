@@ -132,6 +132,7 @@ import { RevokedToken } from './entities/revoke-token';
     TypeOrmModule,
     AuthService,
     JwtAuthGuard,
+    EmailService,
   ],
 })
 export class AuthModule implements NestModule {

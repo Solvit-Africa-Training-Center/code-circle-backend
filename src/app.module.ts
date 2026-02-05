@@ -4,10 +4,12 @@ import databaseConfig from './config/database.config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthController } from './modules/auth/auth.controller';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     AuthModule,
+    UsersModule,
     // Configuration Module
     ConfigModule.forRoot({
       isGlobal: true,

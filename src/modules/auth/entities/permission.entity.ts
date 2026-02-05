@@ -1,4 +1,9 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Entity } from "typeorm/decorator/entity/Entity";
+import { Column } from "typeorm/decorator/columns/Column";
+import { CreateDateColumn } from "typeorm/decorator/columns/CreateDateColumn";
+import { OneToMany } from "typeorm/decorator/relations/OneToMany";
+import { PrimaryGeneratedColumn } from "typeorm/decorator/columns/PrimaryGeneratedColumn";
+import { UpdateDateColumn } from "typeorm/decorator/columns/UpdateDateColumn";
 import { RolePermission } from "./role-permission.entity";
 
 @Entity('permissions')

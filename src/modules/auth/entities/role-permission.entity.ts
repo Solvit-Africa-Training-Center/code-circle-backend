@@ -1,11 +1,11 @@
 import {
   Entity,
   ManyToOne,
-  PrimaryColumn,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PrimaryColumn } from "typeorm/decorator/columns/PrimaryColumn";
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
 

@@ -14,26 +14,26 @@ import { Role } from './role.entity';
 @Entity('user_roles')
 @Index('IDX_user_roles_user_role', ['user', 'role'], { unique: true })
 export class UserRole {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @ManyToOne(() => User, (user) => user.userRoles, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
-    user: User;
+  @ManyToOne(() => User, (user) => user.userRoles, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-    @ManyToOne(() => Role, (role) => role.userRoles, { eager: true })
-    @JoinColumn({ name: 'role_id' })
-    role: Role;
+  @ManyToOne(() => Role, (role) => role.userRoles, { eager: true })
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 
-    @Column({ name: 'assigned_by_user_id', nullable: true })
-    assignedByUserId: string;
+  @Column({ name: 'assigned_by_user_id', nullable: true })
+  assignedByUserId: string;
 
-    @CreateDateColumn({ name: 'assigned_at' })
-    assignedAt: Date;
+  @CreateDateColumn({ name: 'assigned_at' })
+  assignedAt: Date;
 
-    @CreateDateColumn({ name: 'created_at' })
-    createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at' })
-    updatedAt: Date;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

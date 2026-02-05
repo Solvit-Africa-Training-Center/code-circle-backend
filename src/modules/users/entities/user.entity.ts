@@ -14,6 +14,18 @@ import { PasswordResetToken } from '@circle-backend/modules/auth/entities/passwo
 import { TwoFactorSecret } from '@circle-backend/modules/auth/entities/two-factor-secret';
 import { UserPermission } from '../../auth/entities/user-permission.entity';
 
+export enum UserRoleType {
+  ADMIN = 'ADMIN',
+  CREATOR = 'CREATOR',
+  MEMBER = 'MEMBER',
+}
+
+export enum CreatorStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
@@ -34,6 +46,23 @@ export class User {
 
     @Column({ name: 'is_active', default: true })
     isActive: boolean;
+
+    @Column({
+      type: 'enum',
+      enum: UserRoleType,
+      default: UserRoleType.MEMBER,
+    })
+    role: UserRoleType;
+
+    @Column({
+      type: 'enum',
+      enum: CreatorStatus,
+      default: CreatorStatus.PENDING,
+    })
+    creatorStatus: CreatorStatus;
+
+    @Column({ type: 'text', nullable: true })
+    rejectionReason: string | null;
 
     @Column({ name: 'email_verified', default: false })
     emailVerified: boolean;

@@ -1,8 +1,6 @@
-import path from 'path';
-import { config } from 'dotenv';
-config();
-
-import { DataSource } from 'typeorm';
+const { DataSource } = require('typeorm');
+const path = require('path');
+require('dotenv').config();
 
 const dataSource = new DataSource({
   type: 'postgres',
@@ -13,11 +11,9 @@ const dataSource = new DataSource({
   database: process.env.DB_NAME || 'codecircle_db',
   entities: [path.join(__dirname, '/../**/*.entity.{ts,js}')],
   migrations: [path.join(__dirname, '/../database/migrations/*.{ts,js}')],
-  synchronize: false,
+  synchronize: false, 
   logging: process.env.NODE_ENV === 'development',
 });
 
-export default dataSource;
 module.exports = dataSource;
-module.exports = dataSource;
-(module.exports as { default: typeof dataSource }).default = dataSource;
+module.exports.dataSource = dataSource;

@@ -71,8 +71,8 @@ export function setupSwagger(app: INestApplication): void {
       tagsSorter: 'alpha',
       tryItOutEnabled: true,
       displayRequestDuration: true,
-      defaultModelsExpandDepth: 3,
-      defaultModelExpandDepth: 3,
+      defaultModelsExpandDepth: -1,
+      defaultModelExpandDepth: -1,
       syntaxHighlight: {
         theme: 'monokai',
       },
