@@ -36,8 +36,36 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.userRepo.create(createUserDto);
+    // Generate a random password if not provided
+    let password = createUserDto.password;
+    if (!password) {
+      password = this.generateRandomPassword();
+    }
+    // Hash the password
+    const passwordHash = await (
+      hash as (data: string, salt: number) => Promise<string>
+    )(password, 10);
+    const user = this.userRepo.create({
+      ...createUserDto,
+      password: passwordHash,
+    });
     await this.userRepo.save(user);
+
+    // Send email with the password
+    await this.emailService.sendEmail({
+      to: user.email,
+      subject: 'Your Account Has Been Created',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to CodeCircle!</h2>
+          <p>Your account has been created by an admin.</p>
+          <p><b>Email:</b> ${user.email}</p>
+          <p><b>Temporary Password:</b> ${password}</p>
+          <p>Please log in and change your password immediately.</p>
+        </div>
+      `,
+    });
+
     return user;
   }
 

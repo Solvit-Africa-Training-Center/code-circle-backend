@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +21,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ApproveCreatorDto } from './dto/approve-creator.dto';
 import { RejectCreatorDto } from './dto/reject-creator.dto';
 import { ActivateUserDto } from './dto/activate-user.dto';
+import { JwtAuthGuard } from '@circle-backend/modules/auth/guards/jwt-auth.guard';
+import { Roles } from '@circle-backend/common/decorators/roles.decorator';
+import { PermissionGuard } from '@circle-backend/common/guards/permissions.guard';
+import { RequirePermissions } from '@circle-backend/common/decorators/require-permissions.decorator';
+import { PERMISSIONS } from '@circle-backend/modules/auth/constants/permissions';
+import { RolesGuard } from '@circle-backend/common/guards/roles.guard';
 
 @ApiTags('users')
 @ApiBearerAuth('JWT-auth')
@@ -30,6 +37,9 @@ export class UsersController {
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully.' })
+  @UseGuards(JwtAuthGuard, PermissionGuard, RolesGuard)
+  @Roles('ADMIN')
+  @RequirePermissions(PERMISSIONS.USER_CREATE)
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -49,12 +59,12 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
-    @Get(':id/memberships')
-    @ApiOperation({ summary: 'Get all memberships for a user' })
-    @ApiResponse({ status: 200, description: 'List of user memberships.' })
-    getUserMemberships(@Param('id') id: string) {
-      return this.usersService.getUserMemberships(id);
-    }
+  @Get(':id/memberships')
+  @ApiOperation({ summary: 'Get all memberships for a user' })
+  @ApiResponse({ status: 200, description: 'List of user memberships.' })
+  getUserMemberships(@Param('id') id: string) {
+    return this.usersService.getUserMemberships(id);
+  }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user by ID' })
@@ -77,7 +87,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Approve a creator account' })
   @ApiResponse({ status: 200, description: 'Creator approved.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  approveCreator(@Body() dto: ApproveCreatorDto, @Body('adminId') adminId: string) {
+  approveCreator(
+    @Body() dto: ApproveCreatorDto,
+    @Body('adminId') adminId: string,
+  ) {
     return this.usersService.approveCreator({ ...dto, adminId });
   }
 

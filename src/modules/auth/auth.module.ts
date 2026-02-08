@@ -21,27 +21,30 @@ import { EmailVerificationToken } from './entities/email-verification-token.enti
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { TwoFactorSecret } from './entities/two-factor-secret';
+import { UserPermission } from './entities/user-permission.entity';
 
 import { Role } from './entities/role.entity';
 import { UserRole } from './entities/user-role.entity';
+import { RolePermission } from './entities/role-permission.entity';
 
 import { LocalAuthService } from './services/local-auth.service';
 import { OAuthAuthService } from './services/oauth-auth.service';
 import { TwoFactorService } from './services/two-factor.service';
 import { EmailService } from './services/email.service';
 import { TokenService } from './services/token.service';
+import { PermissionResolverService } from './services/permission-resolver.service';
 
 import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
 
 import { GithubStrategy } from './strategies/github.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 import { AuthLoggerMiddleware } from './middleware/auth-logger.middleware';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuditService } from './services/audit.service';
 import { AuditLog } from './entities/audit.entity';
-import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
 import { RevokedToken } from './entities/revoke-token';
 
 @Module({
@@ -55,6 +58,9 @@ import { RevokedToken } from './entities/revoke-token';
       TwoFactorSecret,
       Role,
       UserRole,
+      RolePermission,
+      UserPermission,
+      UserPermission,
       AuditLog,
       RevokedToken,
     ]),
@@ -112,14 +118,15 @@ import { RevokedToken } from './entities/revoke-token';
   controllers: [AuthController, OAuthCallbackController],
 
   providers: [
-    JwtAuthGuard,
     AuthService,
     LocalAuthService,
     OAuthAuthService,
     TwoFactorService,
     EmailService,
     TokenService,
+    PermissionResolverService,
     TwoFactorGuard,
+    JwtAuthGuard,
     GithubStrategy,
     GoogleStrategy,
     JwtStrategy,
@@ -131,8 +138,8 @@ import { RevokedToken } from './entities/revoke-token';
     TwoFactorService,
     TypeOrmModule,
     AuthService,
-    JwtAuthGuard,
     EmailService,
+    PermissionResolverService,
   ],
 })
 export class AuthModule implements NestModule {

@@ -5,28 +5,27 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthController } from './modules/auth/auth.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { TestsModule } from './modules/tests/tests.module';
 
 @Module({
   imports: [
     AuthModule,
     UsersModule,
-    // Configuration Module
+    TestsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
       envFilePath: '.env',
     }),
 
-    // Database Module
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const config = configService.get('database');
+        const config = configService.get<TypeOrmModuleOptions>('database');
         if (!config) {
           throw new Error('Database configuration not found');
         }
-        return config as TypeOrmModuleOptions;
+        return config;
       },
       inject: [ConfigService],
     }),

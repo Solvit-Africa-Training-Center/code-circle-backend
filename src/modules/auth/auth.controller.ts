@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { AuthProvider } from './enums/auth-provider';
-import { JwtAuthGuard } from '@circle-backend/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@circle-backend/modules/auth/guards/jwt-auth.guard';
 import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
 import { User } from '../users/entities/user.entity';
 import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';

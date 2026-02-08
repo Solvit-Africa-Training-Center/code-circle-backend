@@ -32,6 +32,8 @@ export function setupSwagger(app: INestApplication): void {
     )
     .addTag('Auth', 'Authentication endpoints')
     .addTag('users', 'User management')
+    .addTag('Tests', 'Test management')
+    .addTag('Categories', 'Test categories')
     .addApiKey(
       {
         type: 'apiKey',

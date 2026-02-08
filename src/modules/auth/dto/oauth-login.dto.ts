@@ -26,7 +26,7 @@ export class OAuthLoginDto {
   email: string;
 
   @ApiPropertyOptional({
-    example: 'John',
+    example: 'user first name',
     description: 'First name from OAuth provider',
   })
   @IsOptional()
@@ -34,7 +34,7 @@ export class OAuthLoginDto {
   firstName?: string;
 
   @ApiPropertyOptional({
-    example: 'Doe',
+    example: 'user last name',
     description: 'Last name from OAuth provider',
   })
   @IsOptional()
