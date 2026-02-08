@@ -34,7 +34,8 @@ export function setupSwagger(app: INestApplication): void {
     )
     .addTag('health', 'Health checks')
     .addTag('Auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
+    .addTag('Users', 'User management')
+    .addTag('Categories', 'Clubs categories')
     .addApiKey(
       {
         type: 'apiKey',

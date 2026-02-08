@@ -53,7 +53,6 @@ export class AuthService {
           `Failed to send verification email for user ${user.id}`,
           err,
         );
-        // Continue même si l'email échoue
       }
 
       return {
