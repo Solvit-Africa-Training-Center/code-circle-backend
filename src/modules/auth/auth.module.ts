@@ -16,9 +16,7 @@ import { AuthController } from './auth.controller';
 import { OAuthCallbackController } from './oauth.controller';
 
 import { User } from '../users/entities/user.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
-import { EmailVerificationToken } from './entities/email-verification-token.entity';
-import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { AuthToken } from './entities/auth-token.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { TwoFactorSecret } from './entities/two-factor-secret';
 import { UserPermission } from './entities/user-permission.entity';
@@ -45,24 +43,19 @@ import { AuthLoggerMiddleware } from './middleware/auth-logger.middleware';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuditService } from './services/audit.service';
 import { AuditLog } from './entities/audit.entity';
-import { RevokedToken } from './entities/revoke-token';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       User,
-      RefreshToken,
-      EmailVerificationToken,
-      PasswordResetToken,
+      AuthToken, // Consolidated token entity
       OAuthAccount,
       TwoFactorSecret,
       Role,
       UserRole,
       RolePermission,
       UserPermission,
-      UserPermission,
       AuditLog,
-      RevokedToken,
     ]),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     MailerModule.forRootAsync({

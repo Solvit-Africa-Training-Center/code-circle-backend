@@ -7,9 +7,8 @@ import {
   Index,
 } from 'typeorm';
 import { UserRole } from '../../auth/entities/user-role.entity';
-import { RefreshToken } from '../../auth/entities/refresh-token.entity';
+import { AuthToken } from '../../auth/entities/auth-token.entity';
 import { OAuthAccount } from '../../auth/entities/oauth-account.entity';
-import { PasswordResetToken } from '../../auth/entities/password-reset-token.entity';
 import { TwoFactorSecret } from '../../auth/entities/two-factor-secret';
 import { UserPermission } from '../../auth/entities/user-permission.entity';
 
@@ -53,17 +52,11 @@ export class User {
   @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
 
-  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshTokens: RefreshToken[];
+  @OneToMany(() => AuthToken, (authToken) => authToken.user)
+  authTokens: AuthToken[];
 
   @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
   oauthAccounts: OAuthAccount[];
-
-  @OneToMany(
-    () => PasswordResetToken,
-    (passwordResetToken) => passwordResetToken.user,
-  )
-  passwordResetTokens: PasswordResetToken[];
 
   @OneToMany(() => TwoFactorSecret, (twoFactorSecret) => twoFactorSecret.user)
   twoFactorSecrets: TwoFactorSecret[];

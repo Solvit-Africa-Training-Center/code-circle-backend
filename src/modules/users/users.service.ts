@@ -36,12 +36,10 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    // Generate a random password if not provided
     let password = createUserDto.password;
     if (!password) {
       password = this.generateRandomPassword();
     }
-    // Hash the password
     const passwordHash = await (
       hash as (data: string, salt: number) => Promise<string>
     )(password, 10);
@@ -51,7 +49,6 @@ export class UsersService {
     });
     await this.userRepo.save(user);
 
-    // Send email with the password
     await this.emailService.sendEmail({
       to: user.email,
       subject: 'Your Account Has Been Created',
@@ -90,7 +87,6 @@ export class UsersService {
     const admin: User | null = await this.userRepo.findOne({
       where: { id: dto.adminId },
     });
-    // Check if admin has ADMIN role via userRoles
     const isAdmin =
       admin && admin.userRoles?.some((ur) => ur.role?.name === 'ADMIN');
     if (!isAdmin) {
@@ -102,7 +98,6 @@ export class UsersService {
     if (!user) {
       return { success: false, message: 'User not found' };
     }
-    // Check if user is a CREATOR via userRoles
     const isCreator = user.userRoles?.some((ur) => ur.role?.name === 'CREATOR');
     if (!isCreator) {
       return { success: false, message: 'User is not a creator' };

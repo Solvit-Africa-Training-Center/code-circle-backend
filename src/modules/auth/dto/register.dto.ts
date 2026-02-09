@@ -36,7 +36,7 @@ export class RegisterDto {
   password: string;
 
   @ApiProperty({
-    example: 'John',
+    example: 'user first name',
     description: 'User first name',
     required: false,
   })
@@ -46,7 +46,7 @@ export class RegisterDto {
   firstName?: string;
 
   @ApiProperty({
-    example: 'Doe',
+    example: 'user last name',
     description: 'User last name',
     required: false,
   })

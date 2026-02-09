@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { EmailVerificationToken } from '../entities/email-verification-token.entity';
-import { PasswordResetToken } from '../entities/password-reset-token.entity';
+import { AuthToken } from '../entities/auth-token.entity';
 import { User } from '@circle-backend/modules/users/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Repository } from 'typeorm';
@@ -20,20 +19,20 @@ jest.mock('crypto', () => ({
 
 describe('EmailService', () => {
   let service: EmailService;
-  let emailVerificationRepo: jest.Mocked<Repository<EmailVerificationToken>>;
-  let passwordResetRepo: jest.Mocked<Repository<PasswordResetToken>>;
+  let authTokenRepo: jest.Mocked<Repository<AuthToken>>;
   let userRepo: jest.Mocked<Repository<User>>;
   let configService: jest.Mocked<ConfigService>;
   let mailerService: jest.Mocked<MailerService>;
 
   let mockUser: User;
-  let mockVerificationToken: EmailVerificationToken;
+  let mockVerificationToken: AuthToken;
 
   beforeEach(async () => {
-    mockUser = { id: 'user-1', email: 'test@example.com', emailVerified: false, isActive: true } as any;
+    mockUser = { id: 'user-1', email: 'test@example.com', isActive: true } as any;
     mockVerificationToken = {
       id: 'token-1',
       user: mockUser,
+      type: 'email_verification' as any,
       tokenHash: 'hashed-token',
       expiresAt: new Date(Date.now() + 86400000),
       used: false,
@@ -43,19 +42,11 @@ describe('EmailService', () => {
       providers: [
         EmailService,
         {
-          provide: getRepositoryToken(EmailVerificationToken),
+          provide: getRepositoryToken(AuthToken),
           useValue: {
             findOne: jest.fn(),
             create: jest.fn(),
             save: jest.fn().mockImplementation(async (token) => Object.assign(mockVerificationToken, token)),
-          },
-        },
-        {
-          provide: getRepositoryToken(PasswordResetToken),
-          useValue: {
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn().mockImplementation(async (token) => token),
           },
         },
         {
@@ -77,8 +68,7 @@ describe('EmailService', () => {
     }).compile();
 
     service = module.get(EmailService);
-    emailVerificationRepo = module.get(getRepositoryToken(EmailVerificationToken));
-    passwordResetRepo = module.get(getRepositoryToken(PasswordResetToken));
+    authTokenRepo = module.get(getRepositoryToken(AuthToken));
     userRepo = module.get(getRepositoryToken(User));
     configService = module.get(ConfigService);
     mailerService = module.get(MailerService);
@@ -90,8 +80,8 @@ describe('EmailService', () => {
 
   describe('sendVerificationEmail', () => {
     it('should send verification email after generating token', async () => {
-      emailVerificationRepo.create.mockReturnValue(mockVerificationToken as any);
-      emailVerificationRepo.save.mockResolvedValue(mockVerificationToken as any);
+      authTokenRepo.create.mockReturnValue(mockVerificationToken as any);
+      authTokenRepo.save.mockResolvedValue(mockVerificationToken as any);
 
       const token = await service.generateEmailVerificationToken(mockUser);
       expect(token).toBe('raw-token');
@@ -102,17 +92,17 @@ describe('EmailService', () => {
   });
 
   describe('validateEmailVerificationToken', () => {
-    it('should validate token and mark user email as verified', async () => {
-      emailVerificationRepo.findOne.mockResolvedValue({ ...mockVerificationToken, user: mockUser } as any);
+    it('should validate token and mark token as used', async () => {
+      authTokenRepo.findOne.mockResolvedValue({ ...mockVerificationToken, user: mockUser } as any);
 
       const result = await service.validateEmailVerificationToken('raw-token');
 
       expect(mockVerificationToken.used).toBe(true);
-      expect(result.emailVerified).toBe(true);
+      expect(result).toEqual(mockUser);
     });
 
     it('should throw BadRequestException if token invalid', async () => {
-      emailVerificationRepo.findOne.mockResolvedValue(null);
+      authTokenRepo.findOne.mockResolvedValue(null);
       await expect(service.validateEmailVerificationToken('invalid-token')).rejects.toThrow(BadRequestException);
     });
   });
@@ -121,8 +111,8 @@ describe('EmailService', () => {
     it('should generate new token and send email', async () => {
       const newToken = 'new-token';
       userRepo.findOne.mockResolvedValue(mockUser);
-      emailVerificationRepo.create.mockReturnValue(mockVerificationToken as any);
-      emailVerificationRepo.save.mockResolvedValue(mockVerificationToken as any);
+      authTokenRepo.create.mockReturnValue(mockVerificationToken as any);
+      authTokenRepo.save.mockResolvedValue(mockVerificationToken as any);
 
       (crypto.randomBytes as jest.Mock).mockReturnValue({ toString: () => newToken });
 
@@ -136,10 +126,8 @@ describe('EmailService', () => {
       await expect(service.resendVerificationEmail('unknown@example.com')).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if email already verified', async () => {
-      userRepo.findOne.mockResolvedValue({ ...mockUser, emailVerified: true } as any);
-      await expect(service.resendVerificationEmail(mockUser.email)).rejects.toThrow(BadRequestException);
-    });
+    // Note: Email verification status check removed - User entity doesn't have emailVerified field
+    // If you need this functionality, add emailVerified field to User entity first
   });
 
   describe('sendPasswordResetEmail', () => {
@@ -148,20 +136,21 @@ describe('EmailService', () => {
 
       const mockResetToken = {
         id: 'reset-1',
+        type: 'password_reset' as any,
         tokenHash: 'hashed-reset-token',
         expiresAt: new Date(Date.now() + 3600000),
         used: false,
         user: mockUser,
       };
 
-      passwordResetRepo.create.mockReturnValue(mockResetToken as any);
-      passwordResetRepo.save.mockResolvedValue(mockResetToken as any);
+      authTokenRepo.create.mockReturnValue(mockResetToken as any);
+      authTokenRepo.save.mockResolvedValue(mockResetToken as any);
 
       await expect(service.sendPasswordResetEmail(mockUser.email)).resolves.toBeUndefined();
 
       expect(userRepo.findOne).toHaveBeenCalledWith({ where: { email: mockUser.email } });
-      expect(passwordResetRepo.create).toHaveBeenCalled();
-      expect(passwordResetRepo.save).toHaveBeenCalled();
+      expect(authTokenRepo.create).toHaveBeenCalled();
+      expect(authTokenRepo.save).toHaveBeenCalled();
       expect(mailerService.sendMail).toHaveBeenCalled();
     });
   });
@@ -170,13 +159,14 @@ describe('EmailService', () => {
     it('should validate reset token and return user', async () => {
       const mockResetToken = {
         id: 'reset-1',
+        type: 'password_reset' as any,
         tokenHash: 'hashed-token',
         expiresAt: new Date(Date.now() + 3600000),
         used: false,
         user: mockUser,
       };
 
-      passwordResetRepo.findOne.mockResolvedValue(mockResetToken as any);
+      authTokenRepo.findOne.mockResolvedValue(mockResetToken as any);
 
       const result = await service.validatePasswordResetToken('reset-token');
       expect(result).toEqual(mockUser);
@@ -185,13 +175,14 @@ describe('EmailService', () => {
     it('should throw BadRequestException if token expired', async () => {
       const expiredToken = {
         id: 'reset-1',
+        type: 'password_reset' as any,
         tokenHash: 'hashed-token',
         expiresAt: new Date(Date.now() - 1000),
         used: false,
         user: mockUser,
       };
 
-      passwordResetRepo.findOne.mockResolvedValue(expiredToken as any);
+      authTokenRepo.findOne.mockResolvedValue(expiredToken as any);
 
       await expect(service.validatePasswordResetToken('token')).rejects.toThrow(BadRequestException);
     });

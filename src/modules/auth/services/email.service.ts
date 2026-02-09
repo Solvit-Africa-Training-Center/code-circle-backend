@@ -13,8 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 
 import { User } from '../../users/entities/user.entity';
-import { EmailVerificationToken } from '../entities/email-verification-token.entity';
-import { PasswordResetToken } from '../entities/password-reset-token.entity';
+import { AuthToken, AuthTokenType } from '../entities/auth-token.entity';
 
 @Injectable()
 export class EmailService {
@@ -49,11 +48,8 @@ export class EmailService {
     return crypto.createHash('sha256').update(token).digest('hex');
   }
   constructor(
-    @InjectRepository(EmailVerificationToken)
-    private readonly emailTokenRepo: Repository<EmailVerificationToken>,
-
-    @InjectRepository(PasswordResetToken)
-    private readonly passwordResetRepo: Repository<PasswordResetToken>,
+    @InjectRepository(AuthToken)
+    private readonly authTokenRepo: Repository<AuthToken>,
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -70,14 +66,15 @@ export class EmailService {
     const tokenHash = this.hashToken(rawToken);
     const expiresAt = new Date(Date.now() + this.EMAIL_VERIFICATION_EXPIRY);
 
-    const emailToken = this.emailTokenRepo.create({
+    const emailToken = this.authTokenRepo.create({
       user,
+      type: AuthTokenType.EMAIL_VERIFICATION,
       tokenHash,
       expiresAt,
       used: false,
     });
 
-    await this.emailTokenRepo.save(emailToken);
+    await this.authTokenRepo.save(emailToken);
 
     this.logger.log(`Email verification token generated for user ${user.id}`);
 
@@ -123,8 +120,12 @@ export class EmailService {
   async validateEmailVerificationToken(rawToken: string): Promise<User> {
     const tokenHash = this.hashToken(rawToken);
 
-    const token = await this.emailTokenRepo.findOne({
-      where: { tokenHash, used: false },
+    const token = await this.authTokenRepo.findOne({
+      where: { 
+        tokenHash, 
+        type: AuthTokenType.EMAIL_VERIFICATION,
+        used: false 
+      },
       relations: ['user'],
     });
 
@@ -138,9 +139,13 @@ export class EmailService {
 
     token.used = true;
     token.usedAt = new Date();
-    await this.emailTokenRepo.save(token);
+    await this.authTokenRepo.save(token);
 
     const user = token.user;
+    if (!user) {
+      throw new BadRequestException('Token is not associated with a user');
+    }
+    
     // user.emailVerified = true; // Field does not exist, remove or implement if needed
     await this.userRepo.save(user);
 
@@ -163,14 +168,15 @@ export class EmailService {
     const tokenHash = this.hashToken(rawToken);
     const expiresAt = new Date(Date.now() + this.PASSWORD_RESET_EXPIRY);
 
-    const resetToken = this.passwordResetRepo.create({
+    const resetToken = this.authTokenRepo.create({
       user,
+      type: AuthTokenType.PASSWORD_RESET,
       tokenHash,
       expiresAt,
       used: false,
     });
 
-    await this.passwordResetRepo.save(resetToken);
+    await this.authTokenRepo.save(resetToken);
 
     this.logger.log(`Password reset token generated for user ${user.id}`);
 
@@ -180,8 +186,12 @@ export class EmailService {
   async validatePasswordResetToken(rawToken: string): Promise<User> {
     const tokenHash = this.hashToken(rawToken);
 
-    const token = await this.passwordResetRepo.findOne({
-      where: { tokenHash, used: false },
+    const token = await this.authTokenRepo.findOne({
+      where: { 
+        tokenHash, 
+        type: AuthTokenType.PASSWORD_RESET,
+        used: false 
+      },
       relations: ['user'],
     });
 
@@ -193,20 +203,27 @@ export class EmailService {
       throw new BadRequestException('Password reset token has expired');
     }
 
+    if (!token.user) {
+      throw new BadRequestException('Token is not associated with a user');
+    }
+
     return token.user;
   }
 
   async markPasswordResetTokenUsed(rawToken: string): Promise<void> {
     const tokenHash = this.hashToken(rawToken);
 
-    const token = await this.passwordResetRepo.findOne({
-      where: { tokenHash },
+    const token = await this.authTokenRepo.findOne({
+      where: { 
+        tokenHash,
+        type: AuthTokenType.PASSWORD_RESET,
+      },
     });
 
     if (token) {
       token.used = true;
       token.usedAt = new Date();
-      await this.passwordResetRepo.save(token);
+      await this.authTokenRepo.save(token);
 
       this.logger.log(`Password reset token marked as used`);
     }
@@ -217,20 +234,18 @@ export class EmailService {
     if (!user) throw new NotFoundException('User not found');
 
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(rawToken)
-      .digest('hex');
+    const tokenHash = this.hashToken(rawToken);
 
-    const expiresAt = new Date(Date.now() + 3600000);
-    const resetToken = this.passwordResetRepo.create({
+    const expiresAt = new Date(Date.now() + this.PASSWORD_RESET_EXPIRY);
+    const resetToken = this.authTokenRepo.create({
+      type: AuthTokenType.PASSWORD_RESET,
       tokenHash,
       user,
       expiresAt,
       used: false,
     });
 
-    await this.passwordResetRepo.save(resetToken);
+    await this.authTokenRepo.save(resetToken);
 
     const resetUrl = `${this.frontendUrl}/reset-password?token=${rawToken}`;
 
