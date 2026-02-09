@@ -19,8 +19,10 @@ export class CategoryController {
   @ApiBody({ type: CreateCategoryDto })
   @ApiResponse({ status: 201, description: 'Category created.' })
   @ApiResponse({ status: 400, description: 'Bad request.' })
-  createCategory(@Body() body: CreateCategoryDto) {
-    return { success: true, ...body };
+  @ApiResponse({ status: 409, description: 'Category already exists.' })
+  async createCategory(@Body() body: CreateCategoryDto) {
+    const category = await this.testService.createCategory(body);
+    return category;
   }
 
   @Get()
@@ -29,8 +31,8 @@ export class CategoryController {
     description: 'List all test categories.',
   })
   @ApiResponse({ status: 200, description: 'List of categories.' })
-  getCategories() {
-    return [];
+  async getCategories() {
+    return await this.testService.getAllCategories();
   }
 }
 
@@ -44,14 +46,16 @@ export class TestController {
   @ApiBody({ type: CreateTestDto })
   @ApiResponse({ status: 201, description: 'Test created.' })
   @ApiResponse({ status: 400, description: 'Bad request.' })
-  createTest(@Body() body: CreateTestDto) {
-    return { success: true, ...body };
+  @ApiResponse({ status: 404, description: 'Category or user not found.' })
+  async createTest(@Body() body: CreateTestDto) {
+    const test = await this.testService.createTest(body);
+    return test;
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all tests', description: 'List all tests.' })
   @ApiResponse({ status: 200, description: 'List of tests.' })
-  getTests() {
-    return [];
+  async getTests() {
+    return await this.testService.getAllTests();
   }
 }

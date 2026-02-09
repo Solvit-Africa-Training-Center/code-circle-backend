@@ -44,15 +44,17 @@ export class TestController {
   @ApiBody({ type: CreateTestDto })
   @ApiResponse({ status: 201, description: 'Test created.' })
   @ApiResponse({ status: 400, description: 'Bad request.' })
-  createTest(@Body() body: CreateTestDto) {
-    return { success: true, ...body };
+  @ApiResponse({ status: 404, description: 'Category or user not found.' })
+  async createTest(@Body() body: CreateTestDto) {
+    const test = await this.testService.createTest(body);
+    return test;
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all tests', description: 'List all tests.' })
   @ApiResponse({ status: 200, description: 'List of tests.' })
-  getTests() {
-    return [];
+  async getTests() {
+    return await this.testService.getAllTests();
   }
 
   @Post('attempt')
