@@ -1,0 +1,11 @@
+export enum TestType {
+  CREATOR_TEST = 'CREATOR_TEST',
+  MEMBER_TEST = 'MEMBER_TEST',
+}
+
+export enum TestDifficulty {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+  EXPERT = 'EXPERT',
+}
