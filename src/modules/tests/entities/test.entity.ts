@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 // import { User } from '../../users/entities/user.entity';
-// import { Club } from '../../clubs/entities/club.entity';
+import { Club } from '../../clubs/entities/club.entity';
 import { TestQuestion } from './test-question.entity';
 import { TestAttempt } from './test-attempt.entity';
 import { TestType, TestDifficulty } from '../enums/test-type.enum';
@@ -34,9 +34,9 @@ export class Test {
   @Column({ nullable: true })
   clubId: string;
 
-  // @ManyToOne(() => Club, { nullable: true })
-  // @JoinColumn({ name: 'clubId' })
-  // club: Club;
+  @ManyToOne(() => Club, { nullable: true })
+  @JoinColumn({ name: 'clubId' })
+  club: Club;
 
   @Column({
     type: 'enum',
