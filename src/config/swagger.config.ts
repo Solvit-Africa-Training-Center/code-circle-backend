@@ -37,6 +37,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Users', 'User management')
     .addTag('Categories', 'Clubs categories')
     .addTag('Tests', 'Tests for joining the club')
+    .addTag('Clubs', 'Clubs operations')
     .addApiKey(
       {
         type: 'apiKey',
