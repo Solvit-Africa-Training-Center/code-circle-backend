@@ -9,7 +9,6 @@ import {
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { AuthToken } from '../../auth/entities/auth-token.entity';
 import { OAuthAccount } from '../../auth/entities/oauth-account.entity';
-import { TwoFactorSecret } from '../../auth/entities/two-factor-secret';
 import { UserPermission } from '../../auth/entities/user-permission.entity';
 
 import { OneToMany } from 'typeorm';
@@ -42,6 +41,18 @@ export class User {
   })
   globalStatus: GlobalStatus;
 
+  @Column({ nullable: true })
+  phone?: string;
+
+  @Column({ type: 'text', nullable: true })
+  bio?: string;
+
+  @Column({ nullable: true })
+  cv?: string; // Cloudinary URL
+
+  @Column({ nullable: true })
+  degree?: string; // Cloudinary URL
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -58,8 +69,6 @@ export class User {
   @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
   oauthAccounts: OAuthAccount[];
 
-  @OneToMany(() => TwoFactorSecret, (twoFactorSecret) => twoFactorSecret.user)
-  twoFactorSecrets: TwoFactorSecret[];
 
   @OneToMany(() => UserPermission, (userPermission) => userPermission.user)
   userPermissions: UserPermission[];

@@ -2,10 +2,11 @@ import { Injectable, BadRequestException, ConflictException, NotFoundException }
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TestAttempt } from '../entities/test-attempt.entity';
-import { Test, TestType } from '../entities/test.entity';
-import { Category } from '../entities/category.entity';
+import { Test } from '../entities/test.entity';
+import { TestType, TestDifficulty } from '../enums/test-type.enum';
+import { Category } from '../../categories/entities/category.entity';
 import { User, GlobalStatus } from '../../users/entities/user.entity';
-import { EmailService } from '../../../common/services/email.service';
+import { EmailService } from '../../auth/services/email.service';
 import { CreateCategoryDto, CreateTestDto } from '../dto/create-category-test.dto';
 
 @Injectable()
@@ -50,34 +51,51 @@ export class TestService {
     });
     await this.attemptRepo.save(attempt);
 
+    // Note: Email notifications are now handled by TestsService.submitTest
+    // This method is kept for backward compatibility but email logic has been moved
     if (test.type === 'CREATOR_TEST') {
       if (passed) {
-        await this.emailService.sendUserCreatedEmail({
+        await this.emailService.sendEmail({
           to: user.email,
-          username: user.name,
-          temporaryPassword: '',
-          role: 'CREATOR',
+          subject: 'Test Passed - Awaiting Admin Approval',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>🎉 Congratulations!</h2>
+              <p>Dear ${user.name},</p>
+              <p>You have successfully passed the CREATOR test.</p>
+              <p>Your application is now pending admin approval. You will receive an email with your login credentials once an admin approves your account.</p>
+            </div>
+          `,
         });
-        // Send wait for admin approval email
       } else {
-        // Send retry email after one day
-        await this.emailService.sendUserCreatedEmail({
+        await this.emailService.sendEmail({
           to: user.email,
-          username: user.name,
-          temporaryPassword: '',
-          role: 'CREATOR',
+          subject: 'Test Results - Not Passed',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Test Results</h2>
+              <p>Dear ${user.name},</p>
+              <p>Unfortunately, you did not pass the test. Your score was ${score}%.</p>
+              <p>You can retake the test after 24 hours.</p>
+            </div>
+          `,
         });
       }
     } else if (test.type === 'MEMBER_TEST') {
       if (passed) {
         user.globalStatus = GlobalStatus.ACTIVE;
         await this.userRepo.save(user);
-        // Send account activated email
-        await this.emailService.sendUserCreatedEmail({
+        await this.emailService.sendEmail({
           to: user.email,
-          username: user.name,
-          temporaryPassword: '',
-          role: 'MEMBER',
+          subject: 'Test Passed - Account Activated',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>🎉 Congratulations!</h2>
+              <p>Dear ${user.name},</p>
+              <p>You have successfully passed the MEMBER test.</p>
+              <p>Your account has been activated.</p>
+            </div>
+          `,
         });
       }
     }
@@ -147,17 +165,20 @@ export class TestService {
       );
     }
 
-    const test = this.testRepo.create({
+    const test: Test = this.testRepo.create({
       category,
+      categoryId: category.id,
       type: createTestDto.type as TestType,
       clubId: createTestDto.clubId,
-      difficulty: createTestDto.difficulty,
+      difficulty: createTestDto.difficulty as TestDifficulty | undefined,
       passingScore: createTestDto.passingScore ?? 60,
-      createdBy: createdByUser,
+      createdBy: createdByUser?.id,
+      creator: createdByUser,
       isActive: createTestDto.isActive ?? true,
     });
 
-    return await this.testRepo.save(test);
+    const savedTest = await this.testRepo.save(test);
+    return savedTest;
   }
 
   async getAllTests(): Promise<Test[]> {

@@ -18,7 +18,6 @@ export enum AuthTokenType {
   PASSWORD_RESET = 'password_reset',
   REFRESH = 'refresh',
   REVOKED = 'revoked', // For JWT tokens that have been revoked (stored in revoked_tokens table)
-  TWO_FACTOR_BACKUP = 'two_factor_backup', // For 2FA backup codes
 }
 
 /**

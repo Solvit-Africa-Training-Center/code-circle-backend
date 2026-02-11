@@ -18,7 +18,6 @@ import { OAuthCallbackController } from './oauth.controller';
 import { User } from '../users/entities/user.entity';
 import { AuthToken } from './entities/auth-token.entity';
 import { OAuthAccount } from './entities/oauth-account.entity';
-import { TwoFactorSecret } from './entities/two-factor-secret';
 import { UserPermission } from './entities/user-permission.entity';
 
 import { Role } from './entities/role.entity';
@@ -27,12 +26,10 @@ import { RolePermission } from './entities/role-permission.entity';
 
 import { LocalAuthService } from './services/local-auth.service';
 import { OAuthAuthService } from './services/oauth-auth.service';
-import { TwoFactorService } from './services/two-factor.service';
 import { EmailService } from './services/email.service';
 import { TokenService } from './services/token.service';
 import { PermissionResolverService } from './services/permission-resolver.service';
 
-import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
 
 import { GithubStrategy } from './strategies/github.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
@@ -50,7 +47,6 @@ import { AuditLog } from './entities/audit.entity';
       User,
       AuthToken, // Consolidated token entity
       OAuthAccount,
-      TwoFactorSecret,
       Role,
       UserRole,
       RolePermission,
@@ -114,11 +110,9 @@ import { AuditLog } from './entities/audit.entity';
     AuthService,
     LocalAuthService,
     OAuthAuthService,
-    TwoFactorService,
     EmailService,
     TokenService,
     PermissionResolverService,
-    TwoFactorGuard,
     JwtAuthGuard,
     GithubStrategy,
     GoogleStrategy,
@@ -128,11 +122,12 @@ import { AuditLog } from './entities/audit.entity';
 
   exports: [
     JwtModule,
-    TwoFactorService,
     TypeOrmModule,
     AuthService,
     EmailService,
     PermissionResolverService,
+    TokenService,
+    JwtAuthGuard,
   ],
 })
 export class AuthModule implements NestModule {

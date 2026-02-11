@@ -19,6 +19,11 @@ import { UpdateTestDto } from './dto/update-test.dto';
 import { SubmitTestDto } from './dto/submit-test.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
 import { TestType } from './enums/test-type.enum';
+import { User, GlobalStatus } from '../users/entities/user.entity';
+import { UserRole } from '../auth/entities/user-role.entity';
+import { Role } from '../auth/entities/role.entity';
+import { EmailService } from '../auth/services/email.service';
+import { hash } from 'bcryptjs';
 
 @Injectable()
 export class TestsService {
@@ -31,6 +36,13 @@ export class TestsService {
     private readonly testQuestionRepository: Repository<TestQuestion>,
     @InjectRepository(TestAttempt)
     private readonly testAttemptRepository: Repository<TestAttempt>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -353,10 +365,19 @@ export class TestsService {
       const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
       const passed = scorePercentage >= test.passingScore;
 
+      // Fetch user entity
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID "${userId}" not found`);
+      }
+
       // Créer la tentative
       const attempt = this.testAttemptRepository.create({
-        userId,
-        testId: test.id,
+        user,
+        test,
         clubId: submitTestDto.clubId,
         answers: submitTestDto.answers,
         score: scorePercentage,
@@ -370,6 +391,13 @@ export class TestsService {
       this.logger.log(
         `Test attempt saved: ${savedAttempt.id} - Score: ${scorePercentage}% - Passed: ${passed}`,
       );
+
+      // Handle pass/fail logic based on test type
+      if (passed) {
+        await this.handleTestPass(user, test, scorePercentage);
+      } else {
+        await this.handleTestFail(user, test, scorePercentage);
+      }
 
       return savedAttempt;
     } catch (error) {
@@ -496,5 +524,132 @@ export class TestsService {
         'An error occurred while deactivating the test',
       );
     }
+  }
+
+  /**
+   * Generate a random password
+   */
+  private generateRandomPassword(length = 12): string {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  /**
+   * Handle test pass logic
+   */
+  private async handleTestPass(
+    user: User,
+    test: Test,
+    score: number,
+  ): Promise<void> {
+    const password = this.generateRandomPassword();
+    const passwordHash = await (hash as (data: string, salt: number) => Promise<string>)(password, 10);
+
+    if (test.type === TestType.MEMBER_TEST) {
+      // MEMBER: Immediately activate and assign MEMBER role
+      user.password = passwordHash;
+      user.globalStatus = GlobalStatus.ACTIVE;
+      await this.userRepository.save(user);
+
+      // Assign MEMBER role
+      const memberRole = await this.roleRepository.findOne({
+        where: { name: 'MEMBER' },
+      });
+      if (memberRole) {
+        await this.userRoleRepository.save(
+          this.userRoleRepository.create({
+            user,
+            role: memberRole,
+          }),
+        );
+      }
+
+      // Send congratulations email with credentials
+      await this.emailService.sendEmail({
+        to: user.email,
+        subject: 'Congratulations! You Passed the Test',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>🎉 Congratulations!</h2>
+            <p>Dear ${user.name},</p>
+            <p>We are pleased to inform you that you have successfully passed the test with a score of <strong>${score}%</strong>.</p>
+            <p>Your account has been activated and you are now a <strong>MEMBER</strong> of our platform.</p>
+            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <h3>Your Login Credentials:</h3>
+              <p><strong>Email:</strong> ${user.email}</p>
+              <p><strong>Password:</strong> ${password}</p>
+            </div>
+            <p style="color: #d32f2f;"><strong>Important:</strong> Please log in and change your password immediately.</p>
+            <p>Welcome aboard!</p>
+          </div>
+        `,
+      });
+
+      this.logger.log(`MEMBER account activated for user: ${user.id}`);
+    } else if (test.type === TestType.CREATOR_TEST) {
+      // CREATOR: Keep PENDING status, wait for admin approval
+      // Don't set password yet - will be set after admin approval
+      // Assign CREATOR role (but user stays PENDING)
+      const creatorRole = await this.roleRepository.findOne({
+        where: { name: 'CREATOR' },
+      });
+      if (creatorRole) {
+        await this.userRoleRepository.save(
+          this.userRoleRepository.create({
+            user,
+            role: creatorRole,
+          }),
+        );
+      }
+
+      // Send wait for approval email
+      await this.emailService.sendEmail({
+        to: user.email,
+        subject: 'Test Passed - Awaiting Admin Approval',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>🎉 Congratulations!</h2>
+            <p>Dear ${user.name},</p>
+            <p>We are pleased to inform you that you have successfully passed the CREATOR test with a score of <strong>${score}%</strong>.</p>
+            <p>Your application is now pending admin approval. You will receive an email with your login credentials once an admin approves your account.</p>
+            <p>Thank you for your patience!</p>
+          </div>
+        `,
+      });
+
+      this.logger.log(`CREATOR test passed, waiting for admin approval: ${user.id}`);
+    }
+  }
+
+  /**
+   * Handle test fail logic
+   */
+  private async handleTestFail(
+    user: User,
+    test: Test,
+    score: number,
+  ): Promise<void> {
+    // Send failure email
+    await this.emailService.sendEmail({
+      to: user.email,
+      subject: 'Test Results - Not Passed',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Test Results</h2>
+          <p>Dear ${user.name},</p>
+          <p>Unfortunately, you did not pass the test. Your score was <strong>${score}%</strong>.</p>
+          <p>The passing score required was <strong>${test.passingScore}%</strong>.</p>
+          <p>You can retake the test after 24 hours. We encourage you to review the material and try again.</p>
+          <p>Best of luck!</p>
+        </div>
+      `,
+    });
+
+    this.logger.log(`Test failed for user: ${user.id}, score: ${score}%`);
   }
 }

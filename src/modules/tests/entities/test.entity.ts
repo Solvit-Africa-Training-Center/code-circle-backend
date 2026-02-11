@@ -52,9 +52,9 @@ export class Test {
   @Column({ nullable: true })
   createdBy: string;
 
-  // @ManyToOne(() => User, { nullable: true })
-  // @JoinColumn({ name: 'createdBy' })
-  // creator: User;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdBy' })
+  creator: User;
 
   @Column({ default: true })
   isActive: boolean;

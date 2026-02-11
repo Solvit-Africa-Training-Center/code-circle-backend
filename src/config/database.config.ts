@@ -13,7 +13,7 @@ export default registerAs(
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     migrationsTableName: 'migrations',
-    synchronize: process.env.DB_SYNCHRONIZE === 'true',
+    synchronize: false, // Disabled - use migrations instead
     logging: process.env.NODE_ENV === 'development',
     retryAttempts: 3,
     retryDelay: 3000,
