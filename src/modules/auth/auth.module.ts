@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { CommonModule } from '../../common/common.module';
 
 import ms from 'ms';
 
@@ -43,6 +43,7 @@ import { AuditLog } from './entities/audit.entity';
 
 @Module({
   imports: [
+    CommonModule, // Import CommonModule to access MailerService (MailerModule is configured there)
     TypeOrmModule.forFeature([
       User,
       AuthToken, // Consolidated token entity
@@ -53,42 +54,6 @@ import { AuditLog } from './entities/audit.entity';
       UserPermission,
       AuditLog,
     ]),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    MailerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        // Debug logging
-        console.log('📧 SMTP Configuration:');
-        console.log('- Host:', config.get('SMTP_HOST'));
-        console.log('- Port:', config.get('SMTP_PORT'));
-        console.log('- User:', config.get('SMTP_USER'));
-        console.log('- Has Password:', !!config.get('SMTP_PASS'));
-        console.log('- Secure:', config.get('SMTP_SECURE'));
-
-        return {
-          transport: {
-            host: config.get<string>('SMTP_HOST'),
-            port: Number(config.get<number>('SMTP_PORT')),
-            secure: config.get<boolean>('SMTP_SECURE', true), // ← Utilisez SMTP_SECURE
-            auth: {
-              user: config.get<string>('SMTP_USER'),
-              pass: config.get<string>('SMTP_PASS'),
-            },
-            // Options pour Gmail
-            tls: {
-              rejectUnauthorized: false, // Important pour éviter les erreurs de certificat
-            },
-          },
-          defaults: {
-            from: config.get<string>(
-              'EMAIL_FROM',
-              '"CodeCircle" <stephanemugisho24@gmail.com>',
-            ),
-          },
-        };
-      },
-    }),
-
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): JwtModuleOptions => {

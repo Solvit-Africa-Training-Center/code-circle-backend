@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { IsNotEmpty, IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -53,4 +53,13 @@ export class CreateCategoryDto {
   @IsString()
   @MaxLength(100)
   slug?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the category is active',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

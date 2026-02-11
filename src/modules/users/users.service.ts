@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterForTestDto } from './dto/register-for-test.dto';
@@ -76,6 +76,71 @@ export class UsersService {
       email: registerDto.email,
       phone: registerDto.phone,
       bio: registerDto.bio,
+      cv: cvUrl,
+      degree: degreeUrl,
+      password: '', // Will be set after test pass
+      globalStatus: GlobalStatus.PENDING,
+    });
+
+    await this.userRepo.save(user);
+
+    return user;
+  }
+
+  async registerForTestWithFiles({
+    fullName,
+    email,
+    phone,
+    bio,
+    cvFile,
+    degreeFile,
+  }: {
+    fullName: string;
+    email: string;
+    phone: string;
+    bio: string;
+    cvFile: Express.Multer.File;
+    degreeFile?: Express.Multer.File;
+  }): Promise<User> {
+    // Check if email already exists
+    const existingUser = await this.userRepo.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already in use');
+    }
+
+    // Validate phone format
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone)) {
+      throw new BadRequestException(
+        'Phone number must be in international format',
+      );
+    }
+
+    // Upload CV to Cloudinary (using codecircle folder as specified)
+    const cvUrl = await this.cloudinaryService.uploadMulterFile(
+      cvFile,
+      'codecircle/users/cv',
+      'raw',
+    );
+
+    // Upload degree to Cloudinary if provided (using codecircle folder as specified)
+    let degreeUrl: string | undefined;
+    if (degreeFile) {
+      degreeUrl = await this.cloudinaryService.uploadMulterFile(
+        degreeFile,
+        'codecircle/users/degrees',
+        'raw',
+      );
+    }
+
+    // Create user with PENDING status (will be activated after test pass)
+    const user = this.userRepo.create({
+      name: fullName,
+      email,
+      phone,
+      bio,
       cv: cvUrl,
       degree: degreeUrl,
       password: '', // Will be set after test pass

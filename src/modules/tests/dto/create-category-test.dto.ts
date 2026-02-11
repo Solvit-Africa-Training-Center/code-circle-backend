@@ -1,32 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsNotEmpty, IsUUID, IsNumber, Min, Max } from 'class-validator';
-
-export class CreateCategoryDto {
-  @ApiProperty({ example: 'AI', description: 'Category name (e.g. AI, Web)' })
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty({ example: 'ai', description: 'Slug for URLs (e.g. ai, web)' })
-  @IsString()
-  @IsNotEmpty()
-  slug: string;
-
-  @ApiProperty({ example: 'Artificial Intelligence', description: 'Description', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({ example: 'https://example.com/icon.png', description: 'Icon/image URL', required: false })
-  @IsOptional()
-  @IsString()
-  icon?: string;
-
-  @ApiProperty({ example: true, description: 'Is active', default: true })
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-}
+export { CreateCategoryDto } from '../../categories/dto/create-category.dto';
 
 export class CreateTestDto {
   @ApiProperty({ example: 'uuid-of-category', description: 'Category ID' })

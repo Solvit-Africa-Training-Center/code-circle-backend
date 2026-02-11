@@ -11,18 +11,25 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterForTestDto } from './dto/register-for-test.dto';
+import { RegisterForTestFormDto } from './dto/register-for-test-form.dto';
 
 import { ApproveCreatorDto } from './dto/approve-creator.dto';
 import { RejectCreatorDto } from './dto/reject-creator.dto';
@@ -42,11 +49,62 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('register-for-test')
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per file
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only PDF files are allowed'), false);
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ 
     summary: 'Register for test (pre-test registration)',
-    description: 'Register a user account before taking a test. Uploads CV and degree to Cloudinary. User will receive credentials after passing the test.'
+    description: 'Register a user account before taking a test. Upload CV and degree files from your local machine. Files will be uploaded to Cloudinary. User will receive credentials after passing the test.'
   })
-  @ApiBody({ type: RegisterForTestDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['fullName', 'email', 'phone', 'bio', 'cv'],
+      properties: {
+        fullName: {
+          type: 'string',
+          example: 'John Doe',
+          description: 'Full name of the user',
+        },
+        email: {
+          type: 'string',
+          format: 'email',
+          example: 'john.doe@example.com',
+          description: 'Email address',
+        },
+        phone: {
+          type: 'string',
+          example: '+1234567890',
+          description: 'Phone number in international format',
+        },
+        bio: {
+          type: 'string',
+          example: 'Experienced software developer with 5+ years in web development',
+          description: 'User bio',
+        },
+        cv: {
+          type: 'string',
+          format: 'binary',
+          description: 'CV file (PDF format, required)',
+        },
+        degree: {
+          type: 'string',
+          format: 'binary',
+          description: 'Degree certificate file (PDF format, optional)',
+        },
+      },
+    },
+  })
   @ApiResponse({ 
     status: 201, 
     description: 'User registered successfully. You can now take the test.',
@@ -64,9 +122,28 @@ export class UsersController {
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Invalid input or email already in use.' })
-  async registerForTest(@Body() registerDto: RegisterForTestDto) {
-    const user = await this.usersService.registerForTest(registerDto);
+  @ApiResponse({ status: 400, description: 'Invalid input, email already in use, or invalid file format.' })
+  async registerForTest(
+    @Body() body: { fullName: string; email: string; phone: string; bio: string },
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    // Extract files by field name
+    const cvFile = files?.find((f) => f.fieldname === 'cv');
+    const degreeFile = files?.find((f) => f.fieldname === 'degree');
+
+    if (!cvFile) {
+      throw new BadRequestException('CV file is required');
+    }
+    
+    const user = await this.usersService.registerForTestWithFiles({
+      fullName: body.fullName,
+      email: body.email,
+      phone: body.phone,
+      bio: body.bio,
+      cvFile,
+      degreeFile,
+    });
+
     return {
       message: 'Registration successful. You can now take the test.',
       data: {

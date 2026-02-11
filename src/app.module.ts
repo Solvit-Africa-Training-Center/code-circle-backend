@@ -8,19 +8,21 @@ import { UsersModule } from './modules/users/users.module';
 import { TestsModule } from './modules/tests/tests.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ClubsModule } from './modules/clubs/clubs.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
-    AuthModule,
-    UsersModule,
-    TestsModule,
-    CategoriesModule,
-    ClubsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
       envFilePath: '.env',
     }),
+    CommonModule,
+    AuthModule,
+    UsersModule,
+    TestsModule,
+    CategoriesModule,
+    ClubsModule,
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
