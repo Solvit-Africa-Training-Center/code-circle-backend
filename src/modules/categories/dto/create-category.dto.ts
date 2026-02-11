@@ -6,6 +6,14 @@ import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Optional category icon upload',
+  })
+  @IsOptional()
+  file?: unknown;
+
   @ApiProperty({
     example: 'Intelligence Artificielle',
     description: 'Category name',

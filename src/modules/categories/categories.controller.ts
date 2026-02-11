@@ -10,13 +10,24 @@ import {
   Query,
   ParseUUIDPipe,
   HttpCode,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PaginationParams } from '@circle-backend/common/decorators/api-properties';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Express } from 'express';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -25,6 +36,22 @@ export class CategoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new category (Admin only)' })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        icon: { type: 'string' },
+        slug: { type: 'string' },
+      },
+    },
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Category created successfully',
@@ -34,8 +61,26 @@ export class CategoriesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input data',
   })
-  async create(@Body() createCategoryDto: CreateCategoryDto) {
-    const category = await this.categoriesService.create(createCategoryDto);
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'icon', maxCount: 1 },
+    ]),
+  )
+  async create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFiles()
+    files: {
+      file?: Express.Multer.File[];
+      icon?: Express.Multer.File[];
+    },
+  ) {
+    const file = files?.file?.[0] || files?.icon?.[0];
+    const icon = file ? `/uploads/categories/${file.filename}` : undefined;
+    const category = await this.categoriesService.create(
+      createCategoryDto,
+      icon,
+    );
     return {
       message: 'Category created successfully',
       data: category,
@@ -125,6 +170,23 @@ export class CategoriesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category (Admin only)' })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        icon: { type: 'string' },
+        slug: { type: 'string' },
+        isActive: { type: 'boolean' },
+      },
+    },
+  })
   @ApiParam({
     name: 'id',
     description: 'Category UUID',
@@ -142,11 +204,28 @@ export class CategoriesController {
     status: HttpStatus.CONFLICT,
     description: 'Category with this name or slug already exists',
   })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'icon', maxCount: 1 },
+    ]),
+  )
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @UploadedFiles()
+    files: {
+      file?: Express.Multer.File[];
+      icon?: Express.Multer.File[];
+    },
   ) {
-    const category = await this.categoriesService.update(id, updateCategoryDto);
+    const file = files?.file?.[0] || files?.icon?.[0];
+    const icon = file ? `/uploads/categories/${file.filename}` : undefined;
+    const category = await this.categoriesService.update(
+      id,
+      updateCategoryDto,
+      icon,
+    );
     return {
       message: 'Category updated successfully',
       data: category,

@@ -6,6 +6,7 @@ import { AuthController } from './modules/auth/auth.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { TestsModule } from './modules/tests/tests.module';
+import { ClubModule } from './modules/club/club.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TestsModule } from './modules/tests/tests.module';
     AuthModule,
     CategoriesModule,
     TestsModule,
+    ClubModule,
   ],
   controllers: [AuthController],
 })

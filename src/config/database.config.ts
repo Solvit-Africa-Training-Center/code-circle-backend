@@ -10,7 +10,10 @@ export default registerAs(
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'codecircle_db',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    entities: [
+      __dirname + '/../**/*.entity{.ts,.js}',
+      __dirname + '/../**/entities/*{.ts,.js}',
+    ],
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     migrationsTableName: 'migrations',
     synchronize: process.env.DB_SYNCHRONIZE === 'true',

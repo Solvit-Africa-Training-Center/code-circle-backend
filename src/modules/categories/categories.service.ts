@@ -25,7 +25,10 @@ export class CategoriesService {
 
   // Create new categorie
 
-  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async create(
+    createCategoryDto: CreateCategoryDto,
+    iconUrl?: string,
+  ): Promise<Category> {
     try {
       const slug =
         createCategoryDto.slug || this.generateSlug(createCategoryDto.name);
@@ -51,6 +54,7 @@ export class CategoriesService {
       const category = this.categoryRepository.create({
         ...createCategoryDto,
         slug,
+        icon: iconUrl || createCategoryDto.icon,
       });
       const savedCategory = await this.categoryRepository.save(category);
       this.logger.log(
@@ -246,6 +250,7 @@ export class CategoriesService {
   async update(
     id: string,
     updateCategoryDto: UpdateCategoryDto,
+    iconUrl?: string,
   ): Promise<Category> {
     try {
       const category = await this.findOne(id);
@@ -269,6 +274,9 @@ export class CategoriesService {
       }
 
       Object.assign(category, updateCategoryDto);
+      if (iconUrl) {
+        category.icon = iconUrl;
+      }
 
       const updatedCategory = await this.categoryRepository.save(category);
 

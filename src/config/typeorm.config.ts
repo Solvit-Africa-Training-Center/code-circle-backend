@@ -1,4 +1,6 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
+import type { DataSourceOptions } from 'typeorm';
+import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 
@@ -13,8 +15,11 @@ export const dataSourceOptions: DataSourceOptions = {
   username: configService.get<string>('DB_USERNAME') || 'postgres',
   password: configService.get<string>('DB_PASSWORD') || '',
   database: configService.get<string>('DB_NAME') || 'codecircle_db',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
+  entities: [
+    join(__dirname, '..', '**', '*.entity{.ts,.js}'),
+    join(__dirname, '..', '**', 'entities', '*{.ts,.js}'),
+  ],
+  migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
   synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
   logging: configService.get<string>('NODE_ENV') === 'development',
   migrationsRun: false,
