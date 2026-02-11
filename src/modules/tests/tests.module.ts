@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+<<<<<<< HEAD
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryController, TestController } from './controllers/category.controller';
 import { TestService } from './services/test.service';
@@ -15,5 +16,19 @@ import { EmailService } from '../../common/services/email.service';
   ],
   controllers: [CategoryController, TestController],
   providers: [TestService, EmailService],
+=======
+import { TestsService } from './tests.service';
+import { TestsController } from './tests.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Test } from './entities/test.entity';
+import { TestQuestion } from './entities/test-question.entity';
+import { TestAttempt } from './entities/test-attempt.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Test, TestQuestion, TestAttempt])],
+  controllers: [TestsController],
+  providers: [TestsService],
+  exports: [TestsService],
+>>>>>>> origin/dev
 })
 export class TestsModule {}

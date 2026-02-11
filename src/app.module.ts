@@ -6,12 +6,16 @@ import { AuthController } from './modules/auth/auth.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TestsModule } from './modules/tests/tests.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { ClubsModule } from './modules/clubs/clubs.module';
 
 @Module({
   imports: [
     AuthModule,
     UsersModule,
     TestsModule,
+    CategoriesModule,
+    ClubsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
@@ -29,6 +33,10 @@ import { TestsModule } from './modules/tests/tests.module';
       },
       inject: [ConfigService],
     }),
+    AuthModule,
+    CategoriesModule,
+    TestsModule,
+    ClubsModule,
   ],
   controllers: [AuthController],
 })
