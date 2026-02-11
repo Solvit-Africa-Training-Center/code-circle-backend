@@ -3,8 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { Test } from './test.entity';
 
@@ -13,27 +13,28 @@ export class TestQuestion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Test, { nullable: false })
+  @ManyToOne(() => Test, (test) => test.questions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'testId' })
   test: Test;
+
+  @Column()
+  testId: string;
 
   @Column({ type: 'text' })
   question: string;
 
-  @Column({ type: 'json', nullable: true })
-  options?: any;
+  @Column({ type: 'jsonb' })
+  options: string[]; // ['Option A', 'Option B', 'Option C', 'Option D']
 
-  @Column({ type: 'text', nullable: true })
-  correctAnswer?: string;
+  @Column()
+  correctAnswer: string; // L'option correcte
 
-  @Column({ type: 'int', default: 1 })
-  points: number;
+  @Column({ type: 'int', default: 10 })
+  points: number; // Points attribués pour cette question
 
-  @Column({ type: 'int', default: 0 })
-  orderIndex: number;
+  @Column({ type: 'int' })
+  orderIndex: number; // Ordre d'affichage de la question
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 }

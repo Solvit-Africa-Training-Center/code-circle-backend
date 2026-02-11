@@ -57,12 +57,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message,
     };
 
-    // Ajouter stack seulement en dev
     if (process.env.NODE_ENV !== 'production' && exception instanceof Error) {
       errorResponse.stack = exception.stack;
     }
-
-    // Logging côté serveur
     if (status >= 500) {
       this.logger.error(
         `${request.method} ${request.url} ${status} - ${message}`,

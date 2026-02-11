@@ -31,9 +31,10 @@ export function setupSwagger(app: INestApplication): void {
       'JWT-auth',
     )
     .addTag('Auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
-    .addTag('Tests', 'Test management')
-    .addTag('Categories', 'Test categories')
+    .addTag('Users', 'User management')
+    .addTag('Categories', 'Clubs categories')
+    .addTag('Tests', 'Tests for joining the club')
+    .addTag('Clubs', 'Clubs operations')
     .addApiKey(
       {
         type: 'apiKey',

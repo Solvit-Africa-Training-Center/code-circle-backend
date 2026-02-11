@@ -4,14 +4,13 @@ import databaseConfig from './config/database.config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthController } from './modules/auth/auth.controller';
 import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { TestsModule } from './modules/tests/tests.module';
+import { ClubsModule } from './modules/clubs/clubs.module';
 
 @Module({
   imports: [
-    AuthModule,
-    UsersModule,
-    TestsModule,
+    // Configuration Module
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
@@ -29,6 +28,10 @@ import { TestsModule } from './modules/tests/tests.module';
       },
       inject: [ConfigService],
     }),
+    AuthModule,
+    CategoriesModule,
+    TestsModule,
+    ClubsModule,
   ],
   controllers: [AuthController],
 })

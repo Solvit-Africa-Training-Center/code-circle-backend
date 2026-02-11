@@ -3,47 +3,58 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { Test } from './test.entity';
+// import { User } from '../../users/entities/user.entity';
+// import { Club } from '../../clubs/entities/club.entity';
 
 @Entity('test_attempts')
 export class TestAttempt {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, { nullable: false })
-  user: User;
+  // @ManyToOne(() => User)
+  // @JoinColumn({ name: 'userId' })
+  // user: User;
 
-  @ManyToOne(() => Test, { nullable: false })
+  @Column()
+  userId: string;
+
+  @ManyToOne(() => Test, { eager: true })
+  @JoinColumn({ name: 'testId' })
   test: Test;
 
+  @Column()
+  testId: string;
+
+  // Optionnel - si c'est pour rejoindre un club spécifique
   @Column({ nullable: true })
-  clubId?: string;
+  clubId: string;
 
-  @Column({ type: 'int', default: 0 })
-  score: number;
+  // @ManyToOne(() => Club, { nullable: true })
+  // @JoinColumn({ name: 'clubId' })
+  // club: Club;
+
+  @Column({ type: 'jsonb' })
+  answers: Record<string, string>; // { "questionId": "selectedAnswer" }
+
+  @Column({ type: 'int' })
+  score: number; // Score obtenu (en pourcentage)
+
+  @Column()
+  passed: boolean; // Si le test a été réussi
 
   @Column({ default: false })
-  passed: boolean;
-
-  @Column({ default: false })
-  correctedByAI: boolean;
-
-  @Column({ type: 'json', nullable: true })
-  answers?: any;
+  correctedByAI: boolean; // Si corrigé par l'IA
 
   @Column({ type: 'text', nullable: true })
-  feedback?: string;
+  feedback: string; // Feedback de l'IA
 
-  @CreateDateColumn({ name: 'attempted_at' })
+  @CreateDateColumn()
   attemptedAt: Date;
 
-  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
-  completedAt?: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date;
 }
