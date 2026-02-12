@@ -36,7 +36,7 @@ export class RegisterDto {
   password: string;
 
   @ApiProperty({
-    example: 'John',
+    example: 'user first name',
     description: 'User first name',
     required: false,
   })
@@ -46,7 +46,7 @@ export class RegisterDto {
   firstName?: string;
 
   @ApiProperty({
-    example: 'Doe',
+    example: 'user last name',
     description: 'User last name',
     required: false,
   })
@@ -54,4 +54,13 @@ export class RegisterDto {
   @IsString()
   @MaxLength(50)
   lastName?: string;
+
+  @ApiProperty({
+    example: 'Admin',
+    description: 'User role (Admin, MEMBER, etc). Only use for special cases.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  role?: string;
 }

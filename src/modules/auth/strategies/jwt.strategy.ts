@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { User } from '@circle-backend/modules/users/entities/user.entity';
+import { User, GlobalStatus } from '@circle-backend/modules/users/entities/user.entity';
 import { scopeInterface } from '../enums/scope.enum';
 
 export interface JwtPayload {
@@ -42,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<CurrentUserPayload> {
     const user = await this.userRepo.findOne({
-      where: { id: payload.sub, isActive: true },
+      where: { id: payload.sub, globalStatus: GlobalStatus.ACTIVE },
       relations: [
         'userRoles',
         'userRoles.role',
@@ -53,7 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ],
     });
 
-    if (!user || !user.isActive) {
+    if (!user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 

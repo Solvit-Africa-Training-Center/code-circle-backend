@@ -5,22 +5,14 @@ import { AppModule } from '@circle-backend/app.module';
 import { Repository } from 'typeorm';
 import { User } from '@circle-backend/modules/users/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { TwoFactorService } from '@circle-backend/modules/auth/services/two-factor.service';
 import { EmailService } from '@circle-backend/modules/auth/services/email.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
   let userRepo: Repository<User>;
-  let twoFactorService: Partial<TwoFactorService>;
   let emailService: Partial<EmailService>;
 
   beforeAll(async () => {
-    twoFactorService = {
-      validateToken: jest.fn().mockResolvedValue(true),
-      enable: jest.fn().mockResolvedValue({ message: '2FA enabled successfully' }),
-      disable: jest.fn().mockResolvedValue({ message: '2FA disabled successfully' }),
-    };
-
     emailService = {
       generateEmailVerificationToken: jest.fn().mockResolvedValue('test-verification-token'),
       sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
@@ -36,8 +28,6 @@ describe('AuthController (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-    .overrideProvider(TwoFactorService)
-    .useValue(twoFactorService)
     .overrideProvider(EmailService)
     .useValue(emailService)
     .compile();
@@ -81,29 +71,6 @@ describe('AuthController (e2e)', () => {
 
       expect(res.body.accessToken).toBeDefined();
       expect(res.body.refreshToken).toBeDefined();
-    });
-  });
-
-  describe('Two Factor Auth', () => {
-    it('/auth/2fa/enable (POST)', async () => {
-      const user = userRepo.create({ id: 'user-2fa', email: '2fa@example.com' } as any);
-      await userRepo.save(user);
-
-      const res = await request(app.getHttpServer())
-        .post('/auth/2fa/enable')
-        .send({ code: '123456' })
-        .expect(201);
-
-      expect(res.body.message).toBe('2FA enabled successfully');
-    });
-
-    it('/auth/2fa/disable (POST)', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/auth/2fa/disable')
-        .send({ code: '123456' })
-        .expect(201);
-
-      expect(res.body.message).toBe('2FA disabled successfully');
     });
   });
 

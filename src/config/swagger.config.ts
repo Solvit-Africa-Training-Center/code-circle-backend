@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -6,15 +5,14 @@ import { ConfigService } from '@nestjs/config';
 export function setupSwagger(app: INestApplication): void {
   const configService = app.get(ConfigService);
 
-  const isProduction = configService.get('NODE_ENV') === 'production';
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
-  const appName = configService.get('APP_NAME') || 'CodeCircle API';
+  const appName = configService.get<string>('APP_NAME') || 'CodeCircle API';
 
   const appDescription =
-    configService.get('SWAGGER_DESCRIPTION') || 'API Documentation';
+    configService.get<string>('SWAGGER_DESCRIPTION') || 'API Documentation';
 
-  const apiVersion = configService.get('SWAGGER_VERSION') || '1.0';
-  //const apiPrefix = configService.get('API_PREFIX') || 'api';
+  const apiVersion = configService.get<string>('SWAGGER_VERSION') || '1.0';
 
   const options = new DocumentBuilder()
     .setTitle(appName)
@@ -30,9 +28,8 @@ export function setupSwagger(app: INestApplication): void {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
+      'JWT-auth',
     )
-    .addTag('health', 'Health checks')
     .addTag('Auth', 'Authentication endpoints')
     .addTag('Users', 'User management')
     .addTag('Categories', 'Clubs categories')
@@ -74,8 +71,8 @@ export function setupSwagger(app: INestApplication): void {
       tagsSorter: 'alpha',
       tryItOutEnabled: true,
       displayRequestDuration: true,
-      defaultModelsExpandDepth: 3,
-      defaultModelExpandDepth: 3,
+      defaultModelsExpandDepth: -1,
+      defaultModelExpandDepth: -1,
       syntaxHighlight: {
         theme: 'monokai',
       },

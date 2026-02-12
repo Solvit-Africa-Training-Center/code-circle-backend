@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolvePackageJsonExports": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "isolatedModules": false
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true,
+    "skipIgnore": false,
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true
+    },
+    "ignore": ["**/*.js"]
+  },
+  "include": ["src/**/*.ts", "src/scripts/**/*"],
+  "exclude": ["**/*.js"]
+}
+

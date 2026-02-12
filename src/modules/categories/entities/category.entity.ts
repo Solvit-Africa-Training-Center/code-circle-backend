@@ -14,10 +14,10 @@ export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 100 })
+  @Column({ unique: true, length: 100, nullable: false })
   name: string;
 
-  @Column({ unique: true, length: 100 })
+  @Column({ unique: true, length: 100, nullable: false })
   slug: string;
 
   @Column({ type: 'text', nullable: true })
@@ -29,10 +29,10 @@ export class Category {
   @Column({ default: true })
   isActive: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   // Relations (à décommenter plus tard)

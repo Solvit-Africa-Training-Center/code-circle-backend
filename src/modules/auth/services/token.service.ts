@@ -1,12 +1,11 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RefreshToken } from '../entities/refresh-token.entity';
+import { AuthToken, AuthTokenType } from '../entities/auth-token.entity';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { LessThan, Repository } from 'typeorm';
 import { User } from '@circle-backend/modules/users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { RevokedToken } from '../entities/revoke-token';
 
 type JwtExpiry = string | number;
 @Injectable()
@@ -14,8 +13,7 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
   private readonly accessTokenExpiry: JwtExpiry;
   private readonly refreshTokenExpiry: number;
-  @InjectRepository(RevokedToken)
-  private readonly revokedTokenRepo: Repository<RevokedToken>;
+  
   protected hashToken(token: string): string {
     return crypto.createHash('sha256').update(token).digest('hex');
   }
@@ -24,8 +22,8 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
 
-    @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepo: Repository<RefreshToken>,
+    @InjectRepository(AuthToken)
+    private readonly authTokenRepo: Repository<AuthToken>,
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -60,8 +58,12 @@ export class TokenService {
     },
   ): Promise<{ accessToken: string; refreshToken: string }> {
     if (options?.singleDevice) {
-      await this.refreshTokenRepo.update(
-        { user: { id: user.id }, isRevoked: false },
+      await this.authTokenRepo.update(
+        { 
+          user: { id: user.id }, 
+          type: AuthTokenType.REFRESH,
+          isRevoked: false 
+        },
         { isRevoked: true, revokedAt: new Date() },
       );
 
@@ -75,8 +77,9 @@ export class TokenService {
     const rawRefreshToken = crypto.randomBytes(64).toString('hex');
     const tokenHash = this.hashToken(rawRefreshToken);
 
-    const refreshToken = this.refreshTokenRepo.create({
+    const refreshToken = this.authTokenRepo.create({
       user,
+      type: AuthTokenType.REFRESH,
       tokenHash,
       expiresAt: new Date(Date.now() + this.refreshTokenExpiry),
       isRevoked: false,
@@ -84,9 +87,9 @@ export class TokenService {
       ipAddress: options?.ipAddress,
     });
 
-    await this.refreshTokenRepo.save(refreshToken);
+    await this.authTokenRepo.save(refreshToken);
 
-    user.lastLoginAt = new Date();
+    // user.lastLoginAt = new Date(); // Field does not exist, remove or implement if needed
     await this.userRepo.save(user);
 
     this.logger.log(`Issued new token pair for user ${user.id}`);
@@ -99,8 +102,11 @@ export class TokenService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const tokenHash = this.hashToken(rawToken);
 
-    const stored = await this.refreshTokenRepo.findOne({
-      where: { tokenHash },
+    const stored = await this.authTokenRepo.findOne({
+      where: { 
+        tokenHash,
+        type: AuthTokenType.REFRESH,
+      },
       relations: ['user', 'user.userRoles', 'user.userRoles.role'],
     });
 
@@ -108,9 +114,13 @@ export class TokenService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    if (!stored.user) {
+      throw new UnauthorizedException('Refresh token is not associated with a user');
+    }
+
     if (stored.isRevoked) {
       this.logger.warn(
-        `Attempt to use revoked refresh token for user ${stored.user?.id}`,
+        `Attempt to use revoked refresh token for user ${stored.user.id}`,
       );
       throw new UnauthorizedException('Refresh token has been revoked');
     }
@@ -118,17 +128,17 @@ export class TokenService {
     if (stored.expiresAt < new Date()) {
       stored.isRevoked = true;
       stored.revokedAt = new Date();
-      await this.refreshTokenRepo.save(stored);
+      await this.authTokenRepo.save(stored);
 
       this.logger.warn(
-        `Attempt to use expired refresh token for user ${stored.user?.id}`,
+        `Attempt to use expired refresh token for user ${stored.user.id}`,
       );
       throw new UnauthorizedException('Refresh token has expired');
     }
 
     stored.isRevoked = true;
     stored.revokedAt = new Date();
-    await this.refreshTokenRepo.save(stored);
+    await this.authTokenRepo.save(stored);
 
     const tokens = await this.issueRefreshToken(stored.user, {
       deviceInfo: stored.deviceInfo,
@@ -143,8 +153,12 @@ export class TokenService {
   async verifyRefreshToken(rawToken: string): Promise<User> {
     const tokenHash = this.hashToken(rawToken);
 
-    const storedToken = await this.refreshTokenRepo.findOne({
-      where: { tokenHash, isRevoked: false },
+    const storedToken = await this.authTokenRepo.findOne({
+      where: { 
+        tokenHash, 
+        type: AuthTokenType.REFRESH,
+        isRevoked: false 
+      },
       relations: ['user', 'user.userRoles', 'user.userRoles.role'],
     });
 
@@ -152,10 +166,14 @@ export class TokenService {
       throw new UnauthorizedException('Invalid or revoked refresh token');
     }
 
+    if (!storedToken.user) {
+      throw new UnauthorizedException('Refresh token is not associated with a user');
+    }
+
     if (storedToken.expiresAt < new Date()) {
       storedToken.isRevoked = true;
       storedToken.revokedAt = new Date();
-      await this.refreshTokenRepo.save(storedToken);
+      await this.authTokenRepo.save(storedToken);
 
       throw new UnauthorizedException('Refresh token has expired');
     }
@@ -164,8 +182,12 @@ export class TokenService {
   }
 
   async revokeAllForUser(userId: string): Promise<void> {
-    const result = await this.refreshTokenRepo.update(
-      { user: { id: userId }, isRevoked: false },
+    const result = await this.authTokenRepo.update(
+      { 
+        user: { id: userId }, 
+        type: AuthTokenType.REFRESH,
+        isRevoked: false 
+      },
       { isRevoked: true, revokedAt: new Date() },
     );
 
@@ -177,8 +199,12 @@ export class TokenService {
   async revokeToken(rawToken: string): Promise<void> {
     const tokenHash = this.hashToken(rawToken);
 
-    const result = await this.refreshTokenRepo.update(
-      { tokenHash, isRevoked: false },
+    const result = await this.authTokenRepo.update(
+      { 
+        tokenHash, 
+        type: AuthTokenType.REFRESH,
+        isRevoked: false 
+      },
       { isRevoked: true, revokedAt: new Date() },
     );
 
@@ -190,21 +216,22 @@ export class TokenService {
   }
 
   async cleanupExpiredTokens(): Promise<number> {
-    const result = await this.refreshTokenRepo.delete({
+    const result = await this.authTokenRepo.delete({
       expiresAt: LessThan(new Date()),
     });
 
     const count = result.affected || 0;
 
-    this.logger.log(`Cleaned up ${count} expired refresh tokens`);
+    this.logger.log(`Cleaned up ${count} expired tokens`);
 
     return count;
   }
 
-  async getActiveTokens(userId: string): Promise<RefreshToken[]> {
-    return this.refreshTokenRepo.find({
+  async getActiveTokens(userId: string): Promise<AuthToken[]> {
+    return this.authTokenRepo.find({
       where: {
         user: { id: userId },
+        type: AuthTokenType.REFRESH,
         isRevoked: false,
       },
       order: { createdAt: 'DESC' },
@@ -213,14 +240,40 @@ export class TokenService {
   }
 
   async isBlacklisted(token: string): Promise<boolean> {
-    const entry = await this.revokedTokenRepo.findOne({ where: { token } });
+    // Check if JWT token is in revoked_tokens (stored as REVOKED type)
+    const tokenHash = this.hashToken(token);
+    const entry = await this.authTokenRepo.findOne({ 
+      where: { 
+        tokenHash,
+        type: AuthTokenType.REVOKED 
+      } 
+    });
     return !!entry;
   }
 
   async blacklistAccessToken(token: string) {
     const decoded = this.jwtService.decode(token) as any;
+    if (!decoded?.sub) {
+      this.logger.warn('Cannot blacklist token: no user ID in token');
+      return;
+    }
+    
     const expiresAt = new Date(decoded.exp * 1000);
-    const entry = this.revokedTokenRepo.create({ token, expiresAt });
-    await this.revokedTokenRepo.save(entry);
+    const tokenHash = this.hashToken(token);
+    
+    // Get user from JWT (optional - can be null for revoked tokens)
+    const user = await this.userRepo.findOne({ where: { id: decoded.sub } });
+    
+    // Store as REVOKED type in auth_tokens table
+    const entry = this.authTokenRepo.create({
+      type: AuthTokenType.REVOKED,
+      tokenHash,
+      expiresAt,
+      isRevoked: true,
+      revokedAt: new Date(),
+      user: user || null,
+    });
+    
+    await this.authTokenRepo.save(entry);
   }
 }

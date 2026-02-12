@@ -182,7 +182,7 @@ Login with email and password.
     "user": {
       "id": "123e4567-e89b-12d3-a456-426614174000",
       "email": "user@codecircle.com",
-      "username": "johndoe",
+      "username": "kabano",
       "role": "USER"
     }
   },
@@ -196,8 +196,8 @@ Register a new user account.
 **Request Body**:
 ```json
 {
-  "firstName": "John",
-  "lastName": "Doe",
+  "firstName": "user first name",
+  "lastName": "user last name",
   "email": "user@example.com",
   "password": "password123"
 }
@@ -215,8 +215,8 @@ Get user by ID (requires authentication).
 ```json
 {
   "id": "uuid",
-  "firstName": "John",
-  "lastName": "Doe",
+  "firstName": "darrick",
+  "lastName": "ray",
   "email": "user@example.com",
   "role": "USER",
   "createdAt": "2023-01-01T00:00:00.000Z",

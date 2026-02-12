@@ -6,7 +6,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AuthProvider } from '../enums/auth-provider';
@@ -16,7 +15,10 @@ export class OAuthAccount {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.oauthAccounts, { onDelete: 'CASCADE', eager: true })
+  @ManyToOne(() => User, (user) => user.oauthAccounts, {
+    onDelete: 'CASCADE',
+    eager: true,
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

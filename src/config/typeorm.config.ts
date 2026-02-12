@@ -1,25 +1,23 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import path from 'path';
 import { config } from 'dotenv';
-
 config();
 
-const configService = new ConfigService();
+import { DataSource } from 'typeorm';
 
-export const dataSourceOptions: DataSourceOptions = {
+const dataSource = new DataSource({
   type: 'postgres',
-  host: configService.get<string>('DB_HOST') || 'localhost',
-  port: configService.get<number>('DB_PORT') || 5432,
-  username: configService.get<string>('DB_USERNAME') || 'postgres',
-  password: configService.get<string>('DB_PASSWORD') || '',
-  database: configService.get<string>('DB_NAME') || 'codecircle_db',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
-  synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
-  logging: configService.get<string>('NODE_ENV') === 'development',
-  migrationsRun: false,
-};
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 5432,
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'codecircle_db',
+  entities: [path.join(__dirname, '/../**/*.entity.{ts,js}')],
+  migrations: [path.join(__dirname, '/../database/migrations/*.{ts,js}')],
+  synchronize: false,
+  logging: process.env.NODE_ENV === 'development',
+});
 
-// Instance DataSource pour les migrations CLI
-const dataSource = new DataSource(dataSourceOptions);
 export default dataSource;
+module.exports = dataSource;
+module.exports = dataSource;
+(module.exports as { default: typeof dataSource }).default = dataSource;

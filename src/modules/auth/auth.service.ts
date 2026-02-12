@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { LocalAuthService } from './services/local-auth.service';
 import { OAuthAuthService } from './services/oauth-auth.service';
-import { TwoFactorService } from './services/two-factor.service';
 import { EmailService } from './services/email.service';
 import { TokenService } from './services/token.service';
 import { AuthProvider } from './enums/auth-provider';
@@ -19,18 +18,16 @@ export class AuthService {
   constructor(
     private readonly localAuth: LocalAuthService,
     private readonly oauthAuth: OAuthAuthService,
-    private readonly twoFactor: TwoFactorService,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
   ) {}
-
-  // auth.service.ts - Nouvelle version
 
   async register(
     email: string,
     password: string,
     firstName?: string,
     lastName?: string,
+    role?: string,
   ): Promise<{
     userId: string;
     verificationToken: string;
@@ -42,6 +39,7 @@ export class AuthService {
         password,
         firstName,
         lastName,
+        role,
       );
       const token =
         await this.emailService.generateEmailVerificationToken(user);
@@ -62,30 +60,21 @@ export class AuthService {
       };
     } catch (err) {
       this.logger.error(`Registration failed for email ${email}`, err);
-      throw new BadRequestException('User registration failed');
+      throw err instanceof HttpException
+        ? err
+        : new BadRequestException('User registration failed');
     }
   }
 
   async login(
     email: string,
     password: string,
-    twoFactorCode?: string,
   ): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
     try {
       const user = await this.localAuth.validateUser(email, password);
-
-      const has2FA = user.twoFactorSecrets?.some((t) => t.enabled);
-      if (has2FA) {
-        if (!twoFactorCode) throw new BadRequestException('2FA code required');
-        const isValid2FA = await this.twoFactor.validateToken(
-          user,
-          twoFactorCode,
-        );
-        if (!isValid2FA) throw new BadRequestException('Invalid 2FA code');
-      }
 
       const accessToken = this.tokenService.issueAccessToken(user);
       const { refreshToken } = await this.tokenService.issueRefreshToken(user, {
@@ -117,7 +106,7 @@ export class AuthService {
         email: user.email,
       };
     } catch (err) {
-      this.logger.error(`Email verification failed`, err);
+      this.logger.error('Email verification failed', err);
       throw new BadRequestException('Email verification failed');
     }
   }
@@ -146,7 +135,7 @@ export class AuthService {
         refreshToken,
       };
     } catch (err) {
-      this.logger.error(`OAuth login failed`, err);
+      this.logger.error('OAuth login failed', err);
       throw new BadRequestException('OAuth login failed');
     }
   }
@@ -163,35 +152,18 @@ export class AuthService {
         refreshToken,
       };
     } catch (err) {
-      this.logger.error(`Token refresh failed`, err);
+      this.logger.error('Token refresh failed', err);
       throw new BadRequestException('Token refresh failed');
     }
   }
 
-  async setup2FA(user: User): Promise<{
-    secret: string;
-    qrCodeDataUrl: string;
-  }> {
-    try {
-      const { secret, qrCodeDataUrl } = await this.twoFactor.setup(user);
-      return {
-        secret,
-        qrCodeDataUrl,
-      };
-    } catch (err) {
-      this.logger.error(`2FA setup failed for user ${user.id}`, err);
-      throw new BadRequestException('2FA setup failed');
-    }
-  }
 
-  // Méthodes qui retournent juste un message (l'interceptor gérera le format)
   async resendVerificationEmail(email: string): Promise<void> {
     try {
       const user = await this.localAuth.getUserByEmail(email);
-      if (!user) throw new BadRequestException('User not found');
-      if (user.emailVerified)
-        throw new BadRequestException('Email already verified');
-
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
       const token =
         await this.emailService.generateEmailVerificationToken(user);
       await this.emailService.sendVerificationEmail(user, token);
@@ -209,6 +181,12 @@ export class AuthService {
       if (user) {
         await this.emailService.sendPasswordResetEmail(email);
         this.logger.log(`Password reset requested for user ${user.id}`);
+      } else {
+        // Add delay to prevent timing attacks that reveal if email exists
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        this.logger.warn(
+          `Password reset requested for non-existent email: ${email}`,
+        );
       }
     } catch (err) {
       this.logger.error(
@@ -225,8 +203,9 @@ export class AuthService {
       await this.localAuth.updatePassword(user, newPassword);
       await this.emailService.markPasswordResetTokenUsed(token);
       await this.tokenService.revokeAllForUser(user.id);
+      this.logger.log(`Password reset successful for user ${user.id}`);
     } catch (err) {
-      this.logger.error(`Password reset failed`, err);
+      this.logger.error('Password reset failed', err);
       throw new BadRequestException('Password reset failed');
     }
   }
@@ -241,14 +220,18 @@ export class AuthService {
       this.logger.log(`Password changed for user ${user.id}`);
     } catch (err) {
       this.logger.error(`Change password failed for user ${user.id}`, err);
-      throw new BadRequestException('Change password failed');
+      throw err instanceof HttpException
+        ? err
+        : new BadRequestException('Change password failed');
     }
   }
 
   async logout(userId: string, token?: string): Promise<void> {
     try {
       await this.tokenService.revokeAllForUser(userId);
-      if (token) await this.tokenService.blacklistAccessToken(token);
+      if (token) {
+        await this.tokenService.blacklistAccessToken(token);
+      }
       this.logger.log(`User logged out: ${userId}`);
     } catch (err) {
       this.logger.error(`Logout failed for user ${userId}`, err);
@@ -256,34 +239,6 @@ export class AuthService {
     }
   }
 
-  async enableTwoFactor(
-    user: User,
-    code: string,
-  ): Promise<{ backupCodes: string[] }> {
-    try {
-      const result = await this.twoFactor.enable(user, code);
-      this.logger.log(`2FA enabled for user ${user.id}`);
-      if (!result.backupCodes) {
-        throw new Error('Backup codes not generated');
-      }
-      return {
-        backupCodes: result.backupCodes,
-      };
-    } catch (err) {
-      this.logger.error(`Enable 2FA failed for user ${user.id}`, err);
-      throw new BadRequestException('Enable 2FA failed');
-    }
-  }
-
-  async disableTwoFactor(user: User, code: string): Promise<void> {
-    try {
-      await this.twoFactor.disable(user, code);
-      this.logger.log(`2FA disabled for user ${user.id}`);
-    } catch (err) {
-      this.logger.error(`Disable 2FA failed for user ${user.id}`, err);
-      throw new BadRequestException('Disable 2FA failed');
-    }
-  }
 
   async validateOAuthLogin(payload: {
     provider: AuthProvider;
@@ -303,7 +258,6 @@ export class AuthService {
     }
   }
 
-  // Pour link/unlink OAuth
   async linkOAuth(
     user: User,
     oauthData: { provider: AuthProvider; providerId: string; email?: string },

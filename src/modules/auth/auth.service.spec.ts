@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { LocalAuthService } from './services/local-auth.service';
 import { OAuthAuthService } from './services/oauth-auth.service';
-import { TwoFactorService } from './services/two-factor.service';
 import { TokenService } from './services/token.service';
 import { EmailService } from './services/email.service';
 import { User } from '../users/entities/user.entity';
@@ -21,7 +20,6 @@ describe('AuthService', () => {
     isActive: true,
     emailVerified: true,
     passwordHash: 'hashedpassword',
-    twoFactorSecrets: [],
     userRoles: [],
     lastLoginAt: null,
   } as any;
@@ -43,15 +41,6 @@ describe('AuthService', () => {
     unlinkAccount: jest.fn().mockResolvedValue({ success: true }),
   };
 
-  const mockTwoFactorService = {
-    enable: jest
-      .fn()
-      .mockResolvedValue({ message: '2FA enabled successfully' }),
-    disable: jest
-      .fn()
-      .mockResolvedValue({ message: '2FA disabled successfully' }),
-    validateToken: jest.fn().mockResolvedValue(true),
-  };
 
   const mockTokenService = {
     issueAccessToken: jest.fn().mockReturnValue('access123'),
@@ -81,7 +70,6 @@ describe('AuthService', () => {
         AuthService,
         { provide: LocalAuthService, useValue: mockLocalAuthService },
         { provide: OAuthAuthService, useValue: mockOAuthAuthService },
-        { provide: TwoFactorService, useValue: mockTwoFactorService },
         { provide: TokenService, useValue: mockTokenService },
         { provide: EmailService, useValue: mockEmailService },
       ],
@@ -115,9 +103,7 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('should login a user without 2FA', async () => {
-      mockUser.twoFactorSecrets = [];
-
+    it('should login a user', async () => {
       const result = await service.login('test@example.com', 'pass123');
       expect(result).toEqual({
         accessToken: 'access123',
@@ -127,52 +113,6 @@ describe('AuthService', () => {
         'test@example.com',
         'pass123',
       );
-      expect(mockTwoFactorService.validateToken).not.toHaveBeenCalled();
-    });
-
-    it('should login a user with 2FA', async () => {
-      mockUser.twoFactorSecrets = [
-        {
-          id: 'secret-1',
-          userId: mockUser.id,
-          secret: 'JBSWY3DPEHPK3PXP',
-          enabled: true,
-          backupCodes: [],
-          user: mockUser,
-        } as any,
-      ];
-
-      const result = await service.login(
-        'test@example.com',
-        'pass123',
-        '123456',
-      );
-      expect(result).toEqual({
-        accessToken: 'access123',
-        refreshToken: 'refresh123',
-      });
-      expect(mockTwoFactorService.validateToken).toHaveBeenCalledWith(
-        mockUser,
-        '123456',
-      );
-    });
-
-    it('should throw BadRequestException if 2FA code invalid', async () => {
-      mockTwoFactorService.validateToken.mockResolvedValueOnce(false);
-      mockUser.twoFactorSecrets = [
-        {
-          id: 'secret-1',
-          userId: mockUser.id,
-          secret: 'ABC123',
-          enabled: true,
-          backupCodes: [],
-          user: mockUser,
-        } as any,
-      ];
-
-      await expect(
-        service.login('test@example.com', 'pass123', 'wrongcode'),
-      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -220,27 +160,6 @@ describe('AuthService', () => {
     });
   });
 
-  describe('enableTwoFactor', () => {
-    it('should enable 2FA', async () => {
-      const result = await service.enableTwoFactor(mockUser, '123456');
-      expect(result).toEqual({ message: '2FA enabled successfully' });
-      expect(mockTwoFactorService.enable).toHaveBeenCalledWith(
-        mockUser,
-        '123456',
-      );
-    });
-  });
-
-  describe('disableTwoFactor', () => {
-    it('should disable 2FA', async () => {
-      const result = await service.disableTwoFactor(mockUser, '123456');
-      expect(result).toEqual({ message: '2FA disabled successfully' });
-      expect(mockTwoFactorService.disable).toHaveBeenCalledWith(
-        mockUser,
-        '123456',
-      );
-    });
-  });
 
   describe('requestPasswordReset', () => {
     it('should request password reset', async () => {
