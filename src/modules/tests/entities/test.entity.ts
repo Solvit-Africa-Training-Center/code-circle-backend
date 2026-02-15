@@ -9,7 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
-// import { User } from '../../users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { Club } from '../../clubs/entities/club.entity';
 import { TestQuestion } from './test-question.entity';
 import { TestAttempt } from './test-attempt.entity';
@@ -52,9 +52,9 @@ export class Test {
   @Column({ nullable: true })
   createdBy: string;
 
-  // @ManyToOne(() => User, { nullable: true })
-  // @JoinColumn({ name: 'createdBy' })
-  // creator: User;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdBy' })
+  creator: User;
 
   @Column({ default: true })
   isActive: boolean;

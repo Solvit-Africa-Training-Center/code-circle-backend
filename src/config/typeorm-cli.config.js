@@ -9,7 +9,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'codecircle_db',
-  entities: [path.join(__dirname, '/../**/*.entity.{ts,js}'), path.join(__dirname, '/../**/two-factor-secret.{ts,js}')],
+  entities: [path.join(__dirname, '/../**/*.entity.{ts,js}')],
   migrations: [path.join(__dirname, '/../database/migrations/*.{ts,js}')],
   synchronize: false, 
   logging: process.env.NODE_ENV === 'development',

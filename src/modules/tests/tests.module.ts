@@ -1,34 +1,37 @@
 import { Module } from '@nestjs/common';
-<<<<<<< HEAD
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CategoryController, TestController } from './controllers/category.controller';
+
+import { CategoryController } from './controllers/category.controller';
+import { TestsController } from './tests.controller';
+
 import { TestService } from './services/test.service';
-import { Category } from './entities/category.entity';
+import { TestsService } from './tests.service';
+
+import { Category } from '../categories/entities/category.entity';
 import { Test } from './entities/test.entity';
 import { TestQuestion } from './entities/test-question.entity';
 import { TestAttempt } from './entities/test-attempt.entity';
 import { User } from '../users/entities/user.entity';
-import { EmailService } from '../../common/services/email.service';
+import { UserRole } from '../auth/entities/user-role.entity';
+import { Role } from '../auth/entities/role.entity';
+
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Category, Test, TestQuestion, TestAttempt, User]),
+    TypeOrmModule.forFeature([
+      Category,
+      Test,
+      TestQuestion,
+      TestAttempt,
+      User,
+      UserRole,
+      Role,
+    ]),
+    AuthModule,
   ],
-  controllers: [CategoryController, TestController],
-  providers: [TestService, EmailService],
-=======
-import { TestsService } from './tests.service';
-import { TestsController } from './tests.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Test } from './entities/test.entity';
-import { TestQuestion } from './entities/test-question.entity';
-import { TestAttempt } from './entities/test-attempt.entity';
-
-@Module({
-  imports: [TypeOrmModule.forFeature([Test, TestQuestion, TestAttempt])],
-  controllers: [TestsController],
-  providers: [TestsService],
+  controllers: [CategoryController, TestsController],
+  providers: [TestService, TestsService],
   exports: [TestsService],
->>>>>>> 6640aae71400cad143c77b2f07e7becea766fdba
 })
 export class TestsModule {}

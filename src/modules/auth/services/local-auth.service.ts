@@ -13,7 +13,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
 import { TokenService } from './token.service';
-import { TwoFactorService } from './two-factor.service';
 import { EmailService } from './email.service';
 
 @Injectable()
@@ -31,7 +30,6 @@ export class LocalAuthService {
     private readonly userRoleRepo: Repository<UserRole>,
 
     private readonly tokenService: TokenService,
-    private readonly twoFactorService: TwoFactorService,
     private readonly emailService: EmailService,
   ) {}
 
@@ -84,7 +82,6 @@ export class LocalAuthService {
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { email },
-      relations: ['twoFactorSecrets'],
     });
 
     if (!user) {
@@ -111,11 +108,10 @@ export class LocalAuthService {
   async login(
     email: string,
     password: string,
-    twoFactorCode?: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.userRepo.findOne({
       where: { email },
-      relations: ['userRoles', 'userRoles.role', 'twoFactorSecrets'],
+      relations: ['userRoles', 'userRoles.role'],
     });
 
     if (!user) {
@@ -134,22 +130,6 @@ export class LocalAuthService {
     if (!isPasswordValid) {
       this.logger.warn(`Failed login attempt for user: ${email}`);
       throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const has2FA = user.twoFactorSecrets?.some((t) => t.enabled);
-    if (has2FA) {
-      if (!twoFactorCode) {
-        throw new UnauthorizedException('2FA code required');
-      }
-
-      const is2FAValid = await this.twoFactorService.validateToken(
-        user,
-        twoFactorCode,
-      );
-      if (!is2FAValid) {
-        this.logger.warn(`Invalid 2FA code for user: ${email}`);
-        throw new UnauthorizedException('Invalid 2FA code');
-      }
     }
 
     this.logger.log(`Successful login for user: ${user.id} (${email})`);

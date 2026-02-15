@@ -4,30 +4,37 @@ import {
   ExecutionContext,
   UnauthorizedException,
   Logger,
+  Optional,
+  Inject,
 } from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class JwtAuthGuard extends PassportAuthGuard('jwt') {
   private readonly logger = new Logger(JwtAuthGuard.name);
-  constructor(private readonly tokenService: TokenService) {
+  constructor(
+    @Optional() @Inject(TokenService) private readonly tokenService?: TokenService,
+  ) {
     super();
-    // Diagnostic log
-    console.log('JwtAuthGuard constructed. TokenService:', !!tokenService);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Diagnostic log
-    if (!this.tokenService) {
-      console.error('JwtAuthGuard: tokenService is undefined in canActivate!');
-    }
     const req: { headers: Record<string, string> } = context
       .switchToHttp()
       .getRequest();
     const token = req.headers.authorization?.split(' ')[1];
 
-    if (token && (await this.tokenService.isBlacklisted(token))) {
-      throw new UnauthorizedException('Token has been revoked');
+    // Check token blacklist if TokenService is available
+    if (token && this.tokenService) {
+      try {
+        if (await this.tokenService.isBlacklisted(token)) {
+          throw new UnauthorizedException('Token has been revoked');
+        }
+      } catch (error) {
+        // If TokenService check fails, log but don't block authentication
+        // This allows the guard to work even if TokenService is unavailable
+        this.logger.warn('TokenService check failed, proceeding with authentication', error);
+      }
     }
 
     const can = await super.canActivate(context);

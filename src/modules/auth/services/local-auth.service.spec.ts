@@ -4,19 +4,9 @@ import { LocalAuthService } from './local-auth.service';
 import { OAuthAuthService } from './oauth-auth.service';
 import { EmailService } from './email.service';
 import { TokenService } from './token.service';
-import { TwoFactorService } from './two-factor.service';
 import { AuditService } from './audit.service';
 import { User } from '../../users/entities/user.entity';
 
-jest.mock('../services/two-factor.service', () => ({
-  TwoFactorService: jest.fn().mockImplementation(() => ({
-    generateSecret: jest.fn(),
-    enable: jest.fn(),
-    disable: jest.fn(),
-    validateToken: jest.fn(),
-    isEnabled: jest.fn(),
-  })),
-}));
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -24,7 +14,6 @@ describe('AuthService', () => {
   let oauthAuthService: jest.Mocked<OAuthAuthService>;
   let emailService: jest.Mocked<EmailService>;
   let tokenService: jest.Mocked<TokenService>;
-  let twoFactorService: jest.Mocked<TwoFactorService>;
   let auditService: jest.Mocked<AuditService>;
 
   const mockUser: User = {
@@ -35,7 +24,6 @@ describe('AuthService', () => {
     isActive: true,
     emailVerified: true,
     passwordHash: 'hashed',
-    twoFactorSecrets: [],
     userRoles: [],
   } as any;
 
@@ -83,15 +71,6 @@ describe('AuthService', () => {
           },
         },
         {
-          provide: TwoFactorService,
-          useValue: {
-            setup: jest.fn(),
-            enable: jest.fn(),
-            disable: jest.fn(),
-            validateToken: jest.fn(),
-          },
-        },
-        {
           provide: AuditService,
           useValue: { log: jest.fn().mockResolvedValue(undefined) },
         },
@@ -103,7 +82,6 @@ describe('AuthService', () => {
     oauthAuthService = module.get(OAuthAuthService);
     emailService = module.get(EmailService);
     tokenService = module.get(TokenService);
-    twoFactorService = module.get(TwoFactorService);
     auditService = module.get(AuditService);
   });
 
@@ -147,18 +125,6 @@ describe('AuthService', () => {
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
     });
 
-    it('should login user with 2FA code', async () => {
-      localAuthService.validateUser.mockResolvedValue(mockUser);
-
-      const result = await service.login('test@example.com', 'Password123!', '123456');
-
-      expect(localAuthService.validateUser).toHaveBeenCalledWith(
-        'test@example.com',
-        'Password123!',
-      );
-      expect(tokenService.issueAccessToken).toHaveBeenCalledWith(mockUser);
-      expect(tokenService.issueRefreshToken).toHaveBeenCalledWith(mockUser, { singleDevice: true });
-    });
   });
 
   describe('logout', () => {
@@ -242,40 +208,6 @@ describe('AuthService', () => {
     });
   });
 
-  describe('setup2FA', () => {
-    it('should setup 2FA', async () => {
-      const setupData = { secret: 'secret-key', qrCodeDataUrl: 'data:image/png;base64,...' };
-      twoFactorService.setup.mockResolvedValue(setupData);
-
-      const result = await service.setup2FA(mockUser);
-
-      expect(twoFactorService.setup).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(setupData);
-    });
-  });
-
-  describe('enableTwoFactor', () => {
-    it('should enable 2FA', async () => {
-      const enableResult = { message: '2FA enabled', backupCodes: ['code1', 'code2'] };
-      twoFactorService.enable.mockResolvedValue(enableResult);
-
-      const result = await service.enableTwoFactor(mockUser, '123456');
-
-      expect(twoFactorService.enable).toHaveBeenCalledWith(mockUser, '123456');
-      expect(result).toEqual(enableResult);
-    });
-  });
-
-  describe('disableTwoFactor', () => {
-    it('should disable 2FA', async () => {
-      twoFactorService.disable.mockResolvedValue({ message: '2FA disabled' });
-
-      const result = await service.disableTwoFactor(mockUser, '123456');
-
-      expect(twoFactorService.disable).toHaveBeenCalledWith(mockUser, '123456');
-      expect(result.message).toBe('2FA disabled');
-    });
-  });
 
   describe('oauthLogin', () => {
     it('should login via OAuth', async () => {

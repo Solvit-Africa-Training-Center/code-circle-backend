@@ -26,15 +26,12 @@ import {
 import { AuthService } from './auth.service';
 import { AuthProvider } from './enums/auth-provider';
 import { JwtAuthGuard } from '@circle-backend/modules/auth/guards/jwt-auth.guard';
-import { TwoFactorGuard } from '@circle-backend/common/guards/two-factor.guard';
 import { User } from '../users/entities/user.entity';
 import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';
 import { ConfigService } from '@nestjs/config';
 
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { LoginResponseDto } from './dto/login-respons.dto';
-import { Enable2FADto } from './dto/enable-2fa.dto';
-import { Disable2FADto } from './dto/disable-2fa.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -100,7 +97,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Invalid credentials or 2FA code required',
+    description: 'Invalid credentials',
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
@@ -110,7 +107,6 @@ export class AuthController {
     const result = await this.authService.login(
       dto.email,
       dto.password,
-      dto.twoFactorCode,
     );
 
     return {
@@ -121,7 +117,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Logout current user',
@@ -246,7 +242,7 @@ export class AuthController {
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Change password',
@@ -271,88 +267,6 @@ export class AuthController {
       dto.oldPassword,
       dto.newPassword,
     );
-  }
-
-  @Post('2fa/setup')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Setup 2FA',
-    description: 'Generates 2FA secret and QR code for user to scan',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: '2FA setup data generated',
-    schema: {
-      type: 'object',
-      properties: {
-        secret: { type: 'string' },
-        qrCodeDataUrl: { type: 'string' },
-      },
-    },
-  })
-  async setup2FA(@CurrentUser() user: User): Promise<{
-    secret: string;
-    qrCodeDataUrl: string;
-  }> {
-    return this.authService.setup2FA(user);
-  }
-
-  @Post('2fa/enable')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Enable 2FA',
-    description:
-      'Enables 2FA after verifying the setup code. Returns backup codes.',
-  })
-  @ApiBody({ type: Enable2FADto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: '2FA enabled successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string' },
-        backupCodes: { type: 'array', items: { type: 'string' } },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid 2FA code or no setup found',
-  })
-  async enableTwoFactor(
-    @CurrentUser() user: User,
-    @Body() dto: Enable2FADto,
-  ): Promise<{ backupCodes?: string[] }> {
-    return this.authService.enableTwoFactor(user, dto.code);
-  }
-
-  @Post('2fa/disable')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Disable 2FA',
-    description: 'Disables 2FA after verifying code',
-  })
-  @ApiBody({ type: Disable2FADto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: '2FA disabled successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid 2FA code',
-  })
-  async disableTwoFactor(
-    @CurrentUser() user: User,
-    @Body() dto: Disable2FADto,
-  ): Promise<void> {
-    return this.authService.disableTwoFactor(user, dto.code);
   }
 
   @Post('oauth/login')
@@ -380,7 +294,7 @@ export class AuthController {
 
   @Post('oauth/link/:provider')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Link OAuth account',
@@ -411,7 +325,7 @@ export class AuthController {
 
   @Post('oauth/unlink/:provider')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard, TwoFactorGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Unlink OAuth account',
@@ -474,17 +388,6 @@ export class AuthController {
 //   throw new Error('Function not implemented.');
 // }
 
-// function setup2FA(arg0: any, user: any, User: typeof User) {
-//   throw new Error('Function not implemented.');
-// }
-
-// function enableTwoFactor(arg0: any, user: any, User: typeof User, arg3: any, dto: any, Enable2FADto: typeof Enable2FADto) {
-//   throw new Error('Function not implemented.');
-// }
-
-// function disableTwoFactor(arg0: any, user: any, User: typeof User, arg3: any, dto: any, Disable2FADto: typeof Disable2FADto) {
-//   throw new Error('Function not implemented.');
-// }
 
 // function oauthLogin(arg0: any, dto: any, OAuthLoginDto: typeof OAuthLoginDto) {
 //   throw new Error('Function not implemented.');
