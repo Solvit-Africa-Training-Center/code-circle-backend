@@ -24,18 +24,20 @@ import { UpdateQuizDto, SubmitQuizAnswerDto } from './dto/index';
 import { Quiz } from './entities/quiz.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
 
-@ApiTags('quizzes')
+
+// =========== NOT FINISHED/ NOT AVAILABLE NOW ====================
+// @ApiTags('quizzes')
 @Controller('quizzes')
 // @UseGuards(AuthGuard('jwt'))
-@ApiBearerAuth('JWT-auth')
+// @ApiBearerAuth('JWT-auth')
 export class QuizController {
   constructor(private readonly quizzesService: QuizService) {}
 
   // ============= QUIZ ENDPOINTS =============
 
   @Post()
-  @ApiOperation({ summary: 'Create a new quiz (Course Owner only)' })
-  @ApiResponse({ status: HttpStatus.CREATED, type: Quiz })
+  // @ApiOperation({ summary: 'Create a new quiz (Course Owner only)' })
+  // @ApiResponse({ status: HttpStatus.CREATED, type: Quiz })
   async createQuiz(@Body() createQuizDto: CreateQuizDto, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
@@ -47,9 +49,9 @@ export class QuizController {
   }
 
   @Get(':quizId')
-  @ApiOperation({ summary: 'Get quiz details by ID' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: Quiz })
+  // @ApiOperation({ summary: 'Get quiz details by ID' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: Quiz })
   async getQuizById(@Param('quizId') quizId: string) {
     try {
       const quiz = await this.quizzesService.getQuizById(quizId);
@@ -60,9 +62,9 @@ export class QuizController {
   }
 
   @Get('course/:courseId')
-  @ApiOperation({ summary: 'Get all quizzes for a course' })
-  @ApiParam({ name: 'courseId', description: 'Course UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: [Quiz] })
+  // @ApiOperation({ summary: 'Get all quizzes for a course' })
+  // @ApiParam({ name: 'courseId', description: 'Course UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: [Quiz] })
   async getQuizzesByCourse(@Param('courseId') courseId: string) {
     try {
       const quizzes = await this.quizzesService.getCourseQuizzes(courseId);
@@ -73,9 +75,9 @@ export class QuizController {
   }
 
   @Put(':quizId')
-  @ApiOperation({ summary: 'Update quiz (Course Owner only)' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: Quiz })
+  // @ApiOperation({ summary: 'Update quiz (Course Owner only)' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: Quiz })
   async updateQuiz(
     @Param('quizId') quizId: string,
     @Body() updateQuizDto: UpdateQuizDto,
@@ -91,10 +93,10 @@ export class QuizController {
   }
 
   @Delete(':quizId')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a quiz (Course Owner only)' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.OK })
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOperation({ summary: 'Delete a quiz (Course Owner only)' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.OK })
   async deleteQuiz(@Param('quizId') quizId: string, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
@@ -106,9 +108,9 @@ export class QuizController {
   }
 
   @Post(':quizId/publish')
-  @ApiOperation({ summary: 'Publish a quiz (Course Owner only)' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: Quiz })
+  // @ApiOperation({ summary: 'Publish a quiz (Course Owner only)' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: Quiz })
   async publishQuiz(@Param('quizId') quizId: string, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
@@ -122,9 +124,9 @@ export class QuizController {
   // ============= ATTEMPT ENDPOINTS =============
 
   @Post(':quizId/start')
-  @ApiOperation({ summary: 'Start a quiz attempt' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.CREATED, type: QuizAttempt })
+  // @ApiOperation({ summary: 'Start a quiz attempt' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.CREATED, type: QuizAttempt })
   async startQuizAttempt(@Param('quizId') quizId: string, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
@@ -136,9 +138,9 @@ export class QuizController {
   }
 
   @Post('attempts/:attemptId/submit')
-  @ApiOperation({ summary: 'Submit quiz answers' })
-  @ApiParam({ name: 'attemptId', description: 'Attempt UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: QuizAttempt })
+  // @ApiOperation({ summary: 'Submit quiz answers' })
+  // @ApiParam({ name: 'attemptId', description: 'Attempt UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: QuizAttempt })
   async submitQuizAttempt(
     @Param('attemptId') attemptId: string,
     @Body() submitAnswersDto: SubmitQuizAnswerDto,
@@ -154,9 +156,9 @@ export class QuizController {
   }
 
   @Get(':quizId/my-attempts')
-  @ApiOperation({ summary: 'Get current user attempts for a quiz' })
-  @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: [QuizAttempt] })
+  // @ApiOperation({ summary: 'Get current user attempts for a quiz' })
+  // @ApiParam({ name: 'quizId', description: 'Quiz UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: [QuizAttempt] })
   async getUserAttempts(@Param('quizId') quizId: string, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
@@ -168,9 +170,9 @@ export class QuizController {
   }
 
   @Get('attempts/:attemptId')
-  @ApiOperation({ summary: 'Get attempt details' })
-  @ApiParam({ name: 'attemptId', description: 'Attempt UUID' })
-  @ApiResponse({ status: HttpStatus.OK, type: QuizAttempt })
+  // @ApiOperation({ summary: 'Get attempt details' })
+  // @ApiParam({ name: 'attemptId', description: 'Attempt UUID' })
+  // @ApiResponse({ status: HttpStatus.OK, type: QuizAttempt })
   async getAttemptById(@Param('attemptId') attemptId: string, @Request() req: any) {
     try {
       const userId = req.user?.id || 'temp-user-id';
