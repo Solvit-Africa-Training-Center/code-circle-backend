@@ -72,7 +72,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Global prefix
-  const globalPrefix = configService.get<string>('API_PREFIX') || 'api';
+  const globalPrefix = configService.get<string>('API_PREFIX') || '/api/v1';
   app.setGlobalPrefix(globalPrefix);
 
   // Swagger setup (only in non-production)
@@ -80,7 +80,7 @@ async function bootstrap() {
     setupSwagger(app);
   }
 
-  const port = configService.get<number>('APP_PORT') || 3000;
+  const port = configService.get<number>('APP_PORT') || 8080;
   await app.listen(port);
 
   logger.log(
