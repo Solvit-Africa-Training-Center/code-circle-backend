@@ -45,7 +45,7 @@ export const PERMISSIONS = {
   COURSE_DELETE: 'course:delete',
 
   // Member
-  MEMBER: 'member'
+  MEMBER: 'member:member'
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
