@@ -74,7 +74,7 @@ export class AssignmentController {
   }
 
   @Get(':assignmentId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get assignment details by ID' })
   @ApiParam({ name: 'assignmentId', description: 'Assignment UUID' })
   @ApiResponse({
@@ -101,7 +101,7 @@ export class AssignmentController {
   }
 
   @Get('course/:courseId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get all assignments for a course' })
   @ApiParam({ name: 'courseId', description: 'Course UUID' })
   @ApiResponse({
@@ -125,7 +125,7 @@ export class AssignmentController {
   }
 
   @Get('module/:moduleId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get all assignments for a module' })
   @ApiParam({ name: 'moduleId', description: 'Module UUID' })
   @ApiResponse({
@@ -246,7 +246,7 @@ export class AssignmentController {
   // The flow DRAFT → SUBMITTED → GRADED
 
   @Post(':assignmentId/submissions')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Create a submission for an assignment' })
   @ApiParam({ name: 'assignmentId', description: 'Assignment UUID' })
   @ApiResponse({
@@ -280,7 +280,7 @@ export class AssignmentController {
   }
 
   @Post('submissions/:submissionId/submit')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Submit a draft submission' })
   @ApiParam({ name: 'submissionId', description: 'Submission UUID' })
   @ApiResponse({
@@ -308,7 +308,7 @@ export class AssignmentController {
   }
 
   @Put('submissions/:submissionId')
-  @RequirePermissions('member')
+@RequirePermissions('member:member')
   @ApiOperation({ summary: 'Update a draft submission' })
   @ApiParam({ name: 'submissionId', description: 'Submission UUID' })
   @ApiResponse({
@@ -338,7 +338,7 @@ export class AssignmentController {
   }
 
   @Get('submissions/:submissionId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get submission details' })
   @ApiParam({ name: 'submissionId', description: 'Submission UUID' })
   @ApiResponse({
@@ -366,7 +366,7 @@ export class AssignmentController {
   }
 
   @Get(':assignmentId/my-submissions')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get current user submissions for an assignment' })
   @ApiParam({ name: 'assignmentId', description: 'Assignment UUID' })
   @ApiResponse({
