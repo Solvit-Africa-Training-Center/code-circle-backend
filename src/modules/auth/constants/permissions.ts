@@ -36,6 +36,16 @@ export const PERMISSIONS = {
   CLUB_READ: 'club:read',
   CLUB_UPDATE: 'club:update',
   CLUB_DELETE: 'club:delete',
+
+  //course
+  COURSE_OTHER: 'course:other',
+  COURSE_CREATE: 'course:create',
+  COURSE_READ: 'course:read',
+  COURSE_UPDATE: 'course:update',
+  COURSE_DELETE: 'course:delete',
+
+  // Member
+  MEMBER: 'member:member'
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
