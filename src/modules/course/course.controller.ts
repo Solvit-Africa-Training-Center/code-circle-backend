@@ -401,7 +401,7 @@ export class CourseController {
   // ============= ENROLLMENT ENDPOINTS =============
 
   @Post(':courseId/enroll')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Enroll in a course' })
   @ApiParam({ name: 'courseId', description: 'Course UUID' })
   @ApiResponse({
@@ -483,7 +483,7 @@ export class CourseController {
   // ============= PROGRESS ENDPOINTS =============
 
   @Post('lessons/:lessonId/complete')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Mark a lesson as complete' })
   @ApiParam({ name: 'lessonId', description: 'Lesson UUID' })
   @ApiResponse({
@@ -511,7 +511,7 @@ export class CourseController {
   }
 
   @Get(':courseId/progress')
-  @RequirePermissions('course:other', 'member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get user progress in a course' })
   @ApiParam({ name: 'courseId', description: 'Course UUID' })
   @ApiResponse({

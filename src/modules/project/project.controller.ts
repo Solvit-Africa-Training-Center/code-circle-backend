@@ -76,7 +76,7 @@ export class ProjectController {
   }
 
   @Get(':projectId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get project details by ID' })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiResponse({
@@ -102,7 +102,7 @@ export class ProjectController {
   }
 
   @Get('course/:courseId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get all projects for a course' })
   @ApiParam({ name: 'courseId', description: 'Course UUID' })
   @ApiResponse({
@@ -125,7 +125,7 @@ export class ProjectController {
   }
 
   @Get('module/:moduleId')
-  @RequirePermissions('member')
+  @RequirePermissions('member:member')
   @ApiOperation({ summary: 'Get all projects for a module' })
   @ApiParam({ name: 'moduleId', description: 'Module UUID' })
   @ApiResponse({
