@@ -123,13 +123,7 @@ export class CategoriesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Category not found',
   })
-  async findBySlug(@Param('slug') slug: string) {
-    const category = await this.categoriesService.findBySlug(slug);
-    return {
-      message: 'Category retrieved successfully',
-      data: category,
-    };
-  }
+  
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

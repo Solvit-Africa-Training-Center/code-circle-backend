@@ -107,19 +107,17 @@ export class TestService {
     const existingCategory = await this.categoryRepo.findOne({
       where: [
         { name: createCategoryDto.name },
-        { slug: createCategoryDto.slug },
       ],
     });
 
     if (existingCategory) {
       throw new ConflictException(
-        `Category with ${existingCategory.name === createCategoryDto.name ? 'name' : 'slug'} "${existingCategory.name === createCategoryDto.name ? createCategoryDto.name : createCategoryDto.slug}" already exists`,
+        `Category with ${existingCategory.name === createCategoryDto.name ? 'name' : 'slug'} "${existingCategory.name === createCategoryDto.name }" already exists`,
       );
     }
 
     const category = this.categoryRepo.create({
       name: createCategoryDto.name,
-      slug: createCategoryDto.slug,
       description: createCategoryDto.description,
       icon: createCategoryDto.icon,
       isActive: createCategoryDto.isActive ?? true,
