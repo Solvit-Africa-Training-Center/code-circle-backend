@@ -27,9 +27,6 @@ export class CategoriesService {
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     try {
-      const slug =
-        createCategoryDto.slug || this.generateSlug(createCategoryDto.name);
-
       const existingByName = await this.categoryRepository.findOne({
         where: { name: createCategoryDto.name },
       });
@@ -38,19 +35,9 @@ export class CategoriesService {
           `Category with name "${createCategoryDto.name}" already exists`,
         );
       }
-
-      const existingBySlug = await this.categoryRepository.findOne({
-        where: { slug },
-      });
-
-      if (existingBySlug) {
-        throw new ConflictException(
-          `category with slug "${slug}" already exists`,
-        );
-      }
       const category = this.categoryRepository.create({
         ...createCategoryDto,
-        slug,
+  
       });
       const savedCategory = await this.categoryRepository.save(category);
       this.logger.log(
@@ -209,36 +196,7 @@ export class CategoriesService {
   /**
    * Récupérer une catégorie par slug
    */
-  async findBySlug(slug: string): Promise<Category> {
-    try {
-      const category = await this.categoryRepository.findOne({
-        where: { slug },
-      });
 
-      if (!category) {
-        throw new NotFoundException(`Category with slug "${slug}" not found`);
-      }
-
-      this.logger.log(
-        `Category found by slug: ${category.slug} - ${category.name}`,
-      );
-
-      return category;
-    } catch (error) {
-      this.logger.error(
-        `Error fetching category with slug ${slug}: ${error.message}`,
-        error.stack,
-      );
-
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        'An error occurred while retrieving the category',
-      );
-    }
-  }
 
   /**
    * Mettre à jour une catégorie
@@ -253,19 +211,6 @@ export class CategoriesService {
       // Si le nom change, regénérer le slug
       if (updateCategoryDto.name && updateCategoryDto.name !== category.name) {
         const newSlug = this.generateSlug(updateCategoryDto.name);
-
-        // Vérifier que le nouveau slug n'existe pas déjà
-        const existingBySlug = await this.categoryRepository.findOne({
-          where: { slug: newSlug },
-        });
-
-        if (existingBySlug && existingBySlug.id !== id) {
-          throw new ConflictException(
-            `A category with slug "${newSlug}" already exists`,
-          );
-        }
-
-        updateCategoryDto.slug = newSlug;
       }
 
       Object.assign(category, updateCategoryDto);

@@ -17,6 +17,11 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginationParams } from '@circle-backend/common/decorators/api-properties';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '@circle-backend/modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@circle-backend/common/guards/roles.guard';
+import { Roles } from '@circle-backend/common/decorators/roles.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -24,6 +29,9 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new category (Admin only)' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -124,6 +132,9 @@ export class CategoriesController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a category (Admin only)' })
   @ApiParam({
     name: 'id',
@@ -154,6 +165,9 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Soft delete a category (Admin only)' })
   @ApiParam({
@@ -173,6 +187,9 @@ export class CategoriesController {
   }
 
   @Delete(':id/hard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Permanently delete a category (Admin only)' })
   @ApiParam({

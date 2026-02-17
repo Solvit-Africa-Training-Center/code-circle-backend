@@ -28,7 +28,7 @@
     "migration:show": "typeorm migration:show -d src/config/typeorm-cli.config.js",
     "migration:list": "ts-node src/scripts/list-migrations.ts",
     "seed:create": "ts-node src/scripts/create-seed.ts",
-    "seed:run": "ts-node src/database/seeds/run-seeds.ts",
+    "seed:run": "ts-node seed/seed-roles-permissions.ts",
     "seed:user": "ts-node src/database/seeds/user.seed.ts",
     "db:reset": "npm run migration:revert && npm run migration:run",
     "db:fresh": "npm run db:reset && npm run seed:run",

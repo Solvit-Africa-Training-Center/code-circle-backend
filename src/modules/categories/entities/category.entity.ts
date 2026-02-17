@@ -17,9 +17,6 @@ export class Category {
   @Column({ unique: true, length: 100, nullable: false })
   name: string;
 
-  @Column({ unique: true, length: 100, nullable: false })
-  slug: string;
-
   @Column({ type: 'text', nullable: true })
   description: string;
 

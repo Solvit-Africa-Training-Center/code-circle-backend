@@ -34,26 +34,7 @@ export class CreateCategoryDto {
   icon?: string;
 
   // Le slug sera généré automatiquement depuis le name
-  @Transform(({ obj }) => {
-    if (!obj.slug && obj.name) {
-      return obj.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
-        .replace(/[^a-z0-9]+/g, '-') // Remplacer les espaces et caractères spéciaux par des tirets
-        .replace(/^-+|-+$/g, ''); // Enlever les tirets au début et à la fin
-    }
-    return obj.slug;
-  })
-  @ApiPropertyOptional({
-    example: 'intelligence-artificielle',
-    description: 'URL-friendly slug (auto-generated from name if not provided)',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  slug?: string;
-
+ 
   @ApiPropertyOptional({
     example: true,
     description: 'Whether the category is active',

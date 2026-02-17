@@ -74,17 +74,7 @@ export class AuthService {
     refreshToken: string;
   }> {
     try {
-      const user = await this.localAuth.validateUser(email, password);
-
-      const accessToken = this.tokenService.issueAccessToken(user);
-      const { refreshToken } = await this.tokenService.issueRefreshToken(user, {
-        singleDevice: true,
-      });
-
-      return {
-        accessToken,
-        refreshToken,
-      };
+      return await this.localAuth.login(email, password);
     } catch (err) {
       this.logger.error(`Login failed for email ${email}`, err);
       throw err instanceof HttpException
