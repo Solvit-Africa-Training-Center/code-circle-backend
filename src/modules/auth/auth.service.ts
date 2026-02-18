@@ -93,23 +93,23 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(token: string): Promise<{
-    userId: string;
-    email: string;
-  }> {
-    try {
-      const user =
-        await this.emailService.validateEmailVerificationToken(token);
-      this.logger.log(`Email verified for user ${user.id}`);
-      return {
-        userId: user.id,
-        email: user.email,
-      };
-    } catch (err) {
-      this.logger.error('Email verification failed', err);
-      throw new BadRequestException('Email verification failed');
-    }
-  }
+  // async verifyEmail(token: string): Promise<{
+  //   userId: string;
+  //   email: string;
+  // }> {
+  //   try {
+  //     const user =
+  //       await this.emailService.validateEmailVerificationToken(token);
+  //     this.logger.log(`Email verified for user ${user.id}`);
+  //     return {
+  //       userId: user.id,
+  //       email: user.email,
+  //     };
+  //   } catch (err) {
+  //     this.logger.error('Email verification failed', err);
+  //     throw new BadRequestException('Email verification failed');
+  //   }
+  // }
 
   async oauthLogin(oauthUser: {
     provider: AuthProvider;

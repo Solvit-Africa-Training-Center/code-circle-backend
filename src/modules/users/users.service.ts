@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterForTestDto } from './dto/register-for-test.dto';
@@ -182,13 +188,13 @@ export class UsersService {
     const passwordHash = await (
       hash as (data: string, salt: number) => Promise<string>
     )(password, 10);
-    
+
     // Convert firstName/lastName to name
     const name = [createUserDto.firstName, createUserDto.lastName]
       .filter(Boolean)
       .join(' ')
       .trim();
-    
+
     const user = this.userRepo.create({
       name,
       email: createUserDto.email,
@@ -214,9 +220,13 @@ export class UsersService {
     return user;
   }
 
-  async findAll(page: number = 1, limit: number = 10, order: 'ASC' | 'DESC' = 'DESC') {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    order: 'ASC' | 'DESC' = 'DESC',
+  ) {
     const skip = (page - 1) * limit;
-    
+
     const [users, total] = await this.userRepo.findAndCount({
       relations: ['userRoles', 'userRoles.role'],
       skip,
@@ -243,7 +253,12 @@ export class UsersService {
     const sanitizedId = this.sanitizeUUID(id);
     const user = await this.userRepo.findOne({
       where: { id: sanitizedId },
-      relations: ['userRoles', 'userRoles.role', 'userPermissions', 'userPermissions.permission'],
+      relations: [
+        'userRoles',
+        'userRoles.role',
+        'userPermissions',
+        'userPermissions.permission',
+      ],
     });
 
     if (!user) {
@@ -256,7 +271,7 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     const sanitizedId = this.sanitizeUUID(id);
     const user = await this.userRepo.findOne({ where: { id: sanitizedId } });
-    
+
     if (!user) {
       throw new NotFoundException(`User with ID "${sanitizedId}" not found`);
     }
@@ -283,7 +298,8 @@ export class UsersService {
     // Handle name update (from firstName/lastName)
     if (updateUserDto.firstName || updateUserDto.lastName) {
       const firstName = updateUserDto.firstName ?? user.name.split(' ')[0];
-      const lastName = updateUserDto.lastName ?? user.name.split(' ').slice(1).join(' ');
+      const lastName =
+        updateUserDto.lastName ?? user.name.split(' ').slice(1).join(' ');
       updateData.name = [firstName, lastName].filter(Boolean).join(' ').trim();
     }
 
@@ -293,15 +309,17 @@ export class UsersService {
     }
 
     await this.userRepo.update(sanitizedId, updateData);
-    
-    const updatedUser = await this.userRepo.findOne({ where: { id: sanitizedId } });
+
+    const updatedUser = await this.userRepo.findOne({
+      where: { id: sanitizedId },
+    });
     return updatedUser;
   }
 
   async remove(id: string) {
     const sanitizedId = this.sanitizeUUID(id);
     const user = await this.userRepo.findOne({ where: { id: sanitizedId } });
-    
+
     if (!user) {
       throw new NotFoundException(`User with ID "${sanitizedId}" not found`);
     }
@@ -320,7 +338,7 @@ export class UsersService {
     if (!isAdmin) {
       throw new BadRequestException('Only ADMIN can approve creators.');
     }
-    
+
     const user: User | null = await this.userRepo.findOne({
       where: { id: dto.userId },
       relations: ['userRoles', 'userRoles.role'],
@@ -328,12 +346,12 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID "${dto.userId}" not found`);
     }
-    
+
     const isCreator = user.userRoles?.some((ur) => ur.role?.name === 'CREATOR');
     if (!isCreator) {
       throw new BadRequestException('User is not a creator');
     }
-    
+
     if (user.globalStatus === GlobalStatus.ACTIVE) {
       throw new BadRequestException('Creator already approved');
     }
@@ -428,7 +446,7 @@ export class UsersService {
     }
 
     const newStatus = dto.isActive ? GlobalStatus.ACTIVE : GlobalStatus.PENDING;
-    
+
     if (user.globalStatus === newStatus) {
       throw new BadRequestException(
         `User is already ${dto.isActive ? 'active' : 'inactive'}`,

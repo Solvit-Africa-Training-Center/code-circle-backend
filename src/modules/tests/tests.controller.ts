@@ -17,17 +17,15 @@ import {
   ApiResponse,
   ApiParam,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { TestsService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { SubmitTestDto } from './dto/submit-test.dto';
-import {
-  TestResponseDto,
-  TestAttemptResponseDto,
-} from './dto/test-response.dto';
+import { TestResponseDto } from './dto/test-response.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
-import { TestType } from './enums/test-type.enum';
+import { TestType, TestPurpose } from './enums/test-type.enum';
 
 @ApiTags('Tests')
 @Controller('tests')
@@ -41,6 +39,7 @@ export class TestsController {
     description: 'Test created successfully',
     type: TestResponseDto,
   })
+  @ApiBearerAuth()
   async create(@Body() createTestDto: CreateTestDto) {
     const test = await this.testsService.create(createTestDto);
     return {
@@ -89,6 +88,45 @@ export class TestsController {
       data: test,
     };
   }
+  @Get('category/:categoryId/creator-test')
+  @ApiOperation({ summary: 'Get CREATOR test for a specific category' })
+  @ApiParam({
+    name: 'categoryId',
+    description: 'Category UUID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Test retrieved successfully',
+    type: TestResponseDto,
+  })
+  async getCreatorTestByCategory(
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+  ) {
+    const test = await this.testsService.findCreatorTestByCategory(categoryId);
+    return {
+      message: 'Test retrieved successfully',
+      data: test,
+    };
+  }
+
+  @Get('club/:clubId/member-test')
+  @ApiOperation({ summary: 'Get MEMBER test for a specific club' })
+  @ApiParam({
+    name: 'clubId',
+    description: 'Club UUID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Test retrieved successfully',
+    type: TestResponseDto,
+  })
+  async getMemberTestByClub(@Param('clubId', ParseUUIDPipe) clubId: string) {
+    const test = await this.testsService.findMemberTestByClub(clubId);
+    return {
+      message: 'Test retrieved successfully',
+      data: test,
+    };
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a test by ID (for taking the test)' })
@@ -110,33 +148,53 @@ export class TestsController {
   }
 
   @Post('submit')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Submit a test attempt' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Test submitted successfully',
-    type: TestAttemptResponseDto,
   })
-  async submitTest(
-    // TODO: Extraire userId depuis le JWT token
-    @Body() submitTestDto: SubmitTestDto,
-  ) {
-    // Pour l'instant, on utilise un userId fictif
-    // Plus tard, on extraira ça du token JWT
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
-    const attempt = await this.testsService.submitTest(userId, submitTestDto);
+  async submitTest(@Body() submitTestDto: SubmitTestDto) {
+    const result = await this.testsService.submitTest(submitTestDto);
     return {
-      message: attempt.passed
+      message: result.passed
         ? 'Congratulations! You passed the test'
         : 'Unfortunately, you did not pass the test',
-      data: attempt,
+      data: result,
+    };
+  }
+
+  @Get('attempts/all')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all test attempts (Admin only)' })
+  @ApiQuery({ name: 'passed', required: false, type: Boolean })
+  @ApiQuery({
+    name: 'purpose',
+    required: false,
+    enum: TestPurpose,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Attempts retrieved successfully',
+  })
+  async getAllAttempts(
+    @Query() paginationParams: PaginationParams,
+    @Query('passed') passed?: string,
+    @Query('purpose') purpose?: TestPurpose,
+  ) {
+    const result = await this.testsService.getAllAttempts({
+      ...paginationParams,
+      passed: passed === 'true' ? true : passed === 'false' ? false : undefined,
+      purpose,
+    });
+    return {
+      message: 'Attempts retrieved successfully',
+      ...result,
     };
   }
 
   @Get('user/:userId/attempts')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all attempts for a user' })
+  @ApiOperation({ summary: 'Get all attempts for a specific user' })
   @ApiParam({
     name: 'userId',
     description: 'User UUID',
@@ -149,7 +207,7 @@ export class TestsController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Query() paginationParams: PaginationParams,
   ) {
-    const result = await this.testsService.getUserAttempts(
+    const result = await this.testsService.getUserAttemptsWithDetails(
       userId,
       paginationParams,
     );

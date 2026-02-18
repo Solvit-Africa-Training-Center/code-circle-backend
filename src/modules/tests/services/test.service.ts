@@ -1,13 +1,21 @@
-import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TestAttempt } from '../entities/test-attempt.entity';
 import { Test } from '../entities/test.entity';
-import { TestType, TestDifficulty } from '../enums/test-type.enum';
+import { TestType, TestDifficulty, TestPurpose } from '../enums/test-type.enum';
 import { Category } from '../../categories/entities/category.entity';
-import { User, GlobalStatus } from '../../users/entities/user.entity';
-import { EmailService } from '../../auth/services/email.service';
-import { CreateCategoryDto, CreateTestDto } from '../dto/create-category-test.dto';
+import { User } from '../../users/entities/user.entity';
+import {
+  CreateCategoryDto,
+  CreateTestDto,
+} from '../dto/create-category-test.dto';
+import { TestResultService } from './test-result.service';
 
 @Injectable()
 export class TestService {
@@ -20,89 +28,67 @@ export class TestService {
     private readonly categoryRepo: Repository<Category>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly emailService: EmailService,
+    private readonly testResultService: TestResultService,
   ) {}
 
   async submitTestAttempt(
     userId: string,
     testId: string,
     score: number,
-    answers: any,
+    answers: Record<string, string>,
     feedback?: string,
-    clubId?: string,
+    targetClubId?: string,
+    purpose?: TestPurpose,
+    intendedCategoryId?: string,
+    intendedClubName?: string,
   ) {
+    console.log('🔵 submitTestAttempt called', { userId, testId, score });
     const test = await this.testRepo.findOne({ where: { id: testId } });
     if (!test) throw new BadRequestException('Test not found');
+    console.log('🔵 Test found:', test.id, 'passingScore:', test.passingScore);
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
+    console.log(' User found: ', user.id, 'status:', user.globalStatus);
 
     const passed = score >= (test.passingScore || 60);
-    const attempt = this.attemptRepo.create({
-      user,
-      test,
+    console.log(
+      'Score:',
       score,
+      'passingScore:',
+      test.passingScore,
+      'passed: ',
       passed,
-      answers,
-      feedback,
-      clubId,
-      attemptedAt: new Date(),
-      completedAt: new Date(),
-      correctedByAI: true,
-    });
-    await this.attemptRepo.save(attempt);
+    );
 
-    // Note: Email notifications are now handled by TestsService.submitTest
-    // This method is kept for backward compatibility but email logic has been moved
-    if (test.type === 'CREATOR_TEST') {
-      if (passed) {
-        await this.emailService.sendEmail({
-          to: user.email,
-          subject: 'Test Passed - Awaiting Admin Approval',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>🎉 Congratulations!</h2>
-              <p>Dear ${user.name},</p>
-              <p>You have successfully passed the CREATOR test.</p>
-              <p>Your application is now pending admin approval. You will receive an email with your login credentials once an admin approves your account.</p>
-            </div>
-          `,
-        });
-      } else {
-        await this.emailService.sendEmail({
-          to: user.email,
-          subject: 'Test Results - Not Passed',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Test Results</h2>
-              <p>Dear ${user.name},</p>
-              <p>Unfortunately, you did not pass the test. Your score was ${score}%.</p>
-              <p>You can retake the test after 24 hours.</p>
-            </div>
-          `,
-        });
-      }
-    } else if (test.type === 'MEMBER_TEST') {
-      if (passed) {
-        user.globalStatus = GlobalStatus.ACTIVE;
-        await this.userRepo.save(user);
-        await this.emailService.sendEmail({
-          to: user.email,
-          subject: 'Test Passed - Account Activated',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>🎉 Congratulations!</h2>
-              <p>Dear ${user.name},</p>
-              <p>You have successfully passed the MEMBER test.</p>
-              <p>Your account has been activated.</p>
-            </div>
-          `,
-        });
-      }
-    }
+    const attempt = this.attemptRepo.create({
+      userId: userId, // ← string au lieu de variable
+      testId: test.id, // ← testId au lieu de test (objet)
+      purpose: purpose, // ← Ajouté
+      intendedCategoryId: intendedCategoryId, // ← Ajouté
+      intendedClubName: intendedClubName, // ← Ajouté
+      targetClubId: targetClubId, // ← Renommé de clubId
+      answers: answers,
+      score: score,
+      passed: passed,
+      correctedByAI: true,
+      feedback: feedback,
+      completedAt: new Date(),
+      // attemptedAt est auto-généré par @CreateDateColumn()
+    });
+
+    await this.attemptRepo.save(attempt);
+    console.log('🔵 Attempt saved:', attempt.id);
+
+    console.log('Calling testResultService.handleTestResult...')
+    await this.testResultService.handleTestResult(userId, test, score, passed);
+    console.log('testResultService.handleTestResult done')
     return attempt;
   }
 
-  async createCategory(createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<Category> {
     // Check if category with same name or slug already exists
     const existingCategory = await this.categoryRepo.findOne({
       where: [
@@ -141,7 +127,9 @@ export class TestService {
     });
 
     if (!category) {
-      throw new NotFoundException(`Category with ID ${createTestDto.categoryId} not found`);
+      throw new NotFoundException(
+        `Category with ID ${createTestDto.categoryId} not found`,
+      );
     }
 
     // Validate user exists if createdBy is provided
@@ -152,9 +140,11 @@ export class TestService {
       });
 
       if (!foundUser) {
-        throw new NotFoundException(`User with ID ${createTestDto.createdBy} not found`);
+        throw new NotFoundException(
+          `User with ID ${createTestDto.createdBy} not found`,
+        );
       }
-      
+
       createdByUser = foundUser;
     }
 

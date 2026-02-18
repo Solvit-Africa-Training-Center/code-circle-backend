@@ -1,0 +1,2996 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Creates a new user account and sends email verification link",
+        "operationId": "Auth_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email already in use or validation failed"
+          }
+        },
+        "summary": "Register new user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Authenticates user and returns access/refresh tokens. Previous sessions are automatically logged out (single device policy).",
+        "operationId": "Auth_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "403": {
+            "description": "Account disabled or email not verified"
+          }
+        },
+        "summary": "Login with email and password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Revokes all refresh tokens for the authenticated user",
+        "operationId": "Auth_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logout successful"
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Logout current user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "description": "Sends a new verification email to the user",
+        "operationId": "Auth_resendVerification",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification email sent"
+          },
+          "400": {
+            "description": "Email already verified or user not found"
+          }
+        },
+        "summary": "Resend verification email",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/request-password-reset": {
+      "post": {
+        "description": "Sends password reset link to user email",
+        "operationId": "Auth_requestPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email sent (if email exists)"
+          }
+        },
+        "summary": "Request password reset",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "description": "Resets user password using token from email. All sessions will be logged out.",
+        "operationId": "Auth_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "description": "Invalid or expired token"
+          }
+        },
+        "summary": "Reset password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "description": "Changes password for authenticated user. Requires current password. All sessions will be logged out.",
+        "operationId": "Auth_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "401": {
+            "description": "Current password is incorrect"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/login": {
+      "post": {
+        "description": "For mobile/SPA apps that handle OAuth client-side. Accepts OAuth provider data and returns tokens.",
+        "operationId": "Auth_oauthLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OAuth login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "OAuth login/register (Direct API)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/link/{provider}": {
+      "post": {
+        "description": "Links an OAuth provider account to the current user",
+        "operationId": "Auth_linkOAuth",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkOAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OAuth account linked successfully"
+          },
+          "400": {
+            "description": "OAuth account already linked"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Link OAuth account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/unlink/{provider}": {
+      "post": {
+        "description": "Unlinks an OAuth provider account from the current user",
+        "operationId": "Auth_unlinkOAuth",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth account unlinked successfully"
+          },
+          "400": {
+            "description": "Cannot unlink only authentication method"
+          },
+          "404": {
+            "description": "OAuth account not linked"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlink OAuth account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Issues new access and refresh tokens using a valid refresh token",
+        "operationId": "Auth_refreshTokens",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        },
+        "summary": "Refresh access token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/google": {
+      "get": {
+        "description": "Redirects user to Google login page",
+        "operationId": "OAuthCallback_initiateGoogle",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Redirects to Google OAuth consent screen"
+          }
+        },
+        "summary": "Initiate Google OAuth flow",
+        "tags": [
+          "OAuth Callbacks"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/github": {
+      "get": {
+        "description": "Redirects user to GitHub login page",
+        "operationId": "OAuthCallback_initiateGithub",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Redirects to GitHub OAuth consent screen"
+          }
+        },
+        "summary": "Initiate GitHub OAuth flow",
+        "tags": [
+          "OAuth Callbacks"
+        ]
+      }
+    },
+    "/api/v1/users/register-for-test": {
+      "post": {
+        "description": "Register a user account before taking a test. Upload CV and degree files from your local machine. Files will be uploaded to Cloudinary. User will receive credentials after passing the test.",
+        "operationId": "Users_registerForTest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fullName",
+                  "email",
+                  "phone",
+                  "bio",
+                  "cv"
+                ],
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "John Doe",
+                    "description": "Full name of the user"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "john.doe@example.com",
+                    "description": "Email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "+1234567890",
+                    "description": "Phone number in international format"
+                  },
+                  "bio": {
+                    "type": "string",
+                    "example": "Experienced software developer with 5+ years in web development",
+                    "description": "User bio"
+                  },
+                  "cv": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CV file (PDF format, required)"
+                  },
+                  "degree": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Degree certificate file (PDF format, optional)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully. You can now take the test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Registration successful. You can now take the test."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "123e4567-e89b-12d3-a456-426614174000"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "user@example.com"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, email already in use, or invalid file format."
+          }
+        },
+        "summary": "Register for test (pre-test registration)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "operationId": "Users_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully."
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new user (Admin only)",
+        "tags": [
+          "Users"
+        ]
+      },
+      "get": {
+        "operationId": "Users_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "order",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          }
+        },
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "Users_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found."
+          },
+          "400": {
+            "description": "Invalid UUID format."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Get user by ID",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "Users_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully."
+          },
+          "400": {
+            "description": "Invalid input."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Update user by ID",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "Users_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully."
+          },
+          "400": {
+            "description": "Invalid UUID format."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Delete user by ID",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/memberships": {
+      "get": {
+        "operationId": "Users_getUserMemberships",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of user memberships."
+          },
+          "400": {
+            "description": "Invalid UUID format."
+          }
+        },
+        "summary": "Get all memberships for a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/approve-creator": {
+      "post": {
+        "operationId": "Users_approveCreator",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveCreatorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Creator approved."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Approve a creator account",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/reject-creator": {
+      "post": {
+        "operationId": "Users_rejectCreator",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectCreatorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Creator rejected."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Reject a creator account",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/activate-user": {
+      "post": {
+        "operationId": "Users_activateUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User activation status updated."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Activate or deactivate a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "post": {
+        "operationId": "Categories_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new category (Admin only)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "get": {
+        "operationId": "Categories_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories retrieved successfully"
+          }
+        },
+        "summary": "Get all categories with pagination",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/tests": {
+      "post": {
+        "operationId": "Tests_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Test created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new test (Admin/Creator only)",
+        "tags": [
+          "Tests"
+        ]
+      },
+      "get": {
+        "operationId": "Tests_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tests retrieved successfully"
+          }
+        },
+        "summary": "Get all tests with pagination",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/category/{categoryId}/{type}": {
+      "get": {
+        "operationId": "Tests_findByCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "description": "Test type (CREATOR_TEST or MEMBER_TEST)",
+            "schema": {
+              "enum": [
+                "CREATOR_TEST",
+                "MEMBER_TEST"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get test for a specific category and type",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/category/{categoryId}/creator-test": {
+      "get": {
+        "operationId": "Tests_getCreatorTestByCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get CREATOR test for a specific category",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/club/{clubId}/member-test": {
+      "get": {
+        "operationId": "Tests_getMemberTestByClub",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get MEMBER test for a specific club",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/{id}": {
+      "get": {
+        "operationId": "Tests_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Test UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a test by ID (for taking the test)",
+        "tags": [
+          "Tests"
+        ]
+      },
+      "patch": {
+        "operationId": "Tests_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Test UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update a test (Admin/Creator only)",
+        "tags": [
+          "Tests"
+        ]
+      },
+      "delete": {
+        "operationId": "Tests_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Test UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test deactivated successfully"
+          }
+        },
+        "summary": "Soft delete a test (Admin only)",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/submit": {
+      "post": {
+        "operationId": "Tests_submitTest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test submitted successfully"
+          }
+        },
+        "summary": "Submit a test attempt",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/attempts/all": {
+      "get": {
+        "operationId": "Tests_getAllAttempts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          },
+          {
+            "name": "passed",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "purpose",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "CREATE_CLUB",
+                "JOIN_CLUB"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attempts retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all test attempts (Admin only)",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/user/{userId}/attempts": {
+      "get": {
+        "operationId": "Tests_getUserAttempts",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User attempts retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all attempts for a specific user",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/categories/active": {
+      "get": {
+        "operationId": "Categories_findAllActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active categories retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all active categories (no pagination)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "Categories_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid UUID format"
+          },
+          "404": {
+            "description": "Category not found"
+          }
+        },
+        "summary": "Get a category by ID",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "Categories_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Category with this name or slug already exists"
+          }
+        },
+        "summary": "Update a category (Admin only)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "Categories_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deactivated successfully"
+          },
+          "404": {
+            "description": "Category not found"
+          }
+        },
+        "summary": "Soft delete a category (Admin only)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/categories/slug/{slug}": {
+      "get": {
+        "operationId": "Categories_findBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "Category slug",
+            "schema": {
+              "example": "intelligence-artificielle",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found"
+          }
+        },
+        "summary": "Get a category by slug",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}/hard": {
+      "delete": {
+        "operationId": "Categories_hardDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category permanently deleted"
+          },
+          "400": {
+            "description": "Cannot delete category with active clubs"
+          },
+          "404": {
+            "description": "Category not found"
+          }
+        },
+        "summary": "Permanently delete a category (Admin only)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/clubs": {
+      "post": {
+        "operationId": "Clubs_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClubDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Club created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or inactive category"
+          },
+          "409": {
+            "description": "Club with this name already exists in this category"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new club",
+        "tags": [
+          "Clubs"
+        ]
+      },
+      "get": {
+        "operationId": "Clubs_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clubs retrieved successfully"
+          }
+        },
+        "summary": "Get all clubs with pagination",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/active": {
+      "get": {
+        "operationId": "Clubs_findAllActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active clubs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClubResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all active clubs (no pagination)",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/category/{categoryId}": {
+      "get": {
+        "operationId": "Clubs_findByCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "description": "Category UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clubs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClubResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all clubs in a specific category",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/creator/{creatorId}": {
+      "get": {
+        "operationId": "Clubs_findByCreator",
+        "parameters": [
+          {
+            "name": "creatorId",
+            "required": true,
+            "in": "path",
+            "description": "Creator User UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clubs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClubResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all clubs created by a specific user",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}": {
+      "get": {
+        "operationId": "Clubs_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "summary": "Get a club by ID",
+        "tags": [
+          "Clubs"
+        ]
+      },
+      "patch": {
+        "operationId": "Clubs_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClubDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Club updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          },
+          "409": {
+            "description": "Club with this name already exists in this category"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a club (Creator/Admin only)",
+        "tags": [
+          "Clubs"
+        ]
+      },
+      "delete": {
+        "operationId": "Clubs_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club deactivated successfully"
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft delete a club (Creator/Admin only)",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/hard": {
+      "delete": {
+        "operationId": "Clubs_hardDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club permanently deleted"
+          },
+          "400": {
+            "description": "Cannot delete club with active members"
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Permanently delete a club (Admin only)",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "CodeCircle",
+    "description": "API Documentation",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management"
+    },
+    {
+      "name": "Categories",
+      "description": "Clubs categories"
+    },
+    {
+      "name": "Tests",
+      "description": "Tests for joining the club"
+    },
+    {
+      "name": "Clubs",
+      "description": "Clubs operations"
+    }
+  ],
+  "servers": [
+    {
+      "url": "/",
+      "description": "Root"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "JWT",
+        "description": "Enter JWT token",
+        "in": "header"
+      },
+      "api-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for external services"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongP@ssw0rd",
+            "description": "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "firstName": {
+            "type": "string",
+            "example": "user first name",
+            "description": "User first name"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "user last name",
+            "description": "User last name"
+          },
+          "role": {
+            "type": "string",
+            "example": "Admin",
+            "description": "User role (Admin, MEMBER, etc). Only use for special cases."
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RegisterResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Registration successful. Please check your email to verify your account.",
+            "description": "Status message"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Created user ID"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Registered email address"
+          },
+          "verificationToken": {
+            "type": "string",
+            "example": "a1b2c3d4e5f6...",
+            "description": "Email verification token (for development/testing only)"
+          }
+        },
+        "required": [
+          "message",
+          "userId",
+          "email",
+          "verificationToken"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongP@ssw0rd",
+            "description": "User password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "description": "JWT access token (valid for 15 minutes)"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "a1b2c3d4e5f6...",
+            "description": "Refresh token (valid for 7 days)"
+          },
+          "message": {
+            "type": "string",
+            "example": "Login successful. Previous sessions have been logged out.",
+            "description": "Status message"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "message"
+        ]
+      },
+      "RequestPasswordResetDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email address to send password reset link to"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "a1b2c3d4e5f6...",
+            "description": "Password reset token from email"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewStrongP@ssw0rd",
+            "description": "New password (min 8 chars, must contain uppercase, lowercase, number, and special character)",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "example": "CurrentP@ssw0rd",
+            "description": "Current password"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewStrongP@ssw0rd",
+            "description": "New password (min 8 chars, must contain uppercase, lowercase, number, and special character)",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ]
+      },
+      "OAuthLoginDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "LOCAL",
+              "GOOGLE",
+              "GITHUB",
+              "LINKEDIN"
+            ],
+            "example": "GOOGLE",
+            "description": "OAuth provider"
+          },
+          "providerId": {
+            "type": "string",
+            "example": "google-user-id-123",
+            "description": "Provider-specific user ID"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email from OAuth provider"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "user first name",
+            "description": "First name from OAuth provider"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "user last name",
+            "description": "Last name from OAuth provider"
+          },
+          "accessToken": {
+            "type": "string",
+            "example": "ya29.a0AfH6SMBx...",
+            "description": "OAuth provider access token"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "1//0gSHrZK3...",
+            "description": "OAuth provider refresh token"
+          }
+        },
+        "required": [
+          "provider",
+          "providerId",
+          "email"
+        ]
+      },
+      "LinkOAuthDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "example": "google-user-id-123",
+            "description": "Provider-specific user ID"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email associated with OAuth account (optional)"
+          }
+        },
+        "required": [
+          "providerId"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token obtained from login",
+            "example": "a1b2c3d4e5f6..."
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "user name",
+            "description": "First name of the user"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "user last name",
+            "description": "Last name of the user"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "description": "Optional password"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "email"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "user first name",
+            "description": "First name of the user"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "user last name",
+            "description": "Last name of the user"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "description": "Optional password"
+          }
+        }
+      },
+      "ApproveCreatorDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "User ID (UUID) to approve"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "RejectCreatorDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "User ID (UUID) to reject"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Insufficient information",
+            "description": "Reason for rejection"
+          }
+        },
+        "required": [
+          "userId",
+          "reason"
+        ]
+      },
+      "ActivateUserDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+            "description": "User ID (UUID) to activate/deactivate"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Set true to activate, false to deactivate"
+          }
+        },
+        "required": [
+          "userId",
+          "isActive"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Intelligence Artificielle",
+            "description": "Category name",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "example": "Tout ce qui concerne l'IA, le machine learning et le deep learning",
+            "description": "Category description"
+          },
+          "icon": {
+            "type": "string",
+            "example": "ai-icon.svg",
+            "description": "Icon URL or filename"
+          },
+          "slug": {
+            "type": "string",
+            "example": "intelligence-artificielle",
+            "description": "URL-friendly slug (auto-generated from name if not provided)"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the category is active",
+            "default": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateTestQuestionDto": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "example": "What is the capital of France?",
+            "description": "Question text"
+          },
+          "options": {
+            "example": [
+              "Paris",
+              "London",
+              "Berlin",
+              "Madrid"
+            ],
+            "description": "Answer options",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correctAnswer": {
+            "type": "string",
+            "example": "Paris",
+            "description": "Correct answer (must match one of the options)"
+          },
+          "points": {
+            "type": "number",
+            "example": 10,
+            "description": "Points for this question",
+            "minimum": 1
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1,
+            "description": "Order index for display",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "question",
+          "options",
+          "correctAnswer",
+          "points",
+          "orderIndex"
+        ]
+      },
+      "CreateTestDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CREATOR_TEST",
+              "MEMBER_TEST"
+            ],
+            "example": "CREATOR_TEST",
+            "description": "Type of test"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Club UUID (required for MEMBER_TEST)"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED",
+              "EXPERT"
+            ],
+            "example": "INTERMEDIATE",
+            "description": "Difficulty level"
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 70,
+            "description": "Minimum score to pass (percentage)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "User ID who created the test (null if AI-generated)"
+          },
+          "questions": {
+            "description": "List of questions for the test",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTestQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "categoryId",
+          "passingScore",
+          "questions"
+        ]
+      },
+      "TestQuestionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "question": {
+            "type": "string",
+            "example": "What is the capital of France?"
+          },
+          "options": {
+            "example": [
+              "Paris",
+              "London",
+              "Berlin",
+              "Madrid"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "points": {
+            "type": "number",
+            "example": 10
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "question",
+          "options",
+          "points",
+          "orderIndex"
+        ]
+      },
+      "TestResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CREATOR_TEST",
+              "MEMBER_TEST"
+            ],
+            "example": "CREATOR_TEST"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED",
+              "EXPERT"
+            ],
+            "example": "INTERMEDIATE"
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 70
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestQuestionResponseDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "categoryId",
+          "passingScore",
+          "isActive",
+          "questions",
+          "createdAt"
+        ]
+      },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "SubmitTestDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "object",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "User ID (from registration)"
+          },
+          "testId": {
+            "type": "object",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Test UUID"
+          },
+          "answers": {
+            "type": "object",
+            "example": {
+              "question-uuid-1": "Paris",
+              "question-uuid-2": "Blue"
+            },
+            "description": "User answers - { questionId: selectedAnswer }"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "CREATE_CLUB",
+              "JOIN_CLUB"
+            ],
+            "example": "CREATE_CLUB",
+            "description": "Purpose of the test"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category ID (required if purpose is CREATE_CLUB)"
+          },
+          "clubName": {
+            "type": "string",
+            "example": "AI Masters Club",
+            "description": "Intended club name (required if purpose is CREATE_CLUB)"
+          },
+          "targetClubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Target club ID (required if purpose is JOIN_CLUB)"
+          }
+        },
+        "required": [
+          "userId",
+          "testId",
+          "answers",
+          "purpose"
+        ]
+      },
+      "UpdateTestDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CREATOR_TEST",
+              "MEMBER_TEST"
+            ],
+            "example": "CREATOR_TEST",
+            "description": "Type of test"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Club UUID (required for MEMBER_TEST)"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "BEGINNER",
+              "INTERMEDIATE",
+              "ADVANCED",
+              "EXPERT"
+            ],
+            "example": "INTERMEDIATE",
+            "description": "Difficulty level"
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 70,
+            "description": "Minimum score to pass (percentage)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "User ID who created the test (null if AI-generated)"
+          },
+          "questions": {
+            "description": "List of questions for the test",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateTestQuestionDto"
+            }
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the test is active"
+          }
+        }
+      },
+      "CategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "name": {
+            "type": "string",
+            "example": "Intelligence Artificielle",
+            "description": "Category name"
+          },
+          "slug": {
+            "type": "string",
+            "example": "intelligence-artificielle",
+            "description": "URL-friendly slug"
+          },
+          "description": {
+            "type": "string",
+            "example": "Tout ce qui concerne l'IA et le machine learning",
+            "description": "Category description"
+          },
+          "icon": {
+            "type": "string",
+            "example": "ai-icon.svg",
+            "description": "Icon URL"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the category is active"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z",
+            "description": "Creation date"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z",
+            "description": "Last update date"
+          },
+          "clubsCount": {
+            "type": "number",
+            "example": 5,
+            "description": "Number of clubs in this category"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the category is active"
+          }
+        }
+      },
+      "CreateClubDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "AI Masters Club",
+            "description": "Club name",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "creatorId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Creator User UUID"
+          },
+          "description": {
+            "type": "string",
+            "example": "A club dedicated to mastering AI and machine learning",
+            "description": "Club description"
+          }
+        },
+        "required": [
+          "name",
+          "categoryId",
+          "creatorId"
+        ]
+      },
+      "ClubResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Club UUID"
+          },
+          "name": {
+            "type": "string",
+            "example": "AI Masters Club",
+            "description": "Club name"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "category": {
+            "description": "Category details",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryResponseDto"
+              }
+            ]
+          },
+          "creatorId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Creator User UUID"
+          },
+          "description": {
+            "type": "string",
+            "example": "A club dedicated to mastering AI and machine learning",
+            "description": "Club description"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the club is active"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z",
+            "description": "Creation date"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z",
+            "description": "Last update date"
+          },
+          "membersCount": {
+            "type": "number",
+            "example": 25,
+            "description": "Number of members in this club"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "categoryId",
+          "creatorId",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateClubDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "AI Masters Club",
+            "description": "Club name",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Category UUID"
+          },
+          "creatorId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Creator User UUID"
+          },
+          "description": {
+            "type": "string",
+            "example": "A club dedicated to mastering AI and machine learning",
+            "description": "Club description"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the club is active"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Project Repository",
+    "url": "https://github.com/Solvit-Africa-Training-Center/code-circle-backend"
+  }
+}

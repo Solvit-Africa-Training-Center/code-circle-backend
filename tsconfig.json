@@ -3,6 +3,7 @@
     "module": "Node16",
     "moduleResolution": "node16",
     "resolvePackageJsonExports": true,
+    "types":["node", "multer"],
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true,
