@@ -104,10 +104,7 @@ export class AuthController {
     description: 'Account disabled or email not verified',
   })
   async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
-    const result = await this.authService.login(
-      dto.email,
-      dto.password,
-    );
+    const result = await this.authService.login(dto.email, dto.password);
 
     return {
       message: 'Login successful. Previous sessions have been logged out.',
@@ -145,37 +142,37 @@ export class AuthController {
     };
   }
 
-  @Get('verify-email')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Verify email address',
-    description: 'Verifies user email using the token sent via email',
-  })
-  @ApiQuery({
-    name: 'token',
-    type: String,
-    description: 'Email verification token',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Email verified successfully',
-    type: VerifyEmailResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid or expired token',
-  })
-  async verifyEmail(
-    @Query('token') token: string,
-  ): Promise<VerifyEmailResponseDto> {
-    const result = await this.authService.verifyEmail(token);
+  // @Get('verify-email')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOperation({
+  //   summary: 'Verify email address',
+  //   description: 'Verifies user email using the token sent via email',
+  // })
+  // @ApiQuery({
+  //   name: 'token',
+  //   type: String,
+  //   description: 'Email verification token',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Email verified successfully',
+  //   type: VerifyEmailResponseDto,
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.BAD_REQUEST,
+  //   description: 'Invalid or expired token',
+  // })
+  // async verifyEmail(
+  //   @Query('token') token: string,
+  // ): Promise<VerifyEmailResponseDto> {
+  //   const result = await this.authService.verifyEmail(token);
 
-    return {
-      success: true,
-      message: 'Email verified successfully',
-      ...result,
-    };
-  }
+  //   return {
+  //     success: true,
+  //     message: 'Email verified successfully',
+  //     ...result,
+  //   };
+  // }
 
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)

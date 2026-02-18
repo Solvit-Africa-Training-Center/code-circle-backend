@@ -1,49 +1,68 @@
+// src/tests/entities/test-attempt.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { Test } from './test.entity';
+import { TestPurpose } from '../enums/test-type.enum';
 
 @Entity('test_attempts')
 export class TestAttempt {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, { nullable: false })
-  user: User;
+  // Référence au User (sans relation TypeORM)
+  @Column()
+  userId: string;
 
-  @ManyToOne(() => Test, { nullable: false })
+  @ManyToOne(() => Test, { eager: true })
+  @JoinColumn({ name: 'testId' })
   test: Test;
 
-  @Column({ nullable: true })
-  clubId?: string;
+  @Column()
+  testId: string;
 
-  @Column({ type: 'int', default: 0 })
+  // Pour savoir pourquoi le user passe le test
+  @Column({
+    type: 'enum',
+    enum: TestPurpose,
+    nullable: true,
+  })
+  purpose?: TestPurpose;
+
+  // Si CREATE_CLUB
+  @Column({ nullable: true })
+  intendedCategoryId: string;
+
+  @Column({ nullable: true })
+  intendedClubName: string;
+
+  // Si JOIN_CLUB
+  @Column({ nullable: true })
+  targetClubId: string;
+
+  @Column({ type: 'jsonb' })
+  answers: Record<string, string>;
+
+  @Column({ type: 'int' })
   score: number;
 
-  @Column({ default: false })
+  @Column()
   passed: boolean;
 
   @Column({ default: false })
   correctedByAI: boolean;
 
-  @Column({ type: 'json', nullable: true })
-  answers?: any;
-
   @Column({ type: 'text', nullable: true })
-  feedback?: string;
+  feedback: string;
 
-  @CreateDateColumn({ name: 'attempted_at' })
+  @CreateDateColumn()
   attemptedAt: Date;
 
-  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
-  completedAt?: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date;
 }

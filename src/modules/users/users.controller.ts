@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -16,7 +17,11 @@ import {
   UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileInterceptor,
+  FilesInterceptor,
+  AnyFilesInterceptor,
+} from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -43,7 +48,7 @@ import { RolesGuard } from '@circle-backend/common/guards/roles.guard';
 import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';
 import type { CurrentUserPayload } from '@circle-backend/modules/auth/strategies/jwt.strategy';
 
-@ApiTags('users')
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -62,9 +67,10 @@ export class UsersController {
     }),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Register for test (pre-test registration)',
-    description: 'Register a user account before taking a test. Upload CV and degree files from your local machine. Files will be uploaded to Cloudinary. User will receive credentials after passing the test.'
+    description:
+      'Register a user account before taking a test. Upload CV and degree files from your local machine. Files will be uploaded to Cloudinary. User will receive credentials after passing the test.',
   })
   @ApiBody({
     schema: {
@@ -89,7 +95,8 @@ export class UsersController {
         },
         bio: {
           type: 'string',
-          example: 'Experienced software developer with 5+ years in web development',
+          example:
+            'Experienced software developer with 5+ years in web development',
           description: 'User bio',
         },
         cv: {
@@ -105,36 +112,49 @@ export class UsersController {
       },
     },
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'User registered successfully. You can now take the test.',
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'Registration successful. You can now take the test.' },
+        message: {
+          type: 'string',
+          example: 'Registration successful. You can now take the test.',
+        },
         data: {
           type: 'object',
           properties: {
-            userId: { type: 'string', format: 'uuid', example: '123e4567-e89b-12d3-a456-426614174000' },
+            userId: {
+              type: 'string',
+              format: 'uuid',
+              example: '123e4567-e89b-12d3-a456-426614174000',
+            },
             email: { type: 'string', example: 'user@example.com' },
           },
         },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Invalid input, email already in use, or invalid file format.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input, email already in use, or invalid file format.',
+  })
   async registerForTest(
-    @Body() body: { fullName: string; email: string; phone: string; bio: string },
+    @Body()
+    body: { fullName: string; email: string; phone: string; bio: string },
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     // Extract files by field name
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const cvFile = files?.find((f) => f.fieldname === 'cv');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const degreeFile = files?.find((f) => f.fieldname === 'degree');
 
     if (!cvFile) {
       throw new BadRequestException('CV file is required');
     }
-    
+
     const user = await this.usersService.registerForTestWithFiles({
       fullName: body.fullName,
       email: body.email,
@@ -169,7 +189,10 @@ export class UsersController {
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
@@ -204,8 +227,14 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(id, updateUserDto);
   }
 
@@ -216,7 +245,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @ApiResponse({ status: 400, description: 'Invalid UUID format.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
@@ -228,12 +260,18 @@ export class UsersController {
   @ApiOperation({ summary: 'Approve a creator account' })
   @ApiResponse({ status: 200, description: 'Creator approved.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
   approveCreator(
     @Body() dto: ApproveCreatorDto,
     @CurrentUser() currentUser: CurrentUserPayload,
   ) {
-    return this.usersService.approveCreator({ ...dto, adminId: currentUser.id });
+    return this.usersService.approveCreator({
+      ...dto,
+      adminId: currentUser.id,
+    });
   }
 
   // Admin: Reject Creator
@@ -243,7 +281,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Reject a creator account' })
   @ApiResponse({ status: 200, description: 'Creator rejected.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
   rejectCreator(@Body() dto: RejectCreatorDto) {
     return this.usersService.rejectCreator(dto);
   }
@@ -255,7 +296,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Activate or deactivate a user' })
   @ApiResponse({ status: 200, description: 'User activation status updated.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
   activateUser(@Body() dto: ActivateUserDto) {
     return this.usersService.activateUser(dto);
   }

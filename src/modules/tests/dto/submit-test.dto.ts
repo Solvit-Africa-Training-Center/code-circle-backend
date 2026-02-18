@@ -1,13 +1,32 @@
-import { IsUUID, IsObject, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsUUID,
+  IsObject,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TestPurpose } from '../enums/test-type.enum'; // ← Import depuis ton fichier enum
 
 export class SubmitTestDto {
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'User ID (from registration)',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  userId: string | undefined;
+
   @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'Test UUID',
   })
   @IsUUID()
-  testId: string;
+  @IsNotEmpty()
+  testId: string | undefined;
 
   @ApiProperty({
     example: {
@@ -18,13 +37,42 @@ export class SubmitTestDto {
   })
   @IsObject()
   @IsNotEmpty()
-  answers: Record<string, string>;
+  answers: Record<string, string> | undefined;
 
   @ApiProperty({
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    description: 'Club UUID (optional, if joining a club)',
+    enum: TestPurpose,
+    example: TestPurpose.CREATE_CLUB,
+    description: 'Purpose of the test',
   })
-  @IsUUID()
+  @IsEnum(TestPurpose)
   @IsNotEmpty()
-  clubId?: string;
+  purpose: TestPurpose | undefined;
+
+  // Si purpose = CREATE_CLUB
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Category ID (required if purpose is CREATE_CLUB)',
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @ApiPropertyOptional({
+    example: 'AI Masters Club',
+    description: 'Intended club name (required if purpose is CREATE_CLUB)',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(200)
+  clubName?: string;
+
+  // Si purpose = JOIN_CLUB
+  @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Target club ID (required if purpose is JOIN_CLUB)',
+  })
+  @IsOptional()
+  @IsUUID()
+  targetClubId?: string;
 }

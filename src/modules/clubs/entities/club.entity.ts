@@ -10,8 +10,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
-// import { User } from '../../users/entities/user.entity';
-// import { Membership } from '../../memberships/entities/membership.entity';
+//import { User } from '../../users/entities/user.entity';
+//import { Membership } from '../../memberships/entities/membership.entity';
 import { Test } from '../../tests/entities/test.entity';
 
 @Entity('clubs')
@@ -29,7 +29,7 @@ export class Club {
   @Column()
   categoryId: string;
 
-  // Relation avec User (à décommenter quand le module User sera prêt)
+  // //Relation avec User (à décommenter quand le module User sera prêt)
   // @ManyToOne(() => User)
   // @JoinColumn({ name: 'creatorId' })
   // creator: User;

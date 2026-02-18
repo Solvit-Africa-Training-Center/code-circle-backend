@@ -24,14 +24,14 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ default: '' })
   name: string;
 
   @Index('IDX_users_email')
   @Column({ unique: true })
   email: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: '' })
   password: string;
 
   @Column({
@@ -68,8 +68,6 @@ export class User {
 
   @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
   oauthAccounts: OAuthAccount[];
-
-
   @OneToMany(() => UserPermission, (userPermission) => userPermission.user)
   userPermissions: UserPermission[];
   // role is handled by userRoles relation
