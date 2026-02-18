@@ -13,7 +13,9 @@ import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 export class JwtAuthGuard extends PassportAuthGuard('jwt') {
   private readonly logger = new Logger(JwtAuthGuard.name);
   constructor(
-    @Optional() @Inject(TokenService) private readonly tokenService?: TokenService,
+    @Optional()
+    @Inject(TokenService)
+    private readonly tokenService?: TokenService,
   ) {
     super();
   }
@@ -24,16 +26,16 @@ export class JwtAuthGuard extends PassportAuthGuard('jwt') {
       .getRequest();
     const token = req.headers.authorization?.split(' ')[1];
 
-    // Check token blacklist if TokenService is available
     if (token && this.tokenService) {
       try {
         if (await this.tokenService.isBlacklisted(token)) {
           throw new UnauthorizedException('Token has been revoked');
         }
       } catch (error) {
-        // If TokenService check fails, log but don't block authentication
-        // This allows the guard to work even if TokenService is unavailable
-        this.logger.warn('TokenService check failed, proceeding with authentication', error);
+        this.logger.warn(
+          'TokenService check failed, proceeding with authentication',
+          error,
+        );
       }
     }
 
@@ -45,21 +47,24 @@ export class JwtAuthGuard extends PassportAuthGuard('jwt') {
   handleRequest<TUser = any>(err: any, user: TUser, info: any): TUser {
     if (err || !user) {
       let msg: string | undefined;
+
       if (info && typeof info === 'object' && 'message' in info) {
         msg = (info as Record<string, unknown>).message as string;
       } else if (typeof info === 'string') {
         msg = info;
+      } else if (err && typeof err === 'object' && 'message' in err) {
+        msg = String((err as Record<string, unknown>).message);
       }
-      this.logger.warn(
-        `Authentication failed: ${
-          msg ??
-          (err && typeof err === 'object' && 'message' in err
-            ? String((err as Record<string, unknown>).message)
-            : undefined) ??
-          'Unknown error'
-        }`,
+
+      this.logger.warn(`Authentication failed: ${msg ?? 'Unknown error'}`);
+
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+
+      throw new UnauthorizedException(
+        msg && typeof msg === 'string' ? msg : 'Invalid or expired token',
       );
-      throw err || new UnauthorizedException('Invalid or expired token');
     }
     return user;
   }

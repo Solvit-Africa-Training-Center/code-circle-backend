@@ -494,6 +494,11 @@
             "description": "Invalid input, email already in use, or invalid file format."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Register for test (pre-test registration)",
         "tags": [
           "Users"
@@ -520,6 +525,9 @@
           }
         },
         "security": [
+          {
+            "JWT-auth": []
+          },
           {
             "JWT-auth": []
           }
@@ -565,6 +573,11 @@
             "description": "Forbidden - Admin access required."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Get all users",
         "tags": [
           "Users"
@@ -595,6 +608,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Get user by ID",
         "tags": [
           "Users"
@@ -636,6 +654,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Update user by ID",
         "tags": [
           "Users"
@@ -667,6 +690,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Delete user by ID",
         "tags": [
           "Users"
@@ -694,6 +722,11 @@
             "description": "Invalid UUID format."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Get all memberships for a user",
         "tags": [
           "Users"
@@ -725,6 +758,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Approve a creator account",
         "tags": [
           "Users"
@@ -756,6 +794,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Reject a creator account",
         "tags": [
           "Users"
@@ -787,6 +830,11 @@
             "description": "User not found."
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Activate or deactivate a user",
         "tags": [
           "Users"
@@ -2015,6 +2063,2158 @@
           "Clubs"
         ]
       }
+    },
+    "/api/v1/courses": {
+      "post": {
+        "operationId": "Course_createCourse",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Course created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "403": {
+            "description": "Only club owners can create courses"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new course (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}": {
+      "get": {
+        "operationId": "Course_getCourseById",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get course details by ID",
+        "tags": [
+          "courses"
+        ]
+      },
+      "put": {
+        "operationId": "Course_updateCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only course creator can update"
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update course details (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      },
+      "delete": {
+        "operationId": "Course_deleteCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course deleted successfully"
+          },
+          "403": {
+            "description": "Only course creator can delete"
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a course (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/club/{clubId}": {
+      "get": {
+        "operationId": "Course_getCoursesByClub",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club courses retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all courses for a club",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}/publish": {
+      "post": {
+        "operationId": "Course_publishCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course published successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Course cannot be published (missing modules/lessons)"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Publish a course (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}/modules": {
+      "post": {
+        "operationId": "Course_createModule",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Module created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Module"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add a module to a course (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/modules/{moduleId}": {
+      "put": {
+        "operationId": "Course_updateModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "description": "Module UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateModuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Module updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Module"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a module (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      },
+      "delete": {
+        "operationId": "Course_deleteModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "description": "Module UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Module deleted successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a module (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/modules/{moduleId}/lessons": {
+      "post": {
+        "operationId": "Course_createLesson",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "description": "Module UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLessonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lesson created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lesson"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add a lesson to a module (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/lessons/{lessonId}": {
+      "put": {
+        "operationId": "Course_updateLesson",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "description": "Lesson UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lesson updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lesson"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a lesson (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      },
+      "delete": {
+        "operationId": "Course_deleteLesson",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "description": "Lesson UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lesson deleted successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a lesson (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}/enroll": {
+      "post": {
+        "operationId": "Course_enrollInCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Enrolled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already enrolled"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Enroll in a course",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/user/enrollments": {
+      "get": {
+        "operationId": "Course_getUserEnrollments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User enrollments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Enrollment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get current user enrollments",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}/enrollments": {
+      "get": {
+        "operationId": "Course_getCourseEnrollments",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course enrollments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Enrollment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all enrollments for a course (Club Owner only)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/lessons/{lessonId}/complete": {
+      "post": {
+        "operationId": "Course_markLessonComplete",
+        "parameters": [
+          {
+            "name": "lessonId",
+            "required": true,
+            "in": "path",
+            "description": "Lesson UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lesson marked as complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Mark a lesson as complete",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{courseId}/progress": {
+      "get": {
+        "operationId": "Course_getUserProgress",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User progress retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Progress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get user progress in a course",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/assignments": {
+      "post": {
+        "operationId": "Assignment_createAssignment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Assignment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new assignment (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignmentId}": {
+      "get": {
+        "operationId": "Assignment_getAssignmentById",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Assignment not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get assignment details by ID",
+        "tags": [
+          "assignments"
+        ]
+      },
+      "put": {
+        "operationId": "Assignment_updateAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only assignment creator can update"
+          },
+          "404": {
+            "description": "Assignment not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update assignment (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      },
+      "delete": {
+        "operationId": "Assignment_deleteAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment deleted successfully"
+          },
+          "404": {
+            "description": "Assignment not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete an assignment (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/course/{courseId}": {
+      "get": {
+        "operationId": "Assignment_getAssignmentsByCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course assignments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all assignments for a course",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/module/{moduleId}": {
+      "get": {
+        "operationId": "Assignment_getAssignmentsByModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "description": "Module UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Module assignments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all assignments for a module",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignmentId}/publish": {
+      "post": {
+        "operationId": "Assignment_publishAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment published successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Publish an assignment (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignmentId}/submissions": {
+      "post": {
+        "operationId": "Assignment_createSubmission",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Submission created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid submission or deadline passed"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a submission for an assignment",
+        "tags": [
+          "assignments"
+        ]
+      },
+      "get": {
+        "operationId": "Assignment_getAssignmentSubmissions",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment submissions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Submission"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all submissions for an assignment (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/submissions/{submissionId}/submit": {
+      "post": {
+        "operationId": "Assignment_submitAssignment",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "required": true,
+            "in": "path",
+            "description": "Submission UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Submission submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Submit a draft submission",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/submissions/{submissionId}": {
+      "put": {
+        "operationId": "Assignment_updateSubmission",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "required": true,
+            "in": "path",
+            "description": "Submission UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Submission updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a draft submission",
+        "tags": [
+          "assignments"
+        ]
+      },
+      "get": {
+        "operationId": "Assignment_getSubmission",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "required": true,
+            "in": "path",
+            "description": "Submission UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Submission details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get submission details",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignmentId}/my-submissions": {
+      "get": {
+        "operationId": "Assignment_getUserSubmissions",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "description": "Assignment UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User submissions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Submission"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get current user submissions for an assignment",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/submissions/{submissionId}/grade": {
+      "post": {
+        "operationId": "Assignment_gradeSubmission",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "required": true,
+            "in": "path",
+            "description": "Submission UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GradeSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Submission graded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Grade a submission (Course Owner only)",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/v1/quizzes": {
+      "post": {
+        "operationId": "Quiz_createQuiz",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuizDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}": {
+      "get": {
+        "operationId": "Quiz_getQuizById",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      },
+      "put": {
+        "operationId": "Quiz_updateQuiz",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuizDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      },
+      "delete": {
+        "operationId": "Quiz_deleteQuiz",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/course/{courseId}": {
+      "get": {
+        "operationId": "Quiz_getQuizzesByCourse",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/publish": {
+      "post": {
+        "operationId": "Quiz_publishQuiz",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/start": {
+      "post": {
+        "operationId": "Quiz_startQuizAttempt",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "Quiz_submitQuizAttempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitQuizAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/my-attempts": {
+      "get": {
+        "operationId": "Quiz_getUserAttempts",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/quizzes/attempts/{attemptId}": {
+      "get": {
+        "operationId": "Quiz_getAttemptById",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Quiz"
+        ]
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "operationId": "Project_createProject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "403": {
+            "description": "Only club owners can create projects"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new project (Club Owner only)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}": {
+      "get": {
+        "operationId": "Project_getProjectById",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "Project UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get project details by ID",
+        "tags": [
+          "projects"
+        ]
+      },
+      "put": {
+        "operationId": "Project_updateProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "Project UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only project creator can update"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update project details (Club Owner only)",
+        "tags": [
+          "projects"
+        ]
+      },
+      "delete": {
+        "operationId": "Project_deleteProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "Project UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted successfully"
+          },
+          "403": {
+            "description": "Only project creator can delete"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a project (Club Owner only)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/course/{courseId}": {
+      "get": {
+        "operationId": "Project_getCourseProjects",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "path",
+            "description": "Course UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course projects retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all projects for a course",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/module/{moduleId}": {
+      "get": {
+        "operationId": "Project_getModuleProjects",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "description": "Module UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Module projects retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all projects for a module",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}/publish": {
+      "post": {
+        "operationId": "Project_publishProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "Project UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project published successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Publish a project (Club Owner only)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams": {
+      "post": {
+        "operationId": "Project_createTeam",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Team created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Project is not active or user already in a team"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new team for a project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/{teamId}": {
+      "get": {
+        "operationId": "Project_getTeamById",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get team details",
+        "tags": [
+          "projects"
+        ]
+      },
+      "put": {
+        "operationId": "Project_updateTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Team updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update team details (Team Leader only)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}/teams": {
+      "get": {
+        "operationId": "Project_getProjectTeams",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "Project UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project teams retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectTeam"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all teams for a project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/user/my-teams": {
+      "get": {
+        "operationId": "Project_getUserTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User teams retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectTeam"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get current user teams",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/{teamId}/join": {
+      "post": {
+        "operationId": "Project_joinTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Joined team successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Team is full or not accepting members"
+          },
+          "409": {
+            "description": "Already a member of this team"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Join a team",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/{teamId}/leave": {
+      "post": {
+        "operationId": "Project_leaveTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Left team successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot leave team after submission"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Leave a team",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/{teamId}/submit": {
+      "post": {
+        "operationId": "Project_submitProject",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Team does not meet minimum size or deadline passed"
+          },
+          "403": {
+            "description": "Only team leader can submit"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Submit project (Team Leader only)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/teams/{teamId}/grade": {
+      "post": {
+        "operationId": "Project_gradeProject",
+        "parameters": [
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "description": "Team UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GradeProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project graded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTeam"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Team has not submitted yet"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Grade project submission (Club Owner only)",
+        "tags": [
+          "projects"
+        ]
+      }
     }
   },
   "info": {
@@ -2986,6 +5186,2179 @@
             "description": "Whether the club is active"
           }
         }
+      },
+      "CreateCourseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Advanced NestJS Development",
+            "description": "Course title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn advanced NestJS concepts including microservices, GraphQL, and testing",
+            "description": "Detailed course description"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "https://example.com/course-thumbnail.jpg",
+            "description": "Course thumbnail URL"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "example": "intermediate",
+            "description": "Course difficulty level"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "example": "draft",
+            "description": "Course status (defaults to DRAFT)",
+            "default": "draft"
+          },
+          "duration": {
+            "type": "number",
+            "example": 40,
+            "description": "Estimated hours to complete the course",
+            "minimum": 0
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Club ID where this course belongs"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "level",
+          "clubId"
+        ]
+      },
+      "Course": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Advanced NestJS Development"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn advanced NestJS concepts and best practices"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "https://example.com/course-thumbnail.jpg"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "example": "intermediate"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "example": "published"
+          },
+          "duration": {
+            "type": "number",
+            "example": 40
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "thumbnail",
+          "level",
+          "status",
+          "duration",
+          "clubId",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateCourseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Advanced NestJS Development",
+            "description": "Course title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn advanced NestJS concepts including microservices, GraphQL, and testing",
+            "description": "Detailed course description"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "https://example.com/course-thumbnail.jpg",
+            "description": "Course thumbnail URL"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "example": "intermediate",
+            "description": "Course difficulty level"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "example": "published",
+            "description": "Update course status",
+            "default": "draft"
+          },
+          "duration": {
+            "type": "number",
+            "example": 40,
+            "description": "Estimated hours to complete the course",
+            "minimum": 0
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Club ID where this course belongs"
+          }
+        }
+      },
+      "CreateModuleDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Introduction to NestJS",
+            "description": "Module title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn the fundamentals of NestJS framework",
+            "description": "Module description"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1,
+            "description": "Order index for module sequencing",
+            "minimum": 1
+          },
+          "duration": {
+            "type": "number",
+            "example": 5,
+            "description": "Estimated hours for this module",
+            "minimum": 0
+          },
+          "isPublished": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the module is published",
+            "default": true
+          }
+        },
+        "required": [
+          "title",
+          "orderIndex"
+        ]
+      },
+      "Module": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Introduction to NestJS"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn the fundamentals of NestJS framework"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1
+          },
+          "duration": {
+            "type": "number",
+            "example": 5
+          },
+          "isPublished": {
+            "type": "boolean",
+            "example": true
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "orderIndex",
+          "duration",
+          "isPublished",
+          "courseId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateModuleDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Introduction to NestJS",
+            "description": "Module title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn the fundamentals of NestJS framework",
+            "description": "Module description"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1,
+            "description": "Order index for module sequencing",
+            "minimum": 1
+          },
+          "duration": {
+            "type": "number",
+            "example": 5,
+            "description": "Estimated hours for this module",
+            "minimum": 0
+          },
+          "isPublished": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the module is published",
+            "default": true
+          }
+        }
+      },
+      "LessonContentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "video",
+              "text",
+              "code_exercise",
+              "external_link",
+              "file"
+            ],
+            "example": "video",
+            "description": "Type of content"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1,
+            "description": "Order index for content sequencing"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/videos/lesson1.mp4",
+            "description": "URL for video or file content"
+          },
+          "content": {
+            "type": "string",
+            "example": "This is the lesson content in markdown or HTML format...",
+            "description": "Text content or code exercise"
+          },
+          "linkTitle": {
+            "type": "string",
+            "example": "NestJS Official Documentation",
+            "description": "Title for external links"
+          },
+          "linkUrl": {
+            "type": "string",
+            "example": "https://docs.nestjs.com",
+            "description": "External link URL"
+          },
+          "exerciseInstructions": {
+            "type": "string",
+            "example": "Create a NestJS controller that handles GET and POST requests",
+            "description": "Instructions for code exercises"
+          },
+          "codeLanguage": {
+            "type": "string",
+            "example": "typescript",
+            "description": "Programming language for code exercises"
+          },
+          "starterCode": {
+            "type": "string",
+            "example": "import { Controller } from \"@nestjs/common\";",
+            "description": "Starter code for exercises"
+          },
+          "solutionCode": {
+            "type": "string",
+            "example": "import { Controller, Get } from \"@nestjs/common\";...",
+            "description": "Solution code for exercises"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "duration": 300,
+              "resolution": "1080p"
+            },
+            "description": "Additional metadata"
+          }
+        },
+        "required": [
+          "type",
+          "orderIndex"
+        ]
+      },
+      "CreateLessonDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Setting up NestJS Project",
+            "description": "Lesson title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn how to set up a new NestJS project from scratch",
+            "description": "Lesson description"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "video",
+              "text",
+              "code_exercise",
+              "external_link",
+              "quiz",
+              "assignment"
+            ],
+            "example": "video",
+            "description": "Type of lesson"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1,
+            "description": "Order index for lesson sequencing",
+            "minimum": 1
+          },
+          "duration": {
+            "type": "number",
+            "example": 30,
+            "description": "Duration in minutes",
+            "minimum": 0
+          },
+          "isPublished": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the lesson is published",
+            "default": true
+          },
+          "isMandatory": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether completing this lesson is mandatory",
+            "default": false
+          },
+          "contents": {
+            "description": "Lesson content items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonContentDto"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "orderIndex"
+        ]
+      },
+      "Lesson": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Setting up NestJS Project"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn how to set up a new NestJS project from scratch"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "video",
+              "text",
+              "code_exercise",
+              "external_link",
+              "quiz",
+              "assignment"
+            ],
+            "example": "video"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          },
+          "isPublished": {
+            "type": "boolean",
+            "example": true
+          },
+          "isMandatory": {
+            "type": "boolean",
+            "example": false
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "type",
+          "orderIndex",
+          "duration",
+          "isPublished",
+          "isMandatory",
+          "moduleId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Enrollment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "completed",
+              "dropped"
+            ],
+            "example": "active"
+          },
+          "progressPercentage": {
+            "type": "number",
+            "example": 75.5
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:00:00.000Z"
+          },
+          "lastAccessedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:00:00.000Z"
+          },
+          "enrolledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "courseId",
+          "status",
+          "progressPercentage",
+          "completedAt",
+          "lastAccessedAt",
+          "enrolledAt",
+          "updatedAt"
+        ]
+      },
+      "Progress": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "enrollmentId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "lessonId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "example": true
+          },
+          "completionPercentage": {
+            "type": "number",
+            "example": 85
+          },
+          "timeSpent": {
+            "type": "number",
+            "example": 1200
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:00:00.000Z"
+          },
+          "lastAccessedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:00:00.000Z"
+          },
+          "additionalData": {
+            "type": "object",
+            "example": {
+              "quizScore": 90,
+              "attempts": 2
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "enrollmentId",
+          "lessonId",
+          "isCompleted",
+          "completionPercentage",
+          "timeSpent",
+          "completedAt",
+          "lastAccessedAt",
+          "additionalData",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Build a REST API with NestJS",
+            "description": "Assignment title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a complete REST API with authentication and CRUD operations",
+            "description": "Assignment description"
+          },
+          "instructions": {
+            "type": "string",
+            "example": "Detailed instructions for completing the assignment...",
+            "description": "Step-by-step instructions"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "group"
+            ],
+            "example": "individual",
+            "description": "Type of assignment"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "closed"
+            ],
+            "example": "draft",
+            "description": "Assignment status",
+            "default": "draft"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 100,
+            "description": "Maximum points for this assignment",
+            "minimum": 0
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 60,
+            "description": "Minimum score required to pass",
+            "minimum": 0
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-02-15T23:59:59.000Z",
+            "description": "Assignment due date"
+          },
+          "allowLateSubmission": {
+            "type": "boolean",
+            "example": true,
+            "description": "Allow submissions after due date",
+            "default": false
+          },
+          "latePenalty": {
+            "type": "number",
+            "example": 10,
+            "description": "Percentage penalty for late submissions",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "maxAttempts": {
+            "type": "number",
+            "example": 3,
+            "description": "Maximum number of submission attempts",
+            "minimum": 1,
+            "default": 1
+          },
+          "requirePeerReview": {
+            "type": "boolean",
+            "example": true,
+            "description": "Require peer review for this assignment",
+            "default": false
+          },
+          "minPeerReviews": {
+            "type": "number",
+            "example": 2,
+            "description": "Minimum number of peer reviews required",
+            "minimum": 0
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 3,
+            "description": "Maximum team size for group assignments",
+            "minimum": 2
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Course ID this assignment belongs to"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Module ID this assignment belongs to (optional)"
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/starter-code.zip"
+            ],
+            "description": "Attachment URLs (resources, starter code, etc.)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "rubric": "grading criteria details"
+            },
+            "description": "Additional metadata"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "instructions",
+          "type",
+          "courseId"
+        ]
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Build a REST API with NestJS"
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a complete REST API with authentication"
+          },
+          "instructions": {
+            "type": "string",
+            "example": "Detailed instructions for the assignment..."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "group"
+            ],
+            "example": "individual"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "closed"
+            ],
+            "example": "published"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 100
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 60
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-02-15T23:59:59.000Z"
+          },
+          "allowLateSubmission": {
+            "type": "boolean",
+            "example": true
+          },
+          "latePenalty": {
+            "type": "number",
+            "example": 10
+          },
+          "maxAttempts": {
+            "type": "number",
+            "example": 3
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 3
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/starter-code.zip"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "rubric": "grading criteria"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "instructions",
+          "type",
+          "status",
+          "maxPoints",
+          "passingScore",
+          "dueDate",
+          "allowLateSubmission",
+          "latePenalty",
+          "maxAttempts",
+          "maxTeamSize",
+          "courseId",
+          "moduleId",
+          "createdBy",
+          "attachments",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Build a REST API with NestJS",
+            "description": "Assignment title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a complete REST API with authentication and CRUD operations",
+            "description": "Assignment description"
+          },
+          "instructions": {
+            "type": "string",
+            "example": "Detailed instructions for completing the assignment...",
+            "description": "Step-by-step instructions"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "group"
+            ],
+            "example": "individual",
+            "description": "Type of assignment"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "closed"
+            ],
+            "example": "draft",
+            "description": "Assignment status",
+            "default": "draft"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 100,
+            "description": "Maximum points for this assignment",
+            "minimum": 0
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 60,
+            "description": "Minimum score required to pass",
+            "minimum": 0
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-02-15T23:59:59.000Z",
+            "description": "Assignment due date"
+          },
+          "allowLateSubmission": {
+            "type": "boolean",
+            "example": true,
+            "description": "Allow submissions after due date",
+            "default": false
+          },
+          "latePenalty": {
+            "type": "number",
+            "example": 10,
+            "description": "Percentage penalty for late submissions",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "maxAttempts": {
+            "type": "number",
+            "example": 3,
+            "description": "Maximum number of submission attempts",
+            "minimum": 1,
+            "default": 1
+          },
+          "requirePeerReview": {
+            "type": "boolean",
+            "example": true,
+            "description": "Require peer review for this assignment",
+            "default": false
+          },
+          "minPeerReviews": {
+            "type": "number",
+            "example": 2,
+            "description": "Minimum number of peer reviews required",
+            "minimum": 0
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 3,
+            "description": "Maximum team size for group assignments",
+            "minimum": 2
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Course ID this assignment belongs to"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Module ID this assignment belongs to (optional)"
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/starter-code.zip"
+            ],
+            "description": "Attachment URLs (resources, starter code, etc.)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "rubric": "grading criteria details"
+            },
+            "description": "Additional metadata"
+          }
+        }
+      },
+      "CreateSubmissionDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Here is my solution to the assignment...",
+            "description": "Submission content/explanation"
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/submission.zip",
+              "https://example.com/screenshot.png"
+            ],
+            "description": "Attachment URLs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "example": "https://github.com/username/assignment-repo",
+            "description": "GitHub repository URL"
+          },
+          "teamId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Team ID for group assignments"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "Submission": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "assignmentId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "teamId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "content": {
+            "type": "string",
+            "example": "Here is my solution to the assignment..."
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/submission.zip",
+              "https://github.com/user/repo"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "example": "https://github.com/user/assignment-repo"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "submitted",
+              "under_review",
+              "graded",
+              "returned"
+            ],
+            "example": "submitted"
+          },
+          "score": {
+            "type": "object",
+            "example": 85
+          },
+          "feedback": {
+            "type": "object",
+            "example": "Good work! Consider improving error handling."
+          },
+          "attemptNumber": {
+            "type": "number",
+            "example": 1
+          },
+          "isLate": {
+            "type": "boolean",
+            "example": false
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:00:00.000Z"
+          },
+          "gradedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-20T10:00:00.000Z"
+          },
+          "gradedBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "assignmentId",
+          "userId",
+          "teamId",
+          "content",
+          "attachments",
+          "repositoryUrl",
+          "status",
+          "score",
+          "feedback",
+          "attemptNumber",
+          "isLate",
+          "submittedAt",
+          "gradedAt",
+          "gradedBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateSubmissionDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Updated submission content...",
+            "description": "Updated content"
+          },
+          "attachments": {
+            "example": [
+              "https://example.com/updated-file.zip"
+            ],
+            "description": "Updated attachments",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "example": "https://github.com/username/updated-repo",
+            "description": "Updated repository URL"
+          }
+        }
+      },
+      "GradeSubmissionDto": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "example": 85,
+            "description": "Score for the submission",
+            "minimum": 0
+          },
+          "feedback": {
+            "type": "string",
+            "example": "Great work! Consider improving error handling.",
+            "description": "Feedback for the student"
+          }
+        },
+        "required": [
+          "score"
+        ]
+      },
+      "QuizOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "a"
+          },
+          "text": {
+            "type": "string",
+            "example": "To add metadata"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "isCorrect"
+        ]
+      },
+      "CreateQuizQuestionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "multiple_choice",
+              "true_false",
+              "short_answer",
+              "code"
+            ],
+            "example": "multiple_choice"
+          },
+          "orderIndex": {
+            "type": "number",
+            "example": 1
+          },
+          "question": {
+            "type": "string",
+            "example": "What is NestJS?"
+          },
+          "explanation": {
+            "type": "string",
+            "example": "NestJS is a framework..."
+          },
+          "points": {
+            "type": "number",
+            "example": 10
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizOptionDto"
+            }
+          },
+          "correctAnswers": {
+            "example": [
+              "correct answer"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "starterCode": {
+            "type": "string",
+            "example": "console.log();"
+          },
+          "codeLanguage": {
+            "type": "string",
+            "example": "typescript"
+          },
+          "caseSensitive": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "type",
+          "orderIndex",
+          "question"
+        ]
+      },
+      "CreateQuizDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "NestJS Quiz",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Test your knowledge"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "practice",
+              "graded",
+              "final"
+            ],
+            "example": "graded"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "closed"
+            ],
+            "default": "draft"
+          },
+          "timeLimit": {
+            "type": "number",
+            "example": 30
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 100
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 70
+          },
+          "maxAttempts": {
+            "type": "number",
+            "example": 3
+          },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "example": false
+          },
+          "shuffleAnswers": {
+            "type": "boolean",
+            "example": false
+          },
+          "showCorrectAnswers": {
+            "type": "boolean",
+            "example": true
+          },
+          "showResultsImmediately": {
+            "type": "boolean",
+            "example": false
+          },
+          "availableFrom": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "availableUntil": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "lessonId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateQuizQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "courseId"
+        ]
+      },
+      "UpdateQuizDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "NestJS Quiz",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Test your knowledge"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "practice",
+              "graded",
+              "final"
+            ],
+            "example": "graded"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "closed"
+            ],
+            "default": "draft"
+          },
+          "timeLimit": {
+            "type": "number",
+            "example": 30
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 100
+          },
+          "passingScore": {
+            "type": "number",
+            "example": 70
+          },
+          "maxAttempts": {
+            "type": "number",
+            "example": 3
+          },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "example": false
+          },
+          "shuffleAnswers": {
+            "type": "boolean",
+            "example": false
+          },
+          "showCorrectAnswers": {
+            "type": "boolean",
+            "example": true
+          },
+          "showResultsImmediately": {
+            "type": "boolean",
+            "example": false
+          },
+          "availableFrom": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "availableUntil": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "lessonId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateQuizQuestionDto"
+            }
+          }
+        }
+      },
+      "SubmitQuizAnswerDto": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "object",
+            "example": {
+              "question-uuid-1": {
+                "answer": "a"
+              },
+              "question-uuid-2": {
+                "answer": "dependency injection"
+              }
+            },
+            "description": "Answers mapped by question ID"
+          }
+        },
+        "required": [
+          "answers"
+        ]
+      },
+      "MilestoneDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Project Proposal"
+          },
+          "description": {
+            "type": "string",
+            "example": "Submit project proposal document"
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2024-03-15"
+          },
+          "points": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "title",
+          "dueDate",
+          "points"
+        ]
+      },
+      "CreateProjectDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Build a Social Media Platform",
+            "description": "Project title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a full-stack social media application with user authentication, posts, and comments",
+            "description": "Project description"
+          },
+          "requirements": {
+            "type": "string",
+            "example": "Detailed requirements: 1. User authentication, 2. Post creation, 3. Comments system...",
+            "description": "Detailed project requirements"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "group",
+              "individual"
+            ],
+            "example": "group",
+            "description": "Project type"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "completed",
+              "archived"
+            ],
+            "example": "draft",
+            "description": "Project status (defaults to DRAFT)",
+            "default": "draft"
+          },
+          "minTeamSize": {
+            "type": "number",
+            "example": 2,
+            "description": "Minimum team size",
+            "minimum": 1,
+            "default": 2
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 5,
+            "description": "Maximum team size",
+            "minimum": 1,
+            "default": 5
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-03-01T00:00:00.000Z",
+            "description": "Project start date"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-04-30T23:59:59.000Z",
+            "description": "Project end date"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 200,
+            "description": "Maximum points for the project",
+            "minimum": 1,
+            "default": 100
+          },
+          "milestones": {
+            "description": "Project milestones",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MilestoneDto"
+            }
+          },
+          "technologies": {
+            "example": [
+              "NestJS",
+              "React",
+              "PostgreSQL",
+              "Docker"
+            ],
+            "description": "Required technologies",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "example": [
+              "https://example.com/project-template.zip"
+            ],
+            "description": "Resource URLs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Course ID this project belongs to"
+          },
+          "moduleId": {
+            "type": "object",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Module ID (optional)"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "evaluationCriteria": "Detailed rubric"
+            },
+            "description": "Additional metadata"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "requirements",
+          "type",
+          "courseId"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Build a Social Media Platform"
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a full-stack social media application"
+          },
+          "requirements": {
+            "type": "string",
+            "example": "Detailed project requirements and guidelines..."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "group",
+              "individual"
+            ],
+            "example": "group"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "completed",
+              "archived"
+            ],
+            "example": "active"
+          },
+          "minTeamSize": {
+            "type": "number",
+            "example": 2
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 5
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-03-01T00:00:00.000Z"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-04-30T23:59:59.000Z"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 200
+          },
+          "milestones": {
+            "example": [
+              {
+                "title": "Project Proposal",
+                "dueDate": "2024-03-15",
+                "points": 20
+              },
+              {
+                "title": "Mid-term Demo",
+                "dueDate": "2024-04-01",
+                "points": 50
+              },
+              {
+                "title": "Final Presentation",
+                "dueDate": "2024-04-30",
+                "points": 130
+              }
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "technologies": {
+            "example": [
+              "NestJS",
+              "React",
+              "PostgreSQL",
+              "Docker"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "example": [
+              "https://example.com/project-template.zip"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "moduleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "evaluationCriteria": "rubric details"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "type",
+          "status",
+          "minTeamSize",
+          "maxTeamSize",
+          "startDate",
+          "endDate",
+          "maxPoints",
+          "milestones",
+          "technologies",
+          "resources",
+          "courseId",
+          "moduleId",
+          "createdBy",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateProjectDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Build a Social Media Platform",
+            "description": "Project title",
+            "minLength": 3,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "Create a full-stack social media application with user authentication, posts, and comments",
+            "description": "Project description"
+          },
+          "requirements": {
+            "type": "string",
+            "example": "Detailed requirements: 1. User authentication, 2. Post creation, 3. Comments system...",
+            "description": "Detailed project requirements"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "group",
+              "individual"
+            ],
+            "example": "group",
+            "description": "Project type"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "completed",
+              "archived"
+            ],
+            "example": "draft",
+            "description": "Project status (defaults to DRAFT)",
+            "default": "draft"
+          },
+          "minTeamSize": {
+            "type": "number",
+            "example": 2,
+            "description": "Minimum team size",
+            "minimum": 1,
+            "default": 2
+          },
+          "maxTeamSize": {
+            "type": "number",
+            "example": 5,
+            "description": "Maximum team size",
+            "minimum": 1,
+            "default": 5
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-03-01T00:00:00.000Z",
+            "description": "Project start date"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-04-30T23:59:59.000Z",
+            "description": "Project end date"
+          },
+          "maxPoints": {
+            "type": "number",
+            "example": 200,
+            "description": "Maximum points for the project",
+            "minimum": 1,
+            "default": 100
+          },
+          "milestones": {
+            "description": "Project milestones",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MilestoneDto"
+            }
+          },
+          "technologies": {
+            "example": [
+              "NestJS",
+              "React",
+              "PostgreSQL",
+              "Docker"
+            ],
+            "description": "Required technologies",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "example": [
+              "https://example.com/project-template.zip"
+            ],
+            "description": "Resource URLs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "courseId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Course ID this project belongs to"
+          },
+          "moduleId": {
+            "type": "object",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Module ID (optional)"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "evaluationCriteria": "Detailed rubric"
+            },
+            "description": "Additional metadata"
+          }
+        }
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Team Alpha",
+            "description": "Team name",
+            "minLength": 2,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "We are passionate developers building amazing things!",
+            "description": "Team description"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Project ID"
+          }
+        },
+        "required": [
+          "name",
+          "projectId"
+        ]
+      },
+      "ProjectTeam": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Team Alpha"
+          },
+          "description": {
+            "type": "string",
+            "example": "We are passionate developers building amazing things!"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "forming",
+              "active",
+              "submitted",
+              "graded",
+              "disbanded"
+            ],
+            "example": "active"
+          },
+          "members": {
+            "example": [
+              {
+                "userId": "uuid-1",
+                "role": "leader",
+                "joinedAt": "2024-01-15T10:00:00.000Z"
+              },
+              {
+                "userId": "uuid-2",
+                "role": "member",
+                "joinedAt": "2024-01-15T11:00:00.000Z"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "example": "https://github.com/team-alpha/project"
+          },
+          "demoUrl": {
+            "type": "string",
+            "example": "https://team-alpha-demo.netlify.app"
+          },
+          "submissionContent": {
+            "type": "string",
+            "example": "Our project implements a full-stack social media platform..."
+          },
+          "submissionAttachments": {
+            "type": "object",
+            "example": [
+              "https://example.com/presentation.pdf",
+              "https://example.com/demo-video.mp4"
+            ]
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-04-30T10:00:00.000Z"
+          },
+          "score": {
+            "type": "number",
+            "example": 185
+          },
+          "feedback": {
+            "type": "object",
+            "example": "Excellent implementation with great UI/UX!"
+          },
+          "gradedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-05-05T10:00:00.000Z"
+          },
+          "gradedBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "milestoneProgress": {
+            "type": "object",
+            "example": {
+              "milestone-1": {
+                "completed": true,
+                "score": 18,
+                "completedAt": "2024-03-15"
+              },
+              "milestone-2": {
+                "completed": true,
+                "score": 45,
+                "completedAt": "2024-04-01"
+              }
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "projectId",
+          "status",
+          "members",
+          "repositoryUrl",
+          "demoUrl",
+          "submissionContent",
+          "submissionAttachments",
+          "submittedAt",
+          "score",
+          "feedback",
+          "gradedAt",
+          "gradedBy",
+          "milestoneProgress",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Team Alpha",
+            "description": "Team name",
+            "minLength": 2,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "example": "We are passionate developers building amazing things!",
+            "description": "Team description"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Project ID"
+          }
+        }
+      },
+      "SubmitProjectDto": {
+        "type": "object",
+        "properties": {
+          "submissionContent": {
+            "type": "string",
+            "example": "Our project implements a full-stack social media platform...",
+            "description": "Project submission content/description"
+          },
+          "submissionAttachments": {
+            "example": [
+              "https://example.com/presentation.pdf",
+              "https://example.com/demo-video.mp4"
+            ],
+            "description": "Submission attachment URLs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "example": "https://github.com/team-alpha/project",
+            "description": "Repository URL"
+          },
+          "demoUrl": {
+            "type": "string",
+            "example": "https://team-alpha-demo.netlify.app",
+            "description": "Demo URL"
+          }
+        },
+        "required": [
+          "submissionContent"
+        ]
+      },
+      "GradeProjectDto": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "example": 185,
+            "description": "Score for the project submission",
+            "minimum": 0
+          },
+          "feedback": {
+            "type": "string",
+            "example": "Excellent implementation with great UI/UX! Consider adding more test coverage.",
+            "description": "Feedback for the team"
+          }
+        },
+        "required": [
+          "score"
+        ]
       }
     }
   },
