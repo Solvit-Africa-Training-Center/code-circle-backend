@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -13,15 +12,10 @@ import {
   DefaultValuePipe,
   ParseUUIDPipe,
   UseInterceptors,
-  UploadedFile,
   UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  FileInterceptor,
-  FilesInterceptor,
-  AnyFilesInterceptor,
-} from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -33,8 +27,6 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RegisterForTestDto } from './dto/register-for-test.dto';
-import { RegisterForTestFormDto } from './dto/register-for-test-form.dto';
 
 import { ApproveCreatorDto } from './dto/approve-creator.dto';
 import { RejectCreatorDto } from './dto/reject-creator.dto';
@@ -49,6 +41,7 @@ import { CurrentUser } from '@circle-backend/common/decorators/current-user.deco
 import type { CurrentUserPayload } from '@circle-backend/modules/auth/strategies/jwt.strategy';
 
 @ApiTags('Users')
+@ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -145,10 +138,7 @@ export class UsersController {
     body: { fullName: string; email: string; phone: string; bio: string },
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    // Extract files by field name
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const cvFile = files?.find((f) => f.fieldname === 'cv');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const degreeFile = files?.find((f) => f.fieldname === 'degree');
 
     if (!cvFile) {
