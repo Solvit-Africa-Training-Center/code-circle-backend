@@ -205,3 +205,11 @@ For issues, questions, or contributions, please contact the development team or 
 - [NestJS Documentation](https://docs.nestjs.com)
 - [TypeORM Documentation](https://typeorm.io/)
 - [Jest Testing Framework](https://jestjs.io/)
+
+{
+  "email": "admin@codecircle.com",
+  "password": "StrongP@ssw0rd",
+  "firstName": "Admin",
+  "lastName": "Sys",
+  "role": "ADMIN"
+}

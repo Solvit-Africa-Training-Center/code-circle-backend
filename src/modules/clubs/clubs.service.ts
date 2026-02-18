@@ -261,6 +261,34 @@ export class ClubsService {
   }
 
   /**
+   * Trouver un club par nom et catégorie
+   */
+  async findByNameAndCategory(
+    name: string,
+    categoryId: string,
+  ): Promise<Club | null> {
+    try {
+      const club = await this.clubRepository.findOne({
+        where: {
+          name,
+          categoryId,
+        },
+      });
+
+      return club;
+    } catch (error) {
+      this.logger.error(
+        `Error finding club by name and category: ${error.message}`,
+        error.stack,
+      );
+
+      throw new InternalServerErrorException(
+        'An error occurred while searching for the club',
+      );
+    }
+  }
+
+  /**
    * Récupérer un club par ID
    */
   async findOne(id: string): Promise<Club> {

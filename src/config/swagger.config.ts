@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { writeFileSync } from 'fs';
 
 export function setupSwagger(app: INestApplication): void {
   const configService = app.get(ConfigService);
@@ -57,6 +58,8 @@ export function setupSwagger(app: INestApplication): void {
     deepScanRoutes: true,
     extraModels: [],
   });
+
+  writeFileSync('./swagger.json', JSON.stringify(document, null, 2));
 
   const swaggerPath = isProduction ? 'docs' : 'api-docs';
 

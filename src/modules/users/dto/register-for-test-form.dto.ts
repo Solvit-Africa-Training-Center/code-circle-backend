@@ -39,4 +39,3 @@ export class RegisterForTestFormDto {
   })
   bio: string;
 }
-

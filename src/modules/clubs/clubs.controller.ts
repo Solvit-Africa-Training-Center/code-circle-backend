@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,6 +24,12 @@ import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { ClubResponseDto } from './dto/club-response.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
+import { RequirePermissions } from '@circle-backend/common/decorators/require-permissions.decorator';
+import { PERMISSIONS } from '../auth/constants/permissions';
+import { Roles } from '@circle-backend/common/decorators/roles.decorator';
+import { PermissionGuard } from '@circle-backend/common/guards/permissions.guard';
+import { RolesGuard } from '@circle-backend/common/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Clubs')
 @Controller('clubs')
@@ -30,7 +37,10 @@ export class ClubsController {
   constructor(private readonly clubsService: ClubsService) {}
 
   @Post()
-  //@ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, PermissionGuard, RolesGuard)
+  @Roles('USER_CREATOR', 'ADMIN')
+  @RequirePermissions(PERMISSIONS.USER_CREATE)
   @ApiOperation({ summary: 'Create a new club' })
   @ApiResponse({
     status: HttpStatus.CREATED,
