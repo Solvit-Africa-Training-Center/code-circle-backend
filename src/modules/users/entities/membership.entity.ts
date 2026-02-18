@@ -5,8 +5,10 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Club } from '../../clubs/entities/club.entity';
 
 export enum MembershipRole {
   CREATOR = 'CREATOR',
@@ -24,8 +26,19 @@ export class Membership {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  userId: string;
+
   @ManyToOne(() => User, (user) => user.id)
+  @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column()
+  clubId: string;
+
+  @ManyToOne(() => Club)
+  @JoinColumn({ name: 'clubId' })
+  club: Club;
 
   @Column({ type: 'enum', enum: MembershipRole })
   role: MembershipRole;
