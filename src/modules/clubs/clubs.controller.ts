@@ -24,12 +24,15 @@ import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { ClubResponseDto } from './dto/club-response.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
-import { RequirePermissions } from '@circle-backend/common/decorators/require-permissions.decorator';
-import { PERMISSIONS } from '../auth/constants/permissions';
+// import { RequirePermissions } from '@circle-backend/common/decorators/require-permissions.decorator';
+// import { PERMISSIONS } from '../auth/constants/permissions';
 import { Roles } from '@circle-backend/common/decorators/roles.decorator';
-import { PermissionGuard } from '@circle-backend/common/guards/permissions.guard';
+//import { PermissionGuard } from '@circle-backend/common/guards/permissions.guard';
 import { RolesGuard } from '@circle-backend/common/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';
+import type { CurrentUserPayload } from '../auth/strategies/jwt.strategy';
+import { CreateClubInputDto } from './dto/creatorId.dto';
 
 @ApiTags('Clubs')
 @Controller('clubs')
@@ -38,9 +41,8 @@ export class ClubsController {
 
   @Post()
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, PermissionGuard, RolesGuard)
-  @Roles('USER_CREATOR', 'ADMIN')
-  @RequirePermissions(PERMISSIONS.USER_CREATE)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CREATOR', 'ADMIN')
   @ApiOperation({ summary: 'Create a new club' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -55,8 +57,16 @@ export class ClubsController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input data or inactive category',
   })
-  async create(@Body() createClubDto: CreateClubDto) {
-    const club = await this.clubsService.create(createClubDto);
+  async create(
+    @Body() createClubDto: CreateClubInputDto,
+    @CurrentUser() currentUser: CurrentUserPayload,
+  ) {
+    const clubData = {
+      ...createClubDto,
+      creatorId: currentUser.userId,
+    };
+
+    const club = await this.clubsService.create(clubData);
     return {
       message: 'Club created successfully',
       data: club,

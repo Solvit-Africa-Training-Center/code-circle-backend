@@ -21,7 +21,7 @@ import {
 const ROLE_PERMISSION_MAP: Record<string, PermissionKey[]> = {
   ADMIN: Object.values(PERMISSIONS),
 
-  CLUB_LEADER: [
+  CREATOR: [
     // club
     PERMISSIONS.CLUB_CREATE,
     PERMISSIONS.CLUB_READ,
@@ -77,10 +77,14 @@ async function bootstrap() {
     const rolePermissionRepo =
       dataSource.getRepository(RolePermission);
 
+
+    // await rolePermissionRepo.clear(); 
+    // //await userRoleRepo.clear();       
+    // await roleRepo.clear();
     // --------------------
     // Seed roles
     // --------------------
-    const roles = ['ADMIN', 'CLUB_LEADER', 'MEMBER'];
+    const roles = ['ADMIN', 'CREATOR', 'MEMBER'];
 
     for (const name of roles) {
       const exists = await roleRepo.findOne({ where: { name } });

@@ -416,6 +416,149 @@ export class TestsService {
     }
   }
 
+  // /**
+  //  * Soumettre un test
+  //  */
+  // async submitTest(submitTestDto: SubmitTestDto): Promise<{
+  //   passed: boolean;
+  //   score: number;
+  //   attemptId: string | undefined;
+  //   feedback?: string;
+  // }> {
+  //   try {
+  //     // Validation des champs requis
+  //     if (!submitTestDto.userId) {
+  //       throw new BadRequestException('userId is required');
+  //     }
+  //     if (!submitTestDto.testId) {
+  //       throw new BadRequestException('testId is required');
+  //     }
+
+  //     if (!submitTestDto.answers) {
+  //       throw new BadRequestException('answers are required');
+  //     }
+
+  //     // Validation selon le purpose
+  //     if (submitTestDto.purpose === TestPurpose.CREATE_CLUB) {
+  //       if (!submitTestDto.categoryId) {
+  //         throw new BadRequestException(
+  //           'categoryId and clubName are required for CREATE_CLUB purpose',
+  //         );
+  //       }
+
+  //       // Vérifier que la catégorie existe
+  //       const category = await this.categoriesService.findOne(
+  //         submitTestDto.categoryId,
+  //       );
+  //       if (!category.isActive) {
+  //         throw new BadRequestException(
+  //           `Category "${category.name}" is not active`,
+  //         );
+  //       }
+
+  //       // Vérifier qu'un club avec ce nom n'existe pas déjà
+  //       // const existingClub = await this.clubsService.findByNameAndCategory(
+  //       //   submitTestDto.clubName,
+  //       //   submitTestDto.categoryId,
+  //       // );
+  //       // if (existingClub) {
+  //       //   throw new BadRequestException(
+  //       //     `A club named "${submitTestDto.clubName}" already exists in this category`,
+  //       //   );
+  //       // }
+  //     } else if (submitTestDto.purpose === TestPurpose.JOIN_CLUB) {
+  //       if (!submitTestDto.targetClubId) {
+  //         throw new BadRequestException(
+  //           'targetClubId is required for JOIN_CLUB purpose',
+  //         );
+  //       }
+
+  //       // Vérifier que le club existe
+  //       const club = await this.clubsService.findOne(
+  //         submitTestDto.targetClubId,
+  //       );
+  //       if (!club.isActive) {
+  //         throw new BadRequestException('This club is not currently active');
+  //       }
+  //     }
+
+  //     // Récupérer le test avec les bonnes réponses
+  //     const test = await this.findOne(submitTestDto.testId);
+
+  //     if (!test.isActive) {
+  //       throw new BadRequestException('This test is not currently active');
+  //     }
+
+  //     // Calculer le score
+  //     let totalPoints = 0;
+  //     let earnedPoints = 0;
+
+  //     for (const question of test.questions) {
+  //       totalPoints += question.points;
+
+  //       const userAnswer = submitTestDto.answers[question.id];
+  //       if (userAnswer && userAnswer === question.correctAnswer) {
+  //         earnedPoints += question.points;
+  //       }
+  //     }
+
+  //     const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
+  //     const passed = scorePercentage >= test.passingScore;
+
+  //     // Créer la tentative
+  //     const attempt = this.testAttemptRepository.create({
+  //       userId: submitTestDto.userId,
+  //       testId: test.id,
+  //       purpose: submitTestDto.purpose,
+  //       intendedCategoryId: submitTestDto.categoryId,
+  //       intendedClubName: submitTestDto.clubName,
+  //       targetClubId: submitTestDto.targetClubId,
+  //       answers: submitTestDto.answers,
+  //       score: scorePercentage,
+  //       passed,
+  //       correctedByAI: false,
+  //       completedAt: new Date(),
+  //     });
+
+  //     const savedAttempt = await this.testAttemptRepository.save(attempt);
+
+  //     this.logger.log(
+  //       `Test submitted: User ${submitTestDto.userId} - Purpose: ${submitTestDto.purpose} - Score: ${scorePercentage}% - Passed: ${passed}`,
+  //     );
+
+  //     console.log('🟢 Calling testResultService.handleTestResult...');
+  //     await this.testResultService.handleTestResult(
+  //       submitTestDto.userId,
+  //       test,
+  //       scorePercentage,
+  //       passed,
+  //     );
+  //     console.log('🟢 testResultService.handleTestResult done');
+
+  //     return {
+  //       passed,
+  //       score: scorePercentage,
+  //       attemptId: savedAttempt.id,
+  //       feedback: passed
+  //         ? 'Congratulations! You passed the test.'
+  //         : `You scored ${scorePercentage}%. The passing score is ${test.passingScore}%.`,
+  //     };
+  //   } catch (error) {
+  //     this.logger.error(`Error submitting test: ${error.message}`, error.stack);
+
+  //     if (
+  //       error instanceof NotFoundException ||
+  //       error instanceof BadRequestException
+  //     ) {
+  //       throw error;
+  //     }
+
+  //     throw new InternalServerErrorException(
+  //       'An error occurred while submitting the test',
+  //     );
+  //   }
+  // }
+
   /**
    * Soumettre un test
    */
@@ -426,27 +569,32 @@ export class TestsService {
     feedback?: string;
   }> {
     try {
-      // Validation des champs requis
+      // ═══════════════════════════════════════════════════════
+      //           VALIDATIONS COMMUNES
+      // ═══════════════════════════════════════════════════════
       if (!submitTestDto.userId) {
         throw new BadRequestException('userId is required');
       }
       if (!submitTestDto.testId) {
         throw new BadRequestException('testId is required');
       }
-
       if (!submitTestDto.answers) {
         throw new BadRequestException('answers are required');
       }
 
-      // Validation selon le purpose
+      // ═══════════════════════════════════════════════════════
+      //       VALIDATIONS SELON LE PURPOSE
+      // ═══════════════════════════════════════════════════════
+
       if (submitTestDto.purpose === TestPurpose.CREATE_CLUB) {
+        // ✅ Pour CREATOR : On a besoin de categoryId seulement
         if (!submitTestDto.categoryId) {
           throw new BadRequestException(
-            'categoryId and clubName are required for CREATE_CLUB purpose',
+            'categoryId is required for CREATE_CLUB purpose',
           );
         }
 
-        // Vérifier que la catégorie existe
+        // Vérifier que la catégorie existe et est active
         const category = await this.categoriesService.findOne(
           submitTestDto.categoryId,
         );
@@ -456,24 +604,17 @@ export class TestsService {
           );
         }
 
-        // Vérifier qu'un club avec ce nom n'existe pas déjà
-        // const existingClub = await this.clubsService.findByNameAndCategory(
-        //   submitTestDto.clubName,
-        //   submitTestDto.categoryId,
-        // );
-        // if (existingClub) {
-        //   throw new BadRequestException(
-        //     `A club named "${submitTestDto.clubName}" already exists in this category`,
-        //   );
-        // }
+        // Note: La validation du nom du club se fera APRÈS le test
+        // quand l'utilisateur choisira le nom de son club
       } else if (submitTestDto.purpose === TestPurpose.JOIN_CLUB) {
+        // ✅ Pour MEMBER : On a besoin de targetClubId
         if (!submitTestDto.targetClubId) {
           throw new BadRequestException(
             'targetClubId is required for JOIN_CLUB purpose',
           );
         }
 
-        // Vérifier que le club existe
+        // Vérifier que le club existe et est actif
         const club = await this.clubsService.findOne(
           submitTestDto.targetClubId,
         );
@@ -482,14 +623,20 @@ export class TestsService {
         }
       }
 
-      // Récupérer le test avec les bonnes réponses
+      // ═══════════════════════════════════════════════════════
+      //       RÉCUPÉRATION ET VALIDATION DU TEST
+      // ═══════════════════════════════════════════════════════
+
       const test = await this.findOne(submitTestDto.testId);
 
       if (!test.isActive) {
         throw new BadRequestException('This test is not currently active');
       }
 
-      // Calculer le score
+      // ═══════════════════════════════════════════════════════
+      //              CALCUL DU SCORE
+      // ═══════════════════════════════════════════════════════
+
       let totalPoints = 0;
       let earnedPoints = 0;
 
@@ -505,7 +652,10 @@ export class TestsService {
       const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
       const passed = scorePercentage >= test.passingScore;
 
-      // Créer la tentative
+      // ═══════════════════════════════════════════════════════
+      //          ENREGISTREMENT DE LA TENTATIVE
+      // ═══════════════════════════════════════════════════════
+
       const attempt = this.testAttemptRepository.create({
         userId: submitTestDto.userId,
         testId: test.id,
@@ -525,6 +675,10 @@ export class TestsService {
       this.logger.log(
         `Test submitted: User ${submitTestDto.userId} - Purpose: ${submitTestDto.purpose} - Score: ${scorePercentage}% - Passed: ${passed}`,
       );
+
+      // ═══════════════════════════════════════════════════════
+      //    GESTION DU RÉSULTAT (Email + Status Update)
+      // ═══════════════════════════════════════════════════════
 
       console.log('🟢 Calling testResultService.handleTestResult...');
       await this.testResultService.handleTestResult(

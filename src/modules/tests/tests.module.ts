@@ -15,10 +15,12 @@ import { ClubsModule } from '../clubs/clubs.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { TestResultService } from './services/test-result.service';
+import { UserRole } from '../auth/entities/user-role.entity';
+import { Role } from '../auth/entities/role.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Test, TestQuestion, TestAttempt]),
+    TypeOrmModule.forFeature([Test, TestQuestion, TestAttempt, Role, UserRole]),
     CategoriesModule,
     ClubsModule,
     UsersModule,

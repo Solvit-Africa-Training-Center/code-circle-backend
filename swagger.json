@@ -1701,7 +1701,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateClubDto"
+                "$ref": "#/components/schemas/CreateClubInputDto"
               }
             }
           }
@@ -5054,7 +5054,7 @@
           }
         }
       },
-      "CreateClubDto": {
+      "CreateClubInputDto": {
         "type": "object",
         "properties": {
           "name": {
@@ -5069,11 +5069,6 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "description": "Category UUID"
           },
-          "creatorId": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "Creator User UUID"
-          },
           "description": {
             "type": "string",
             "example": "A club dedicated to mastering AI and machine learning",
@@ -5082,8 +5077,7 @@
         },
         "required": [
           "name",
-          "categoryId",
-          "creatorId"
+          "categoryId"
         ]
       },
       "ClubResponseDto": {
@@ -5169,11 +5163,6 @@
             "type": "string",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "description": "Category UUID"
-          },
-          "creatorId": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "Creator User UUID"
           },
           "description": {
             "type": "string",

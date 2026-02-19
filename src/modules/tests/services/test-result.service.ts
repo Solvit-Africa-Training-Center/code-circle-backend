@@ -12,6 +12,8 @@ import { Test } from '../entities/test.entity';
 import { TestType } from '../enums/test-type.enum';
 import { EmailService } from '../../auth/services/email.service';
 import { hash } from 'bcryptjs';
+import { Role } from '@circle-backend/modules/auth/entities/role.entity';
+import { UserRole } from '@circle-backend/modules/auth/entities/user-role.entity';
 
 @Injectable()
 export class TestResultService {
@@ -20,6 +22,10 @@ export class TestResultService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role) // ← AJOUTER
+    private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
     private readonly emailService: EmailService,
   ) {}
 
@@ -120,6 +126,32 @@ export class TestResultService {
       user.globalStatus = GlobalStatus.ACTIVE;
       await this.userRepository.save(user);
 
+      const memberRole = await this.roleRepository.findOne({
+        where: { name: 'MEMBER' },
+      });
+
+      if (!memberRole) {
+        this.logger.error('MEMBER role not found in database');
+        throw new InternalServerErrorException('System configuration error');
+      }
+
+      const existingUserRole = await this.userRoleRepository.findOne({
+        where: {
+          user: { id: user.id },
+          role: { id: memberRole.id },
+        },
+      });
+
+      if (!existingUserRole) {
+        const userRole = this.userRoleRepository.create({
+          user: { id: user.id },
+          role: { id: memberRole.id },
+        });
+        await this.userRoleRepository.save(userRole);
+
+        this.logger.log(`MEMBER role assigned to user: ${user.id}`);
+      }
+
       this.logger.log(`MEMBER account activated for user: ${user.id}`);
 
       // 3. Envoyer l'email avec les credentials
@@ -150,9 +182,7 @@ export class TestResultService {
    * → Mot de passe généré mais pas encore actif
    */
   private async handleCreatorTestPass(
-    user: User,
-    test: Test,
-    score: number,
+user: User, test: Test, score: number,
   ): Promise<void> {
     try {
       // 1. Générer le mot de passe temporaire
@@ -162,6 +192,32 @@ export class TestResultService {
       // 2. Sauvegarder le mot de passe, status reste PENDING
       user.password = passwordHash;
       await this.userRepository.save(user);
+
+      const createRole = await this.roleRepository.findOne({
+        where: { name: 'CREATOR' },
+      });
+
+      if (!createRole) {
+        this.logger.error(`CREATOR role not found in database`);
+        throw new InternalServerErrorException('System configuration error');
+      }
+
+      const existingUserRole = await this.userRoleRepository.findOne({
+        where: {
+           user: { id: user.id },
+          role: { id: createRole.id },
+        },
+      });
+
+      if (!existingUserRole) {
+        const userRole = this.userRoleRepository.create({
+          user: { id: user.id },
+          role: { id: createRole.id },
+        });
+        await this.userRoleRepository.save(userRole);
+
+        this.logger.log(`CREATOR role assigned to user: ${user.id}`);
+      }
 
       this.logger.log(
         `CREATOR test passed, waiting for admin approval: ${user.id}`,
