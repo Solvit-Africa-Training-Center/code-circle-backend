@@ -18,6 +18,7 @@ export interface JwtPayload {
 }
 
 export interface CurrentUserPayload {
+  userId: string;
   id: string;
   email: string;
   roles: {
@@ -117,6 +118,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     ].filter((perm) => !deniedPermissions.has(perm));
 
     return {
+      userId: user.id,
       id: user.id,
       email: user.email,
       roles: userRoles.map((ur) => ({

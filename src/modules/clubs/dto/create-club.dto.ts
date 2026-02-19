@@ -29,14 +29,6 @@ export class CreateClubDto {
   @IsNotEmpty()
   categoryId: string;
 
-  @ApiProperty({
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    description: 'Creator User UUID',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  creatorId: string;
-
   @ApiPropertyOptional({
     example: 'A club dedicated to mastering AI and machine learning',
     description: 'Club description',
