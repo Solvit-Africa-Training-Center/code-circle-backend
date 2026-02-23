@@ -15,6 +15,12 @@ import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
 import { CategoriesService } from '../categories/categories.service';
+import {
+  Membership,
+  MembershipRole,
+  MembershipStatus,
+} from '../users/entities/membership.entity';
+import { Course } from '../course/entities/course.entity';
 
 @Injectable()
 export class ClubsService {
@@ -23,6 +29,10 @@ export class ClubsService {
   constructor(
     @InjectRepository(Club)
     private readonly clubRepository: Repository<Club>,
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
     private readonly categoriesService: CategoriesService,
   ) {}
 
@@ -471,6 +481,273 @@ export class ClubsService {
 
       throw new InternalServerErrorException(
         'An error occurred while deleting the club',
+      );
+    }
+  }
+
+  /**
+   * Get club member and course counts
+   */
+  async getClubStats(id: string): Promise<{
+    clubId: string;
+    memberCount: number;
+    courseCount: number;
+  }> {
+    try {
+      await this.findOne(id);
+      await this.ensureMembershipsTable();
+
+      const hasCoursesTable = await this.tableExists('courses');
+
+      const memberCount = await this.membershipRepository.count({
+        where: { clubId: id, status: MembershipStatus.ACTIVE },
+      });
+
+      const courseCount = hasCoursesTable
+        ? await this.courseRepository.count({
+            where: { clubId: id },
+          })
+        : 0;
+
+      if (!hasCoursesTable) {
+        this.logger.warn(
+          'Table "courses" does not exist. Returning courseCount = 0.',
+        );
+      }
+
+      return {
+        clubId: id,
+        memberCount,
+        courseCount,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching club stats for ID ${id}: ${error.message}`,
+        error.stack,
+      );
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while retrieving club stats',
+      );
+    }
+  }
+
+  /**
+   * Get all active members for a club
+   */
+  async getClubMembers(id: string): Promise<Membership[]> {
+    try {
+      await this.findOne(id);
+      await this.ensureMembershipsTable();
+
+      return await this.membershipRepository.find({
+        where: { clubId: id, status: MembershipStatus.ACTIVE },
+        relations: ['user'],
+        order: { joinedAt: 'DESC' },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error fetching club members for ID ${id}: ${error.message}`,
+        error.stack,
+      );
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while retrieving club members',
+      );
+    }
+  }
+
+  /**
+   * Get all courses in a club
+   */
+  async getClubCourses(id: string): Promise<Course[]> {
+    try {
+      await this.findOne(id);
+
+      const hasCoursesTable = await this.tableExists('courses');
+      if (!hasCoursesTable) {
+        this.logger.warn(
+          'Table "courses" does not exist. Returning empty courses list.',
+        );
+        return [];
+      }
+
+      return await this.courseRepository.find({
+        where: { clubId: id },
+        order: { createdAt: 'DESC' },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error fetching club courses for ID ${id}: ${error.message}`,
+        error.stack,
+      );
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while retrieving club courses',
+      );
+    }
+  }
+
+  private async tableExists(tableName: string): Promise<boolean> {
+    const result = await this.clubRepository.query(
+      'SELECT to_regclass($1) AS table_name',
+      [`public.${tableName}`],
+    );
+
+    return Boolean(result?.[0]?.table_name);
+  }
+
+  private async ensureMembershipsTable(): Promise<void> {
+    const hasMembershipsTable = await this.tableExists('memberships');
+    if (hasMembershipsTable) {
+      return;
+    }
+
+    this.logger.warn(
+      'Table "memberships" not found. Creating it automatically.',
+    );
+
+    await this.clubRepository.query(`
+      CREATE TABLE IF NOT EXISTS memberships (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        "userId" uuid NOT NULL,
+        "clubId" uuid NOT NULL,
+        role varchar(20) NOT NULL DEFAULT 'MEMBER',
+        status varchar(20) NOT NULL DEFAULT 'pending',
+        joined_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_memberships_user_club" UNIQUE ("userId", "clubId"),
+        CONSTRAINT "FK_memberships_user" FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT "FK_memberships_club" FOREIGN KEY ("clubId") REFERENCES clubs(id) ON DELETE CASCADE
+      );
+    `);
+
+    await this.clubRepository.query(`
+      CREATE INDEX IF NOT EXISTS "IDX_memberships_clubId_status"
+      ON memberships ("clubId", status);
+    `);
+  }
+
+  async joinClub(
+    clubId: string,
+    userId: string,
+  ): Promise<{ message: string; membership: Membership }> {
+    try {
+      const club = await this.findOne(clubId);
+
+      if (!club.isActive) {
+        throw new BadRequestException('Cannot join an inactive club');
+      }
+
+      await this.ensureMembershipsTable();
+
+      const existingMembership = await this.membershipRepository.findOne({
+        where: { clubId, userId },
+      });
+
+      if (existingMembership?.status === MembershipStatus.ACTIVE) {
+        throw new ConflictException('You are already an active member of this club');
+      }
+
+      const role =
+        club.creatorId === userId ? MembershipRole.CREATOR : MembershipRole.MEMBER;
+
+      if (existingMembership) {
+        existingMembership.status = MembershipStatus.ACTIVE;
+        existingMembership.role = role;
+        const membership = await this.membershipRepository.save(existingMembership);
+
+        return {
+          message: `You have re-joined "${club.name}" successfully`,
+          membership,
+        };
+      }
+
+      const membership = this.membershipRepository.create({
+        clubId,
+        userId,
+        role,
+        status: MembershipStatus.ACTIVE,
+      });
+
+      const savedMembership = await this.membershipRepository.save(membership);
+
+      return {
+        message: `You joined "${club.name}" successfully`,
+        membership: savedMembership,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error joining club with ID ${clubId}: ${error.message}`,
+        error.stack,
+      );
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof ConflictException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while joining the club',
+      );
+    }
+  }
+
+  async leaveClub(clubId: string, userId: string): Promise<{ message: string }> {
+    try {
+      const club = await this.findOne(clubId);
+
+      await this.ensureMembershipsTable();
+
+      const membership = await this.membershipRepository.findOne({
+        where: { clubId, userId, status: MembershipStatus.ACTIVE },
+      });
+
+      if (!membership) {
+        throw new BadRequestException('You are not an active member of this club');
+      }
+
+      if (club.creatorId === userId || membership.role === MembershipRole.CREATOR) {
+        throw new BadRequestException(
+          'Club creator cannot leave the club. Transfer ownership first.',
+        );
+      }
+
+      await this.membershipRepository.remove(membership);
+
+      return { message: `You left "${club.name}" successfully` };
+    } catch (error) {
+      this.logger.error(
+        `Error leaving club with ID ${clubId}: ${error.message}`,
+        error.stack,
+      );
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while leaving the club',
       );
     }
   }

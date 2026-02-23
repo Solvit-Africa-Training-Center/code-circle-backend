@@ -1811,6 +1811,75 @@
         ]
       }
     },
+    "/api/v1/clubs/{id}/join": {
+      "post": {
+        "operationId": "Clubs_joinClub",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Joined club successfully"
+          },
+          "400": {
+            "description": "Inactive club or invalid membership state"
+          },
+          "409": {
+            "description": "User is already an active member"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Join a club as member",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/leave": {
+      "post": {
+        "operationId": "Clubs_leaveClub",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Left club successfully"
+          },
+          "400": {
+            "description": "Not an active member or creator cannot leave"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Leave a club",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
     "/api/v1/clubs/active": {
       "get": {
         "operationId": "Clubs_findAllActive",
@@ -1906,6 +1975,140 @@
           }
         ],
         "summary": "Get all clubs created by a specific user",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/members": {
+      "get": {
+        "operationId": "Clubs_getClubMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club members retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Membership"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "summary": "Get all active members in a club",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/courses": {
+      "get": {
+        "operationId": "Clubs_getClubCourses",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club courses retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Course"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "summary": "Get all courses in a club",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/stats": {
+      "get": {
+        "operationId": "Clubs_getClubStats",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Club statistics retrieved successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "clubId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "memberCount": {
+                          "type": "number",
+                          "example": 24
+                        },
+                        "courseCount": {
+                          "type": "number",
+                          "example": 5
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Club not found"
+          }
+        },
+        "summary": "Get member and course counts for a club",
         "tags": [
           "Clubs"
         ]
@@ -5149,6 +5352,82 @@
           "updatedAt"
         ]
       },
+      "Membership": {
+        "type": "object",
+        "properties": {}
+      },
+      "Course": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Advanced NestJS Development"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn advanced NestJS concepts and best practices"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "https://example.com/course-thumbnail.jpg"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "example": "intermediate"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "example": "published"
+          },
+          "duration": {
+            "type": "number",
+            "example": 40
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "thumbnail",
+          "level",
+          "status",
+          "duration",
+          "clubId",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateClubDto": {
         "type": "object",
         "properties": {
@@ -5234,78 +5513,6 @@
           "description",
           "level",
           "clubId"
-        ]
-      },
-      "Course": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "title": {
-            "type": "string",
-            "example": "Advanced NestJS Development"
-          },
-          "description": {
-            "type": "string",
-            "example": "Learn advanced NestJS concepts and best practices"
-          },
-          "thumbnail": {
-            "type": "string",
-            "example": "https://example.com/course-thumbnail.jpg"
-          },
-          "level": {
-            "type": "string",
-            "enum": [
-              "beginner",
-              "intermediate",
-              "advanced"
-            ],
-            "example": "intermediate"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "draft",
-              "published",
-              "archived"
-            ],
-            "example": "published"
-          },
-          "duration": {
-            "type": "number",
-            "example": 40
-          },
-          "clubId": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "createdBy": {
-            "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "description",
-          "thumbnail",
-          "level",
-          "status",
-          "duration",
-          "clubId",
-          "createdBy",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "UpdateCourseDto": {
