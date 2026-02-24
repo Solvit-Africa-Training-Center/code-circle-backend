@@ -80,9 +80,9 @@ export class TestService {
     await this.attemptRepo.save(attempt);
     console.log('🔵 Attempt saved:', attempt.id);
 
-    console.log('Calling testResultService.handleTestResult...')
+    console.log('Calling testResultService.handleTestResult...');
     await this.testResultService.handleTestResult(userId, test, score, passed);
-    console.log('testResultService.handleTestResult done')
+    console.log('testResultService.handleTestResult done');
     return attempt;
   }
 
@@ -91,21 +91,17 @@ export class TestService {
   ): Promise<Category> {
     // Check if category with same name or slug already exists
     const existingCategory = await this.categoryRepo.findOne({
-      where: [
-        { name: createCategoryDto.name },
-        { slug: createCategoryDto.slug },
-      ],
+      where: [{ name: createCategoryDto.name }],
     });
 
     if (existingCategory) {
       throw new ConflictException(
-        `Category with ${existingCategory.name === createCategoryDto.name ? 'name' : 'slug'} "${existingCategory.name === createCategoryDto.name ? createCategoryDto.name : createCategoryDto.slug}" already exists`,
+        `Category with ${existingCategory.name === createCategoryDto.name ? 'name' : 'slug'} "${existingCategory.name === createCategoryDto.name ? createCategoryDto.name : createCategoryDto.name}" already exists`,
       );
     }
 
     const category = this.categoryRepo.create({
       name: createCategoryDto.name,
-      slug: createCategoryDto.slug,
       description: createCategoryDto.description,
       icon: createCategoryDto.icon,
       isActive: createCategoryDto.isActive ?? true,

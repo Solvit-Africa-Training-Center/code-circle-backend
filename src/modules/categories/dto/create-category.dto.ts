@@ -1,65 +1,47 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { IsNotEmpty, IsString, IsOptional, MaxLength, IsBoolean } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  MaxLength,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SkillType } from '../entities/category.entity';
 
 export class CreateCategoryDto {
-  @ApiProperty({
-    example: 'Intelligence Artificielle',
-    description: 'Category name',
-    maxLength: 100,
-  })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'UI/UX Design' })
   @IsString()
-  @MaxLength(100)
+  @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({
-    example:
-      "Tout ce qui concerne l'IA, le machine learning et le deep learning",
-    description: 'Category description',
+  @ApiProperty({
+    example: 'User interface and user experience design',
   })
-  @IsOptional()
   @IsString()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
-  @ApiPropertyOptional({
-    example: 'ai-icon.svg',
-    description: 'Icon URL or filename',
-  })
-  @IsOptional()
+  @ApiProperty({ example: 'design-icon.svg' })
   @IsString()
+  @IsOptional()
   icon?: string;
 
-  // Le slug sera généré automatiquement depuis le name
-  @Transform(({ obj }) => {
-    if (!obj.slug && obj.name) {
-      return obj.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
-        .replace(/[^a-z0-9]+/g, '-') // Remplacer les espaces et caractères spéciaux par des tirets
-        .replace(/^-+|-+$/g, ''); // Enlever les tirets au début et à la fin
-    }
-    return obj.slug;
+  @ApiProperty({
+    enum: SkillType,
+    example: SkillType.DESIGN,
+    description: 'Type of skill - affects question generation',
   })
-  @ApiPropertyOptional({
-    example: 'intelligence-artificielle',
-    description: 'URL-friendly slug (auto-generated from name if not provided)',
-  })
+  @IsEnum(SkillType)
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  slug?: string;
+  skillType?: SkillType;
 
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Whether the category is active',
-    default: true,
-  })
-  @IsOptional()
+  @ApiProperty({ example: true })
   @IsBoolean()
+  @IsOptional()
   isActive?: boolean;
 }

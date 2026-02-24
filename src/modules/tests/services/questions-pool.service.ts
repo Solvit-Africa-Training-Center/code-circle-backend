@@ -122,19 +122,290 @@ export class QuestionPoolService {
   /**
    * Construire le prompt pour Gemini
    */
+  //   private async buildPrompt(params: GeneratePoolParams): Promise<string> {
+  //     const baseInstruction = `
+  // You are an expert at creating technical questions for a developer community platform.
+
+  // STRICT RULES:
+  // 1. Respond ONLY with valid JSON, no markdown, no preamble
+  // 2. Generate EXACTLY 30 questions
+  // 3. Question distribution:
+  //    - 40% MULTIPLE_CHOICE (12 questions)
+  //    - 30% CODE_ANALYSIS (9 questions)
+  //    - 20% CODE_CHALLENGE (6 questions)
+  //    - 10% OPEN_ENDED (3 questions)
+  // 4. Difficulty: ${params.difficulty}
+  // 5. Points: 10 per question
+  // 6. All questions must be in ENGLISH
+
+  // EXPECTED JSON FORMAT:
+  // {
+  //   "questions": [
+  //     {
+  //       "type": "MULTIPLE_CHOICE",
+  //       "question": "What is...?",
+  //       "options": ["Option A", "Option B", "Option C", "Option D"],
+  //       "correctAnswer": "Option A",
+  //       "points": 10
+  //     },
+  //     {
+  //       "type": "CODE_ANALYSIS",
+  //       "question": "What does this code return?\\n\`\`\`python\\ndef func():\\n    return x\\n\`\`\`",
+  //       "options": ["Result A", "Result B", "Result C", "Result D"],
+  //       "correctAnswer": "Result A",
+  //       "points": 10
+  //     },
+  //     {
+  //       "type": "CODE_CHALLENGE",
+  //       "question": "Write a function that...",
+  //       "codeTemplate": "def function_name(param):\\n    pass",
+  //       "testCases": [
+  //         {"input": "5", "expectedOutput": "25", "description": "Square of 5"}
+  //       ],
+  //       "points": 10
+  //     },
+  //     {
+  //       "type": "OPEN_ENDED",
+  //       "question": "Explain how you would...",
+  //       "evaluationCriteria": {
+  //         "keywords": ["keyword1", "keyword2"],
+  //         "minLength": 50,
+  //         "rubric": "The answer should mention..."
+  //       },
+  //       "points": 10
+  //     }
+  //   ]
+  // }`;
+
+  //     if (params.poolType === PoolType.CATEGORY) {
+  //       const category = await this.categoriesService.findOne(params.categoryId!);
+
+  //       return `${baseInstruction}
+
+  // CONTEXT: Questions for CREATOR TEST in category "${category.name}"
+  // Description: ${category.description}
+
+  // TOPICS TO COVER:
+  // 1. Technical skills in ${category.name} (60%)
+  // 2. Leadership and team management (25%)
+  // 3. Community building and communication (15%)
+
+  // EXAMPLES OF EXPECTED QUESTIONS:
+  // - Multiple choice on key concepts of ${category.name}
+  // - Code analysis related to ${category.name}
+  // - Code challenge: "Write a function that solves X in ${category.name}"
+  // - Open-ended: "How would you motivate inactive members?"
+  // - Open-ended: "Describe your strategy to grow a ${category.name} community"
+  // - Leadership: "What's your approach to conflict resolution?"
+
+  // Generate 30 diverse questions in JSON format now:`;
+  //     } else {
+  //       const club = await this.clubsService.findOne(params.clubId!);
+  //       const category = await this.categoriesService.findOne(club.categoryId);
+
+  //       return `${baseInstruction}
+
+  // CONTEXT: Questions for MEMBER TEST to join club "${club.name}"
+  // Category: ${category.name}
+  // Club Description: ${club.description || 'A club focused on ' + category.name}
+
+  // TOPICS TO COVER:
+  // 1. Specific skills related to the club's focus (80%)
+  // 2. Understanding of club's goals and values (15%)
+  // 3. Motivation and engagement (5%)
+
+  // EXAMPLES OF EXPECTED QUESTIONS:
+  // - Multiple choice on concepts relevant to "${club.name}"
+  // - Code analysis pertinent to club's topic
+  // - Code challenge related to club's focus area
+  // - Open-ended: "Why do you want to join ${club.name}?"
+  // - Open-ended: "What can you contribute to this community?"
+
+  // The questions should be specifically tailored to: ${club.description || category.name}
+
+  // Generate 30 diverse questions in JSON format now:`;
+  //     }
+  //   }
+
+  // src/tests/services/question-pool.service.ts
+
+  /**
+   * Construire le prompt pour Gemini selon le type de compétence
+   */
   private async buildPrompt(params: GeneratePoolParams): Promise<string> {
-    const baseInstruction = `
+    if (params.poolType === PoolType.CATEGORY) {
+      const category = await this.categoriesService.findOne(params.categoryId!);
+      return this.buildCategoryPrompt(category, params.difficulty);
+    } else {
+      const club = await this.clubsService.findOne(params.clubId!);
+      const category = await this.categoriesService.findOne(club.categoryId);
+      return this.buildClubPrompt(club, category, params.difficulty);
+    }
+  }
+
+  /**
+   * Prompt pour CREATOR TEST (selon le skillType de la catégorie)
+   */
+  private buildCategoryPrompt(category: any, difficulty: string): string {
+    const baseInstruction = this.getBaseInstruction(difficulty);
+
+    // Déterminer la distribution des questions selon le skillType
+    const distribution = this.getQuestionDistribution(category.skillType);
+
+    return `${baseInstruction}
+
+CONTEXT: Questions for CREATOR TEST in category "${category.name}"
+Description: ${category.description}
+Skill Type: ${category.skillType}
+
+QUESTION DISTRIBUTION:
+${distribution.description}
+
+TOPICS TO COVER:
+1. ${distribution.topic1}
+2. Leadership and team management (25%)
+3. Community building and communication (15%)
+
+${distribution.examples}
+
+Generate 30 diverse questions in JSON format now:`;
+  }
+
+  /**
+   * Prompt pour MEMBER TEST (selon le club)
+   */
+  private buildClubPrompt(
+    club: any,
+    category: any,
+    difficulty: string,
+  ): string {
+    const baseInstruction = this.getBaseInstruction(difficulty);
+
+    // Déterminer la distribution selon la catégorie du club
+    const distribution = this.getQuestionDistribution(category.skillType);
+
+    return `${baseInstruction}
+
+CONTEXT: Questions for MEMBER TEST to join club "${club.name}"
+Category: ${category.name}
+Skill Type: ${category.skillType}
+Club Description: ${club.description || 'A club focused on ' + category.name}
+
+QUESTION DISTRIBUTION:
+${distribution.description}
+
+TOPICS TO COVER:
+1. ${distribution.topic1}
+2. Understanding of club's goals and values (15%)
+3. Motivation and engagement (5%)
+
+${distribution.examples}
+
+The questions should be specifically tailored to: ${club.description || category.name}
+
+Generate 30 diverse questions in JSON format now:`;
+  }
+
+  /**
+   * Obtenir la distribution des questions selon le type de compétence
+   */
+  private getQuestionDistribution(skillType: string): {
+    description: string;
+    topic1: string;
+    examples: string;
+  } {
+    switch (skillType) {
+      case 'PROGRAMMING':
+        return {
+          description: `- 40% MULTIPLE_CHOICE (12 questions)
+- 30% CODE_ANALYSIS (9 questions)
+- 20% CODE_CHALLENGE (6 questions)
+- 10% OPEN_ENDED (3 questions)`,
+          topic1: 'Technical programming skills (60%)',
+          examples: `EXAMPLES OF EXPECTED QUESTIONS:
+- Multiple choice on programming concepts, algorithms, data structures
+- Code analysis: "What does this code return?"
+- Code challenge: "Write a function that..."
+- Open-ended: "How would you motivate inactive members?"
+- Open-ended: "Describe your strategy to grow a technical community"
+- Leadership: "What's your approach to conflict resolution?"`,
+        };
+
+      case 'DESIGN':
+        return {
+          description: `- 60% MULTIPLE_CHOICE (18 questions)
+- 0% CODE_ANALYSIS (0 questions)
+- 0% CODE_CHALLENGE (0 questions)
+- 40% OPEN_ENDED (12 questions)`,
+          topic1: 'Design principles and best practices (60%)',
+          examples: `EXAMPLES OF EXPECTED QUESTIONS:
+- Multiple choice on design principles, color theory, typography, user research
+- Multiple choice: "What is the best accessibility contrast ratio?"
+- Multiple choice: "Which design pattern is best for mobile navigation?"
+- Open-ended: "Describe your design process for a new feature"
+- Open-ended: "How do you conduct user research?"
+- Open-ended: "Explain your approach to creating a design system"
+- Open-ended: "How would you improve the UX of [scenario]?"
+- Leadership: "How do you handle feedback on your designs?"
+
+IMPORTANT: Do NOT include any code-related questions (CODE_ANALYSIS, CODE_CHALLENGE). Focus on design theory, principles, processes, and case studies.`,
+        };
+
+      case 'BUSINESS':
+        return {
+          description: `- 50% MULTIPLE_CHOICE (15 questions)
+- 0% CODE_ANALYSIS (0 questions)
+- 0% CODE_CHALLENGE (0 questions)
+- 50% OPEN_ENDED (15 questions)`,
+          topic1: 'Business strategy and product management (60%)',
+          examples: `EXAMPLES OF EXPECTED QUESTIONS:
+- Multiple choice on product management frameworks, metrics, business strategy
+- Multiple choice: "What is the difference between OKRs and KPIs?"
+- Multiple choice: "Which pricing strategy is best for SaaS?"
+- Open-ended: "How would you prioritize features in a roadmap?"
+- Open-ended: "Describe your approach to market research"
+- Open-ended: "How do you measure product success?"
+- Open-ended: "Explain how you would launch a new product"
+- Leadership: "How do you align stakeholders with different priorities?"
+
+IMPORTANT: Do NOT include any code-related questions. Focus on business strategy, product thinking, market analysis, and leadership.`,
+        };
+
+      case 'MIXED':
+        return {
+          description: `- 50% MULTIPLE_CHOICE (15 questions)
+- 20% CODE_ANALYSIS (6 questions)
+- 10% CODE_CHALLENGE (3 questions)
+- 20% OPEN_ENDED (6 questions)`,
+          topic1: 'Technical and theoretical knowledge (60%)',
+          examples: `EXAMPLES OF EXPECTED QUESTIONS:
+- Multiple choice on both technical concepts and theoretical knowledge
+- Code analysis: Only if relevant to the domain (e.g., DevOps scripts, Data Science code)
+- Code challenge: Simple technical tasks when applicable
+- Open-ended: Mix of technical explanations and strategic thinking
+- Open-ended: "Explain your CI/CD pipeline design" (DevOps)
+- Open-ended: "How do you choose the right ML model?" (Data Science)
+- Leadership: "How do you balance technical debt with feature development?"`,
+        };
+
+      default:
+        // Par défaut, traiter comme PROGRAMMING
+        return this.getQuestionDistribution('PROGRAMMING');
+    }
+  }
+
+  /**
+   * Instruction de base (commune à tous les types)
+   */
+  private getBaseInstruction(difficulty: string): string {
+    return `
 You are an expert at creating technical questions for a developer community platform.
 
 STRICT RULES:
 1. Respond ONLY with valid JSON, no markdown, no preamble
 2. Generate EXACTLY 30 questions
-3. Question distribution:
-   - 40% MULTIPLE_CHOICE (12 questions)
-   - 30% CODE_ANALYSIS (9 questions)
-   - 20% CODE_CHALLENGE (6 questions)
-   - 10% OPEN_ENDED (3 questions)
-4. Difficulty: ${params.difficulty}
+3. Follow the QUESTION DISTRIBUTION specified below
+4. Difficulty: ${difficulty}
 5. Points: 10 per question
 6. All questions must be in ENGLISH
 
@@ -176,57 +447,7 @@ EXPECTED JSON FORMAT:
     }
   ]
 }`;
-
-    if (params.poolType === PoolType.CATEGORY) {
-      const category = await this.categoriesService.findOne(params.categoryId!);
-
-      return `${baseInstruction}
-
-CONTEXT: Questions for CREATOR TEST in category "${category.name}"
-Description: ${category.description}
-
-TOPICS TO COVER:
-1. Technical skills in ${category.name} (60%)
-2. Leadership and team management (25%)
-3. Community building and communication (15%)
-
-EXAMPLES OF EXPECTED QUESTIONS:
-- Multiple choice on key concepts of ${category.name}
-- Code analysis related to ${category.name}
-- Code challenge: "Write a function that solves X in ${category.name}"
-- Open-ended: "How would you motivate inactive members?"
-- Open-ended: "Describe your strategy to grow a ${category.name} community"
-- Leadership: "What's your approach to conflict resolution?"
-
-Generate 30 diverse questions in JSON format now:`;
-    } else {
-      const club = await this.clubsService.findOne(params.clubId!);
-      const category = await this.categoriesService.findOne(club.categoryId);
-
-      return `${baseInstruction}
-
-CONTEXT: Questions for MEMBER TEST to join club "${club.name}"
-Category: ${category.name}
-Club Description: ${club.description || 'A club focused on ' + category.name}
-
-TOPICS TO COVER:
-1. Specific skills related to the club's focus (80%)
-2. Understanding of club's goals and values (15%)
-3. Motivation and engagement (5%)
-
-EXAMPLES OF EXPECTED QUESTIONS:
-- Multiple choice on concepts relevant to "${club.name}"
-- Code analysis pertinent to club's topic
-- Code challenge related to club's focus area
-- Open-ended: "Why do you want to join ${club.name}?"
-- Open-ended: "What can you contribute to this community?"
-
-The questions should be specifically tailored to: ${club.description || category.name}
-
-Generate 30 diverse questions in JSON format now:`;
-    }
   }
-
   /**
    * Parser la réponse de Gemini
    */

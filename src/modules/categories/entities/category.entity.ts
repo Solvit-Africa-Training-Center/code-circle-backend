@@ -9,6 +9,12 @@ import {
 // import { Club } from '../../clubs/entities/club.entity';
 // import { Test } from '../../tests/entities/test.entity';
 
+export enum SkillType {
+  PROGRAMMING = 'PROGRAMMING',
+  DESIGN = 'DESIGN',
+  BUSINESS = 'BUSINESS',
+  MIXED = 'MIXED',
+}
 @Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn('uuid')
@@ -17,14 +23,18 @@ export class Category {
   @Column({ unique: true, length: 100, nullable: false })
   name: string;
 
-  @Column({ unique: true, length: 100, nullable: false })
-  slug: string;
-
   @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   icon: string;
+
+  @Column({
+    type: 'enum',
+    enum: SkillType,
+    default: SkillType.PROGRAMMING,
+  })
+  skillType: SkillType;
 
   @Column({ default: true })
   isActive: boolean;

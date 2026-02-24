@@ -1747,42 +1747,6 @@
         ]
       }
     },
-    "/api/v1/categories/slug/{slug}": {
-      "get": {
-        "operationId": "Categories_findBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "Category slug",
-            "schema": {
-              "example": "intelligence-artificielle",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found"
-          }
-        },
-        "summary": "Get a category by slug",
-        "tags": [
-          "Categories"
-        ]
-      }
-    },
     "/api/v1/categories/{id}/hard": {
       "delete": {
         "operationId": "Categories_hardDelete",
@@ -4750,34 +4714,38 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "Intelligence Artificielle",
-            "description": "Category name",
-            "maxLength": 100
+            "example": "UI/UX Design"
           },
           "description": {
             "type": "string",
-            "example": "Tout ce qui concerne l'IA, le machine learning et le deep learning",
-            "description": "Category description"
+            "example": "User interface and user experience design"
           },
           "icon": {
             "type": "string",
-            "example": "ai-icon.svg",
-            "description": "Icon URL or filename"
+            "example": "design-icon.svg"
           },
-          "slug": {
+          "skillType": {
             "type": "string",
-            "example": "intelligence-artificielle",
-            "description": "URL-friendly slug (auto-generated from name if not provided)"
+            "enum": [
+              "PROGRAMMING",
+              "DESIGN",
+              "BUSINESS",
+              "MIXED"
+            ],
+            "example": "DESIGN",
+            "description": "Type of skill - affects question generation"
           },
           "isActive": {
             "type": "boolean",
-            "example": true,
-            "description": "Whether the category is active",
-            "default": true
+            "example": true
           }
         },
         "required": [
-          "name"
+          "name",
+          "description",
+          "icon",
+          "skillType",
+          "isActive"
         ]
       },
       "CreateTestQuestionDto": {
