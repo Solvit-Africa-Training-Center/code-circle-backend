@@ -981,6 +981,9 @@
         "security": [
           {
             "bearer": []
+          },
+          {
+            "JWT-auth": []
           }
         ],
         "summary": "Create a new test (Admin/Creator only)",
@@ -1059,52 +1062,12 @@
             "description": "Tests retrieved successfully"
           }
         },
-        "summary": "Get all tests with pagination",
-        "tags": [
-          "Tests"
-        ]
-      }
-    },
-    "/api/v1/tests/category/{categoryId}/{type}": {
-      "get": {
-        "operationId": "Tests_findByCategory",
-        "parameters": [
+        "security": [
           {
-            "name": "categoryId",
-            "required": true,
-            "in": "path",
-            "description": "Category UUID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "required": true,
-            "in": "path",
-            "description": "Test type (CREATOR_TEST or MEMBER_TEST)",
-            "schema": {
-              "enum": [
-                "CREATOR_TEST",
-                "MEMBER_TEST"
-              ],
-              "type": "string"
-            }
+            "JWT-auth": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Test retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TestResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get test for a specific category and type",
+        "summary": "Get all tests with pagination",
         "tags": [
           "Tests"
         ]
@@ -1126,17 +1089,10 @@
         ],
         "responses": {
           "200": {
-            "description": "Test retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TestResponseDto"
-                }
-              }
-            }
+            "description": "Test retrieved successfully"
           }
         },
-        "summary": "Get CREATOR test for a specific category",
+        "summary": "Get CREATOR test with 10 random questions from pool",
         "tags": [
           "Tests"
         ]
@@ -1168,6 +1124,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Get MEMBER test for a specific club",
         "tags": [
           "Tests"
@@ -1489,6 +1450,167 @@
         ]
       }
     },
+    "/api/v1/question-pool/generate": {
+      "post": {
+        "description": "Generates 30 questions using Gemini AI and stores them in the question pool",
+        "operationId": "QuestionPool_generatePool",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "poolType",
+                  "difficulty"
+                ],
+                "properties": {
+                  "poolType": {
+                    "type": "string",
+                    "enum": [
+                      "CATEGORY",
+                      "CLUB"
+                    ],
+                    "example": "CATEGORY"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required if poolType is CATEGORY"
+                  },
+                  "clubId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required if poolType is CLUB"
+                  },
+                  "difficulty": {
+                    "type": "string",
+                    "enum": [
+                      "BEGINNER",
+                      "INTERMEDIATE",
+                      "ADVANCED",
+                      "EXPERT"
+                    ],
+                    "example": "INTERMEDIATE"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "30 questions generated and stored successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Generate 30 questions for a pool (Admin only)",
+        "tags": [
+          "Question Pool"
+        ]
+      }
+    },
+    "/api/v1/question-pool": {
+      "get": {
+        "operationId": "QuestionPool_getPoolQuestions",
+        "parameters": [
+          {
+            "name": "poolType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "CATEGORY",
+                "CLUB"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clubId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all questions from a pool",
+        "tags": [
+          "Question Pool"
+        ]
+      },
+      "delete": {
+        "operationId": "QuestionPool_deletePool",
+        "parameters": [
+          {
+            "name": "poolType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "CATEGORY",
+                "CLUB"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clubId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a question pool (Admin only)",
+        "tags": [
+          "Question Pool"
+        ]
+      }
+    },
     "/api/v1/categories/active": {
       "get": {
         "operationId": "Categories_findAllActive",
@@ -1620,42 +1742,6 @@
           }
         },
         "summary": "Soft delete a category (Admin only)",
-        "tags": [
-          "Categories"
-        ]
-      }
-    },
-    "/api/v1/categories/slug/{slug}": {
-      "get": {
-        "operationId": "Categories_findBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "Category slug",
-            "schema": {
-              "example": "intelligence-artificielle",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found"
-          }
-        },
-        "summary": "Get a category by slug",
         "tags": [
           "Categories"
         ]
@@ -4628,34 +4714,38 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "Intelligence Artificielle",
-            "description": "Category name",
-            "maxLength": 100
+            "example": "UI/UX Design"
           },
           "description": {
             "type": "string",
-            "example": "Tout ce qui concerne l'IA, le machine learning et le deep learning",
-            "description": "Category description"
+            "example": "User interface and user experience design"
           },
           "icon": {
             "type": "string",
-            "example": "ai-icon.svg",
-            "description": "Icon URL or filename"
+            "example": "design-icon.svg"
           },
-          "slug": {
+          "skillType": {
             "type": "string",
-            "example": "intelligence-artificielle",
-            "description": "URL-friendly slug (auto-generated from name if not provided)"
+            "enum": [
+              "PROGRAMMING",
+              "DESIGN",
+              "BUSINESS",
+              "MIXED"
+            ],
+            "example": "DESIGN",
+            "description": "Type of skill - affects question generation"
           },
           "isActive": {
             "type": "boolean",
-            "example": true,
-            "description": "Whether the category is active",
-            "default": true
+            "example": true
           }
         },
         "required": [
-          "name"
+          "name",
+          "description",
+          "icon",
+          "skillType",
+          "isActive"
         ]
       },
       "CreateTestQuestionDto": {

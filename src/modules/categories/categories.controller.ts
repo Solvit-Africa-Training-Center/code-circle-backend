@@ -99,30 +99,6 @@ export class CategoriesController {
     };
   }
 
-  @Get('slug/:slug')
-  @ApiOperation({ summary: 'Get a category by slug' })
-  @ApiParam({
-    name: 'slug',
-    description: 'Category slug',
-    example: 'intelligence-artificielle',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Category found',
-    type: CategoryResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Category not found',
-  })
-  async findBySlug(@Param('slug') slug: string) {
-    const category = await this.categoriesService.findBySlug(slug);
-    return {
-      message: 'Category retrieved successfully',
-      data: category,
-    };
-  }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category (Admin only)' })
   @ApiParam({
