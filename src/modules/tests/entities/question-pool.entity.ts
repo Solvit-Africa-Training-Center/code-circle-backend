@@ -1,13 +1,12 @@
-// src/tests/entities/test-question.entity.ts
+// src/tests/entities/question-pool.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
+  UpdateDateColumn,
+  Index,
 } from 'typeorm';
-import { Test } from './test.entity';
 
 export enum QuestionType {
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
@@ -16,38 +15,51 @@ export enum QuestionType {
   CODE_CHALLENGE = 'CODE_CHALLENGE',
 }
 
-@Entity('test_questions')
-export class TestQuestion {
+export enum PoolType {
+  CATEGORY = 'CATEGORY',
+  CLUB = 'CLUB',
+}
+
+@Entity('question_pool')
+export class QuestionPool {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Test, (test) => test.questions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'testId' })
-  test: Test;
+  // Type de pool
+  @Column({
+    type: 'enum',
+    enum: PoolType,
+  })
+  poolType: PoolType;
 
-  @Column()
-  testId: string;
+  // ( CREATOR_TEST)
+  @Index()
+  @Column({ nullable: true })
+  categoryId?: string;
 
-  // Question type
+  // ( MEMBER_TEST)
+  @Index()
+  @Column({ nullable: true })
+  clubId?: string;
+
+  // Type de question
   @Column({
     type: 'enum',
     enum: QuestionType,
-    default: QuestionType.MULTIPLE_CHOICE,
   })
-  type: QuestionType;
+  questionType: QuestionType;
 
   @Column({ type: 'text' })
   question: string;
 
-  // For QCM and CODE_ANALYSIS
+  // Pour MULTIPLE_CHOICE et CODE_ANALYSIS
   @Column({ type: 'jsonb', nullable: true })
   options?: string[];
 
-  // For QCM, CODE_ANALYSIS, OPEN_ENDED
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   correctAnswer?: string;
 
-  // For CODE_CHALLENGE
+  // Pour CODE_CHALLENGE
   @Column({ type: 'jsonb', nullable: true })
   testCases?: Array<{
     input: string;
@@ -55,7 +67,6 @@ export class TestQuestion {
     description?: string;
   }>;
 
-  // Pour CODE_CHALLENGE
   @Column({ type: 'text', nullable: true })
   codeTemplate?: string;
 
@@ -71,9 +82,20 @@ export class TestQuestion {
   @Column({ type: 'int', default: 10 })
   points: number;
 
-  @Column({ type: 'int' })
-  orderIndex: number;
+  // Difficulté de la question
+  @Column({
+    type: 'enum',
+    enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'],
+    default: 'INTERMEDIATE',
+  })
+  difficulty: string;
+
+  @Column({ default: true })
+  isActive: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -26,6 +26,7 @@ import { SubmitTestDto } from './dto/submit-test.dto';
 import { TestResponseDto } from './dto/test-response.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
 import { TestType, TestPurpose } from './enums/test-type.enum';
+import { Roles } from '@circle-backend/common/decorators/roles.decorator';
 
 @ApiTags('Tests')
 @Controller('tests')
@@ -33,6 +34,8 @@ export class TestsController {
   constructor(private readonly testsService: TestsService) {}
 
   @Post()
+  @Roles('ADMIN', 'CREATOR')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new test (Admin/Creator only)' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -49,6 +52,8 @@ export class TestsController {
   }
 
   @Get()
+  @Roles('ADMIN', 'CREATOR')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all tests with pagination' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -62,42 +67,41 @@ export class TestsController {
     };
   }
 
-  @Get('category/:categoryId/:type')
-  @ApiOperation({ summary: 'Get test for a specific category and type' })
-  @ApiParam({
-    name: 'categoryId',
-    description: 'Category UUID',
-  })
-  @ApiParam({
-    name: 'type',
-    enum: TestType,
-    description: 'Test type (CREATOR_TEST or MEMBER_TEST)',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Test retrieved successfully',
-    type: TestResponseDto,
-  })
-  async findByCategory(
-    @Param('categoryId', ParseUUIDPipe) categoryId: string,
-    @Param('type') type: TestType,
-  ) {
-    const test = await this.testsService.findByCategory(categoryId, type);
-    return {
-      message: 'Test retrieved successfully',
-      data: test,
-    };
-  }
+  // @Get('category/:categoryId/:type')
+  // @ApiOperation({ summary: 'Get test for a specific category and type' })
+  // @ApiParam({
+  //   name: 'categoryId',
+  //   description: 'Category UUID',
+  // })
+  // @ApiParam({
+  //   name: 'type',
+  //   enum: TestType,
+  //   description: 'Test type (CREATOR_TEST or MEMBER_TEST)',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Test retrieved successfully',
+  //   type: TestResponseDto,
+  // })
+  // async findByCategory(
+  //   @Param('categoryId', ParseUUIDPipe) categoryId: string,
+  //   @Param('type') type: TestType,
+  // ) {
+  //   const test = await this.testsService.findByCategory(categoryId, type);
+  //   return {
+  //     message: 'Test retrieved successfully',
+  //     data: test,
+  //   };
+  // }
+
   @Get('category/:categoryId/creator-test')
-  @ApiOperation({ summary: 'Get CREATOR test for a specific category' })
-  @ApiParam({
-    name: 'categoryId',
-    description: 'Category UUID',
+  @ApiOperation({
+    summary: 'Get CREATOR test with 10 random questions from pool',
   })
+  @ApiParam({ name: 'categoryId', description: 'Category UUID' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Test retrieved successfully',
-    type: TestResponseDto,
   })
   async getCreatorTestByCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
@@ -110,6 +114,8 @@ export class TestsController {
   }
 
   @Get('club/:clubId/member-test')
+  @Roles('CREATOR')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get MEMBER test for a specific club' })
   @ApiParam({
     name: 'clubId',
