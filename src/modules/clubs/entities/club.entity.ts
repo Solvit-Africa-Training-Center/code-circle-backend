@@ -40,6 +40,9 @@ export class Club {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Column({ type: 'text', nullable: true })
+  imageUrl?: string;
+
   @Column({ default: true })
   isActive: boolean;
 

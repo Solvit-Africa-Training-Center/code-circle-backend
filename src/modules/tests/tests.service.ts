@@ -26,6 +26,7 @@ import { ClubsService } from '../clubs/clubs.service';
 import { TestResultService } from './services/test-result.service';
 import { QuestionPoolService } from './services/questions-pool.service';
 import { PoolType } from './entities/question-pool.entity';
+import { CloudinaryService } from '../../common/services/cloudinary.service';
 
 @Injectable()
 export class TestsService {
@@ -42,6 +43,7 @@ export class TestsService {
     private readonly clubsService: ClubsService,
     private readonly testResultService: TestResultService,
     private readonly questionPoolService: QuestionPoolService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   /**
@@ -334,14 +336,61 @@ export class TestsService {
     try {
       const club = await this.clubsService.findOne(clubId);
 
-      const test = await this.testRepository.findOne({
+      let test = await this.testRepository.findOne({
         where: {
           clubId,
-          type: TestType.MEMBER_TEST, // ← Utilise ton enum existant
+          type: TestType.MEMBER_TEST,
           isActive: true,
         },
         relations: ['questions', 'category'],
       });
+
+      if (!test) {
+        const categoryId = club.categoryId ?? club.category?.id;
+        if (!categoryId) {
+          throw new BadRequestException(
+            `Club "${club.name}" has no category configured`,
+          );
+        }
+
+        const poolQuestions = await this.questionPoolService.selectRandomQuestions(
+          PoolType.CLUB,
+          undefined,
+          clubId,
+          5,
+        );
+
+        const createdTest = this.testRepository.create({
+          type: TestType.MEMBER_TEST,
+          clubId,
+          categoryId,
+          difficulty: TestDifficulty.INTERMEDIATE,
+          passingScore: 70,
+          isActive: true,
+        });
+        const savedTest = await this.testRepository.save(createdTest);
+
+        const testQuestions = poolQuestions.map((poolQuestion, index) =>
+          this.testQuestionRepository.create({
+            testId: savedTest.id,
+            type: poolQuestion.questionType,
+            question: poolQuestion.question,
+            options: poolQuestion.options,
+            correctAnswer: poolQuestion.correctAnswer,
+            testCases: poolQuestion.testCases,
+            codeTemplate: poolQuestion.codeTemplate,
+            evaluationCriteria: poolQuestion.evaluationCriteria,
+            points: poolQuestion.points,
+            orderIndex: index + 1,
+          }),
+        );
+        await this.testQuestionRepository.save(testQuestions);
+
+        test = await this.testRepository.findOne({
+          where: { id: savedTest.id },
+          relations: ['questions', 'category'],
+        });
+      }
 
       if (!test) {
         throw new NotFoundException(
@@ -362,7 +411,10 @@ export class TestsService {
         error.stack,
       );
 
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 
@@ -541,12 +593,20 @@ export class TestsService {
       // ═══════════════════════════════════════════════════════
 
       console.log('🟢 Calling testResultService.handleTestResult...');
-      await this.testResultService.handleTestResult(
-        submitTestDto.userId,
-        test,
-        scorePercentage,
-        passed,
-      );
+      try {
+        await this.testResultService.handleTestResult(
+          submitTestDto.userId,
+          test,
+          scorePercentage,
+          passed,
+        );
+      } catch (resultError) {
+        const err = resultError as Error;
+        this.logger.error(
+          `Post-submit result handling failed for attempt ${savedAttempt.id}: ${err.message}`,
+          err.stack,
+        );
+      }
       console.log('🟢 testResultService.handleTestResult done');
 
       return {
@@ -688,6 +748,57 @@ export class TestsService {
 
       throw new InternalServerErrorException(
         'An error occurred while retrieving attempts',
+      );
+    }
+  }
+
+  async uploadProctoringVideo(
+    attemptId: string,
+    videoFile: Express.Multer.File,
+  ): Promise<TestAttempt> {
+    try {
+      if (!videoFile) {
+        throw new BadRequestException('Video file is required');
+      }
+
+      if (!videoFile.mimetype?.startsWith('video/')) {
+        throw new BadRequestException('Only video files are allowed');
+      }
+
+      const attempt = await this.testAttemptRepository.findOne({
+        where: { id: attemptId },
+      });
+
+      if (!attempt) {
+        throw new NotFoundException(`Test attempt with ID "${attemptId}" not found`);
+      }
+
+      const videoUrl = await this.cloudinaryService.uploadMulterFile(
+        videoFile,
+        'codecircle/tests/proctoring',
+        'video',
+      );
+
+      attempt.proctoringVideoUrl = videoUrl;
+      const updatedAttempt = await this.testAttemptRepository.save(attempt);
+
+      this.logger.log(`Proctoring video uploaded for attempt: ${attemptId}`);
+      return updatedAttempt;
+    } catch (error) {
+      this.logger.error(
+        `Error uploading proctoring video for attempt ${attemptId}: ${error.message}`,
+        error.stack,
+      );
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An error occurred while uploading proctoring video',
       );
     }
   }

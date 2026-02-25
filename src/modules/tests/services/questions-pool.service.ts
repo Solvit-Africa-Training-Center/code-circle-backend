@@ -496,6 +496,7 @@ EXPECTED JSON FORMAT:
     poolType: PoolType,
     categoryId?: string,
     clubId?: string,
+    questionCount = 5,
   ): Promise<QuestionPool[]> {
     try {
       const queryBuilder = this.questionPoolRepository
@@ -513,18 +514,18 @@ EXPECTED JSON FORMAT:
 
       const allQuestions = await queryBuilder.getMany();
 
-      if (allQuestions.length < 10) {
+      if (allQuestions.length < questionCount) {
         throw new BadRequestException(
-          `Not enough questions in pool. Found ${allQuestions.length}, need at least 10`,
+          `Not enough questions in pool. Found ${allQuestions.length}, need at least ${questionCount}`,
         );
       }
 
       // Sélection aléatoire de 10 questions
       const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 10);
+      const selected = shuffled.slice(0, questionCount);
 
       this.logger.log(
-        `Selected 10 random questions from pool of ${allQuestions.length}`,
+        `Selected ${questionCount} random questions from pool of ${allQuestions.length}`,
       );
 
       return selected;

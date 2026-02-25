@@ -57,6 +57,8 @@ export class CloudinaryService {
       const uploadOptions: any = {
         folder,
         resource_type: resourceType,
+        type: 'upload',
+        access_mode: 'public',
         use_filename: true,
         unique_filename: true,
       };
@@ -94,6 +96,8 @@ export class CloudinaryService {
       const uploadResult = await cloudinary.uploader.upload(base64String, {
         folder,
         resource_type: resourceType,
+        type: 'upload',
+        access_mode: 'public',
         use_filename: true,
         unique_filename: true,
       });
@@ -133,6 +137,8 @@ export class CloudinaryService {
       const uploadOptions: any = {
         folder,
         resource_type: resourceType,
+        type: 'upload',
+        access_mode: 'public',
         use_filename: true,
         unique_filename: true,
         filename_override: file.originalname,
@@ -168,6 +174,69 @@ export class CloudinaryService {
         `Failed to delete file from Cloudinary: ${error.message}`,
       );
       throw new BadRequestException('Failed to delete file');
+    }
+  }
+
+  getSignedAssetUrl(assetUrl?: string): string | undefined {
+    if (!assetUrl) {
+      return undefined;
+    }
+
+    try {
+      this.ensureConfigured();
+      const url = new URL(assetUrl);
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (parts.length < 5) {
+        return assetUrl;
+      }
+
+      const cloudName = parts[0];
+      const resourceType = parts[1] as 'image' | 'raw' | 'video' | 'auto';
+      const deliveryType = parts[2] || 'upload';
+      const versionPart = parts[3];
+      const publicPathParts = parts.slice(4);
+
+      if (!cloudName || !resourceType || !publicPathParts.length) {
+        return assetUrl;
+      }
+
+      const decodedPublicPathParts = publicPathParts.map((part) =>
+        decodeURIComponent(part),
+      );
+      const publicId = decodedPublicPathParts.join('/');
+      const version =
+        versionPart?.startsWith('v') && Number.isFinite(Number(versionPart.slice(1)))
+          ? Number(versionPart.slice(1))
+          : undefined;
+
+      if (resourceType === 'raw') {
+        const lastSegment =
+          decodedPublicPathParts[decodedPublicPathParts.length - 1] ?? '';
+        const dotIndex = lastSegment.lastIndexOf('.');
+        const format =
+          dotIndex > -1 ? '' : 'pdf';
+
+        return cloudinary.utils.private_download_url(publicId, format, {
+          resource_type: 'raw',
+          type: deliveryType,
+          expires_at: Math.floor(Date.now() / 1000) + 10 * 60,
+        });
+      }
+
+      // Public image/video uploads do not need signing.
+      if (deliveryType === 'upload') {
+        return assetUrl;
+      }
+
+      return cloudinary.url(publicId, {
+        resource_type: resourceType,
+        type: deliveryType,
+        secure: true,
+        sign_url: true,
+        version,
+      });
+    } catch {
+      return assetUrl;
     }
   }
 }

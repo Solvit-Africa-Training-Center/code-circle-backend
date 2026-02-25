@@ -584,6 +584,88 @@
         ]
       }
     },
+    "/api/v1/users/register-member-for-club": {
+      "post": {
+        "description": "Creates/refreshes a pending member applicant account. The applicant must pass the club test before login credentials are emailed.",
+        "operationId": "Users_registerMemberForClub",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterMemberForClubDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member applicant registered successfully."
+          },
+          "409": {
+            "description": "Email already belongs to an active account or another account type."
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Register a member applicant before club test",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/creator-applications/pending": {
+      "get": {
+        "operationId": "Users_getPendingCreatorApplications",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending leader applications retrieved successfully."
+          },
+          "403": {
+            "description": "Forbidden - Admin access required."
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get pending leader applications for admin review",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/v1/users/{id}": {
       "get": {
         "operationId": "Users_findOne",
@@ -841,117 +923,6 @@
         ]
       }
     },
-    "/api/v1/categories": {
-      "post": {
-        "operationId": "Categories_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCategoryDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Category created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          }
-        },
-        "summary": "Create a new category (Admin only)",
-        "tags": [
-          "Categories"
-        ]
-      },
-      "get": {
-        "operationId": "Categories_findAll",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10,
-              "example": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": "createdAt",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": "DESC",
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": "search term",
-              "type": "string"
-            }
-          },
-          {
-            "name": "filters",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Object"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Categories retrieved successfully"
-          }
-        },
-        "summary": "Get all categories with pagination",
-        "tags": [
-          "Categories"
-        ]
-      }
-    },
     "/api/v1/tests": {
       "post": {
         "operationId": "Tests_create",
@@ -1092,7 +1063,7 @@
             "description": "Test retrieved successfully"
           }
         },
-        "summary": "Get CREATOR test with 10 random questions from pool",
+        "summary": "Get CREATOR test with 5 random questions from pool",
         "tags": [
           "Tests"
         ]
@@ -1124,12 +1095,7 @@
             }
           }
         },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Get MEMBER test for a specific club",
+        "summary": "Get MEMBER test for a specific club (public)",
         "tags": [
           "Tests"
         ]
@@ -1250,6 +1216,49 @@
           }
         },
         "summary": "Submit a test attempt",
+        "tags": [
+          "Tests"
+        ]
+      }
+    },
+    "/api/v1/tests/attempts/{attemptId}/proctoring-video": {
+      "post": {
+        "operationId": "Tests_uploadProctoringVideo",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "video"
+                ],
+                "properties": {
+                  "video": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proctoring video uploaded successfully"
+          }
+        },
+        "summary": "Upload proctoring video for a test attempt",
         "tags": [
           "Tests"
         ]
@@ -1452,7 +1461,7 @@
     },
     "/api/v1/question-pool/generate": {
       "post": {
-        "description": "Generates 30 questions using Gemini AI and stores them in the question pool",
+        "description": "ADMIN generates by category. CREATOR generates by own club.",
         "operationId": "QuestionPool_generatePool",
         "parameters": [],
         "requestBody": {
@@ -1509,7 +1518,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Generate 30 questions for a pool (Admin only)",
+        "summary": "Generate 30 questions for a pool",
         "tags": [
           "Question Pool"
         ]
@@ -1608,6 +1617,117 @@
         "summary": "Delete a question pool (Admin only)",
         "tags": [
           "Question Pool"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "post": {
+        "operationId": "Categories_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new category (Admin only)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "get": {
+        "operationId": "Categories_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "search term",
+              "type": "string"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories retrieved successfully"
+          }
+        },
+        "summary": "Get all categories with pagination",
+        "tags": [
+          "Categories"
         ]
       }
     },
@@ -1992,6 +2112,61 @@
           }
         ],
         "summary": "Get all clubs created by a specific user",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/stats": {
+      "get": {
+        "operationId": "Clubs_getStats",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club stats retrieved successfully"
+          }
+        },
+        "summary": "Get club stats (members and projects)",
+        "tags": [
+          "Clubs"
+        ]
+      }
+    },
+    "/api/v1/clubs/{id}/members": {
+      "get": {
+        "operationId": "Clubs_getMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Club UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Club members retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get active members of a club (Leader/Admin)",
         "tags": [
           "Clubs"
         ]
@@ -4301,6 +4476,191 @@
           "projects"
         ]
       }
+    },
+    "/api/v1/collaboration/clubs/{clubId}/room": {
+      "get": {
+        "operationId": "Collaboration_getRoom",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get collaboration room state for a club",
+        "tags": [
+          "collaboration"
+        ]
+      }
+    },
+    "/api/v1/collaboration/clubs/{clubId}/messages": {
+      "post": {
+        "operationId": "Collaboration_createMessage",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Post a collaboration chat message",
+        "tags": [
+          "collaboration"
+        ]
+      }
+    },
+    "/api/v1/collaboration/clubs/{clubId}/tasks": {
+      "post": {
+        "operationId": "Collaboration_createTask",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a collaboration sprint task",
+        "tags": [
+          "collaboration"
+        ]
+      }
+    },
+    "/api/v1/collaboration/tasks/{taskId}": {
+      "patch": {
+        "operationId": "Collaboration_updateTask",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollaborationTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a collaboration sprint task",
+        "tags": [
+          "collaboration"
+        ]
+      }
+    },
+    "/api/v1/collaboration/clubs/{clubId}/code-submissions": {
+      "post": {
+        "operationId": "Collaboration_createCodeSubmission",
+        "parameters": [
+          {
+            "name": "clubId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationCodeSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Submit a collaboration code snippet",
+        "tags": [
+          "collaboration"
+        ]
+      }
     }
   },
   "info": {
@@ -4633,6 +4993,31 @@
           "email"
         ]
       },
+      "RegisterMemberForClubDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Jane Doe",
+            "description": "Full name of the member applicant"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane@example.com",
+            "description": "Email of the member applicant"
+          },
+          "clubId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Target club ID"
+          }
+        },
+        "required": [
+          "fullName",
+          "email",
+          "clubId"
+        ]
+      },
       "UpdateUserDto": {
         "type": "object",
         "properties": {
@@ -4706,45 +5091,6 @@
         },
         "required": [
           "userId",
-          "isActive"
-        ]
-      },
-      "CreateCategoryDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "UI/UX Design"
-          },
-          "description": {
-            "type": "string",
-            "example": "User interface and user experience design"
-          },
-          "icon": {
-            "type": "string",
-            "example": "design-icon.svg"
-          },
-          "skillType": {
-            "type": "string",
-            "enum": [
-              "PROGRAMMING",
-              "DESIGN",
-              "BUSINESS",
-              "MIXED"
-            ],
-            "example": "DESIGN",
-            "description": "Type of skill - affects question generation"
-          },
-          "isActive": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "name",
-          "description",
-          "icon",
-          "skillType",
           "isActive"
         ]
       },
@@ -5074,6 +5420,45 @@
           }
         }
       },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "UI/UX Design"
+          },
+          "description": {
+            "type": "string",
+            "example": "User interface and user experience design"
+          },
+          "icon": {
+            "type": "string",
+            "example": "design-icon.svg"
+          },
+          "skillType": {
+            "type": "string",
+            "enum": [
+              "PROGRAMMING",
+              "DESIGN",
+              "BUSINESS",
+              "MIXED"
+            ],
+            "example": "DESIGN",
+            "description": "Type of skill - affects question generation"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "icon",
+          "skillType",
+          "isActive"
+        ]
+      },
       "CategoryResponseDto": {
         "type": "object",
         "properties": {
@@ -5163,6 +5548,11 @@
             "type": "string",
             "example": "A club dedicated to mastering AI and machine learning",
             "description": "Club description"
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://images.example.com/clubs/ai-masters.jpg",
+            "description": "Club cover image URL"
           }
         },
         "required": [
@@ -5206,6 +5596,11 @@
             "example": "A club dedicated to mastering AI and machine learning",
             "description": "Club description"
           },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://images.example.com/clubs/ai-masters.jpg",
+            "description": "Club cover image URL"
+          },
           "isActive": {
             "type": "boolean",
             "example": true,
@@ -5227,6 +5622,11 @@
             "type": "number",
             "example": 25,
             "description": "Number of members in this club"
+          },
+          "projectsCount": {
+            "type": "number",
+            "example": 7,
+            "description": "Number of projects in this club"
           }
         },
         "required": [
@@ -5258,6 +5658,11 @@
             "type": "string",
             "example": "A club dedicated to mastering AI and machine learning",
             "description": "Club description"
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://images.example.com/clubs/ai-masters.jpg",
+            "description": "Club cover image URL"
           },
           "isActive": {
             "type": "boolean",
@@ -7438,6 +7843,22 @@
         "required": [
           "score"
         ]
+      },
+      "CreateCollaborationMessageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCollaborationTaskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCollaborationTaskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCollaborationCodeSubmissionDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   },

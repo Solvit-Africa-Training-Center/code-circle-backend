@@ -20,6 +20,7 @@ import { Course } from '../course/entities/course.entity';
 import { Module as MyModule } from '../course/entities/module.entity';
 import { CourseStatus } from '../course/entities/course.entity';
 import { Enrollment } from '../course/entities/enrollment.entity';
+import { Membership, MembershipStatus } from '../users/entities/membership.entity';
 
 @Injectable()
 export class ProjectService {
@@ -34,6 +35,8 @@ export class ProjectService {
     private readonly moduleRepository: Repository<MyModule>,
     @InjectRepository(Enrollment)
     private readonly enrollmentRepository: Repository<Enrollment>,
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
   ) {}
 
   // ============= PROJECT MANAGEMENT =============
@@ -43,6 +46,21 @@ export class ProjectService {
     userId: string,
   ): Promise<Project> {
     try {
+      const normalizedMinTeamSize =
+        createProjectDto.type === ProjectType.INDIVIDUAL
+          ? 1
+          : createProjectDto.minTeamSize ?? 2;
+      const normalizedMaxTeamSize =
+        createProjectDto.type === ProjectType.INDIVIDUAL
+          ? 1
+          : createProjectDto.maxTeamSize ?? 5;
+
+      if (normalizedMaxTeamSize < normalizedMinTeamSize) {
+        throw new BadRequestException(
+          'Maximum team size cannot be less than minimum team size',
+        );
+      }
+
       const course = await this.courseRepository.findOne({
         where: {
           id: createProjectDto.courseId,
@@ -63,7 +81,9 @@ export class ProjectService {
         : undefined;
 
       const project = this.projectRepository.create({
-        ...createProjectDto,  
+        ...createProjectDto,
+        minTeamSize: normalizedMinTeamSize,
+        maxTeamSize: normalizedMaxTeamSize,
         moduleId: module?.id ?? undefined, 
         course,                            
         module: module ?? undefined,       
@@ -99,7 +119,7 @@ export class ProjectService {
   }
 }
 
-  async getCourseProjects(courseId: string): Promise<Project[]> {
+  async getCourseProjects(courseId: string, userId: string): Promise<Project[]> {
     try {
       const course = await this.courseRepository.findOne({
         where: { id: courseId },
@@ -107,6 +127,13 @@ export class ProjectService {
 
       if (!course) {
         throw new NotFoundException(`Course with ID ${courseId} not found`);
+      }
+
+      const isOwner = course.createdBy === userId;
+      if (!isOwner) {
+        if (course.status !== CourseStatus.PUBLISHED) {
+          throw new ForbiddenException('Course is not published');
+        }
       }
       return await this.projectRepository.find({
         where: { courseId },
@@ -185,6 +212,25 @@ export class ProjectService {
       }
       // if moduleId is undefined — not provided in DTO, leave project.moduleId unchanged
 
+      if (updateProjectDto.type === ProjectType.INDIVIDUAL) {
+        updateData['minTeamSize'] = 1;
+        updateData['maxTeamSize'] = 1;
+      } else if (updateProjectDto.type === ProjectType.GROUP) {
+        const minTeamSize =
+          updateProjectDto.minTeamSize ?? project.minTeamSize ?? 2;
+        const maxTeamSize =
+          updateProjectDto.maxTeamSize ?? project.maxTeamSize ?? 5;
+
+        if (maxTeamSize < minTeamSize) {
+          throw new BadRequestException(
+            'Maximum team size cannot be less than minimum team size',
+          );
+        }
+
+        updateData['minTeamSize'] = minTeamSize;
+        updateData['maxTeamSize'] = maxTeamSize;
+      }
+
       Object.assign(project, updateData);
       return await this.projectRepository.save(project);
     } catch (error) {
@@ -253,9 +299,26 @@ export class ProjectService {
       if (project.status !== ProjectStatus.ACTIVE) {
         throw new BadRequestException('Cannot create team for inactive project');
       }
-      if (project.type === ProjectType.INDIVIDUAL) {
-        throw new BadRequestException(
-          'Cannot create a team for an individual project',
+
+      const course = await this.courseRepository.findOne({
+        where: { id: project.courseId },
+      });
+
+      if (!course) {
+        throw new NotFoundException('Course not found for this project');
+      }
+
+      const membership = await this.membershipRepository.findOne({
+        where: {
+          clubId: course.clubId,
+          userId,
+          status: MembershipStatus.ACTIVE,
+        },
+      });
+
+      if (!membership) {
+        throw new ForbiddenException(
+          'You must join this club to submit this project',
         );
       }
 
@@ -274,6 +337,10 @@ export class ProjectService {
       const team = this.projectTeamRepository.create({
         ...createTeamDto,
         projectId: createTeamDto.projectId,
+        status:
+          project.type === ProjectType.INDIVIDUAL
+            ? TeamStatus.ACTIVE
+            : TeamStatus.FORMING,
         members: [
           {
             userId,
@@ -359,6 +426,12 @@ export class ProjectService {
 
       if (team.project.status !== ProjectStatus.ACTIVE) {
         throw new BadRequestException('Cannot join a team for an inactive project');
+      }
+
+      if (team.project.type === ProjectType.INDIVIDUAL) {
+        throw new BadRequestException(
+          'Cannot join another member on an individual project',
+        );
       }
 
       if (team.status !== TeamStatus.FORMING && team.status !== TeamStatus.ACTIVE) {

@@ -7,6 +7,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +16,11 @@ import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
 import { CategoriesService } from '../categories/categories.service';
+import { TestAttempt } from '../tests/entities/test-attempt.entity';
+import { TestPurpose, TestType } from '../tests/enums/test-type.enum';
+import { Membership, MembershipStatus } from '../users/entities/membership.entity';
+import { Course } from '../course/entities/course.entity';
+import { Project } from '../project/entities/project.entity';
 
 @Injectable()
 export class ClubsService {
@@ -23,13 +29,23 @@ export class ClubsService {
   constructor(
     @InjectRepository(Club)
     private readonly clubRepository: Repository<Club>,
+    @InjectRepository(TestAttempt)
+    private readonly testAttemptRepository: Repository<TestAttempt>,
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     private readonly categoriesService: CategoriesService,
   ) {}
 
   /**
    * Créer un nouveau club
    */
-  async create(createClubDto: CreateClubDto): Promise<Club> {
+  async create(
+    createClubDto: CreateClubDto & { creatorId: string },
+  ): Promise<Club> {
     try {
       // Vérifier que la catégorie existe et est active
       const category = await this.categoriesService.findOne(
@@ -42,8 +58,30 @@ export class ClubsService {
         );
       }
 
-      // TODO: Vérifier que le creatorId existe (quand le module User sera prêt)
-      // const user = await this.usersService.findOne(createClubDto.creatorId);
+      const latestApprovedAttempt = await this.testAttemptRepository
+        .createQueryBuilder('attempt')
+        .leftJoinAndSelect('attempt.test', 'test')
+        .where('attempt.userId = :creatorId', {
+          creatorId: createClubDto.creatorId,
+        })
+        .andWhere('attempt.purpose = :purpose', {
+          purpose: TestPurpose.CREATE_CLUB,
+        })
+        .andWhere('attempt.passed = :passed', { passed: true })
+        .andWhere('attempt.intendedCategoryId = :categoryId', {
+          categoryId: createClubDto.categoryId,
+        })
+        .andWhere('test.type = :testType', {
+          testType: TestType.CREATOR_TEST,
+        })
+        .orderBy('attempt.attemptedAt', 'DESC')
+        .getOne();
+
+      if (!latestApprovedAttempt) {
+        throw new ForbiddenException(
+          'You must pass the leader application test for this category before creating a club',
+        );
+      }
 
       // Vérifier qu'un club avec ce nom n'existe pas déjà dans cette catégorie
       const existingClub = await this.clubRepository.findOne({
@@ -174,6 +212,47 @@ export class ClubsService {
         where: { isActive: true },
         relations: ['category'],
         order: { name: 'ASC' },
+      });
+
+      if (!clubs.length) {
+        this.logger.log('Retrieved 0 active clubs');
+        return clubs;
+      }
+
+      const clubIds = clubs.map((club) => club.id);
+
+      const memberCounts = await this.membershipRepository
+        .createQueryBuilder('membership')
+        .select('membership.clubId', 'clubId')
+        .addSelect('COUNT(DISTINCT membership.userId)', 'count')
+        .where('membership.clubId IN (:...clubIds)', { clubIds })
+        .andWhere('membership.status IN (:...memberStatuses)', {
+          memberStatuses: [MembershipStatus.ACTIVE, MembershipStatus.PENDING],
+        })
+        .groupBy('membership.clubId')
+        .getRawMany<{ clubId: string; count: string }>();
+
+      const projectCounts = await this.projectRepository
+        .createQueryBuilder('project')
+        .innerJoin(Course, 'course', 'project.courseId = course.id')
+        .select('course.clubId', 'clubId')
+        .addSelect('COUNT(*)', 'count')
+        .where('course.clubId IN (:...clubIds)', { clubIds })
+        .groupBy('course.clubId')
+        .getRawMany<{ clubId: string; count: string }>();
+
+      const membersByClubId = new Map(
+        memberCounts.map((row) => [row.clubId, Number(row.count)]),
+      );
+      const projectsByClubId = new Map(
+        projectCounts.map((row) => [row.clubId, Number(row.count)]),
+      );
+
+      clubs.forEach((club) => {
+        (club as Club & { membersCount?: number; projectsCount?: number }).membersCount =
+          membersByClubId.get(club.id) ?? 0;
+        (club as Club & { membersCount?: number; projectsCount?: number }).projectsCount =
+          projectsByClubId.get(club.id) ?? 0;
       });
 
       this.logger.log(`Retrieved ${clubs.length} active clubs`);

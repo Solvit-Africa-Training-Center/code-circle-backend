@@ -8,6 +8,8 @@ import {
   Query,
   UseGuards,
   HttpStatus,
+  BadRequestException,
+  ForbiddenException,
   //ParseUUIDPipe,
 } from '@nestjs/common';
 import {
@@ -23,20 +25,26 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PoolType } from './entities/question-pool.entity';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { CurrentUserPayload } from '../auth/strategies/jwt.strategy';
+import { ClubsService } from '../clubs/clubs.service';
 
 @ApiTags('Question Pool')
 @Controller('question-pool')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class QuestionPoolController {
-  constructor(private readonly questionPoolService: QuestionPoolService) {}
+  constructor(
+    private readonly questionPoolService: QuestionPoolService,
+    private readonly clubsService: ClubsService,
+  ) {}
 
   @Post('generate')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'CREATOR', 'CLUB_LEADER')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Generate 30 questions for a pool (Admin only)',
+    summary: 'Generate 30 questions for a pool',
     description:
-      'Generates 30 questions using Gemini AI and stores them in the question pool',
+      'ADMIN generates by category. CREATOR generates by own club.',
   })
   @ApiBody({
     schema: {
@@ -78,7 +86,49 @@ export class QuestionPoolController {
       clubId?: string;
       difficulty: string;
     },
+    @CurrentUser() currentUser: CurrentUserPayload,
   ) {
+    const roleNames = (currentUser.roles ?? []).map((role) =>
+      role.name.toUpperCase(),
+    );
+    const isAdmin = roleNames.includes('ADMIN');
+    const isCreator =
+      roleNames.includes('CREATOR') || roleNames.includes('CLUB_LEADER');
+
+    if (isAdmin) {
+      if (generateDto.poolType !== PoolType.CATEGORY) {
+        throw new BadRequestException(
+          'ADMIN can only generate questions by category',
+        );
+      }
+      if (!generateDto.categoryId) {
+        throw new BadRequestException(
+          'categoryId is required for CATEGORY pool generation',
+        );
+      }
+      generateDto.clubId = undefined;
+    } else if (isCreator) {
+      if (generateDto.poolType !== PoolType.CLUB) {
+        throw new BadRequestException(
+          'CREATOR can only generate questions by club',
+        );
+      }
+      if (!generateDto.clubId) {
+        throw new BadRequestException(
+          'clubId is required for CLUB pool generation',
+        );
+      }
+
+      const club = await this.clubsService.findOne(generateDto.clubId);
+      if (club.creatorId !== currentUser.userId) {
+        throw new ForbiddenException(
+          'You can only generate questions for your own club',
+        );
+      }
+
+      generateDto.categoryId = undefined;
+    }
+
     const questions =
       await this.questionPoolService.generateQuestionPool(generateDto);
 

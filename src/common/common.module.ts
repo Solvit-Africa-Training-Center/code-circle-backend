@@ -1,8 +1,8 @@
-import { Module, Global } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from './services/email.service';
 import { CloudinaryService } from './services/cloudinary.service';
+import { EmailService } from './services/email.service';
 
 @Global()
 @Module({
@@ -10,32 +10,40 @@ import { CloudinaryService } from './services/cloudinary.service';
     MailerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        // Debug logging
-        console.log('📧 SMTP Configuration (CommonModule):');
+        const smtpPort = Number(config.get<number>('SMTP_PORT', 587));
+        const rawSecure = config.get<string>('SMTP_SECURE');
+        const smtpSecure =
+          typeof rawSecure === 'string'
+            ? rawSecure.toLowerCase() === 'true'
+            : smtpPort === 465;
+        const smtpUser = config.get<string>('SMTP_USER');
+        const smtpPass = config.get<string>('SMTP_PASS')?.replace(/\s+/g, '');
+        const emailFrom =
+          config.get<string>('EMAIL_FROM') || `"CodeCircle" <${smtpUser}>`;
+
+        console.log('SMTP Configuration (CommonModule):');
         console.log('- Host:', config.get('SMTP_HOST'));
-        console.log('- Port:', config.get('SMTP_PORT'));
-        console.log('- User:', config.get('SMTP_USER'));
-        console.log('- Has Password:', !!config.get('SMTP_PASS'));
-        console.log('- Secure:', config.get('SMTP_SECURE'));
+        console.log('- Port:', smtpPort);
+        console.log('- User:', smtpUser);
+        console.log('- Has Password:', !!smtpPass);
+        console.log('- Secure:', smtpSecure);
+        console.log('- From:', emailFrom);
 
         return {
           transport: {
             host: config.get<string>('SMTP_HOST'),
-            port: Number(config.get<number>('SMTP_PORT')),
-            secure: config.get<boolean>('SMTP_SECURE', true),
+            port: smtpPort,
+            secure: smtpSecure,
             auth: {
-              user: config.get<string>('SMTP_USER'),
-              pass: config.get<string>('SMTP_PASS'),
+              user: smtpUser,
+              pass: smtpPass,
             },
             tls: {
               rejectUnauthorized: false,
             },
           },
           defaults: {
-            from: config.get<string>(
-              'EMAIL_FROM',
-              '"CodeCircle" <stephanemugisho24@gmail.com>',
-            ),
+            from: emailFrom,
           },
         };
       },
@@ -45,4 +53,3 @@ import { CloudinaryService } from './services/cloudinary.service';
   exports: [EmailService, CloudinaryService],
 })
 export class CommonModule {}
-

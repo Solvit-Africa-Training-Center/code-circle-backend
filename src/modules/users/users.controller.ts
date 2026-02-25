@@ -31,6 +31,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ApproveCreatorDto } from './dto/approve-creator.dto';
 import { RejectCreatorDto } from './dto/reject-creator.dto';
 import { ActivateUserDto } from './dto/activate-user.dto';
+import { RegisterMemberForClubDto } from './dto/register-member-for-club.dto';
 import { JwtAuthGuard } from '@circle-backend/modules/auth/guards/jwt-auth.guard';
 import { Roles } from '@circle-backend/common/decorators/roles.decorator';
 import { PermissionGuard } from '@circle-backend/common/guards/permissions.guard';
@@ -189,6 +190,56 @@ export class UsersController {
     @Query('order') order: 'ASC' | 'DESC' = 'DESC',
   ) {
     return this.usersService.findAll(page, limit, order);
+  }
+
+  @Post('register-member-for-club')
+  @ApiOperation({
+    summary: 'Register a member applicant before club test',
+    description:
+      'Creates/refreshes a pending member applicant account. The applicant must pass the club test before login credentials are emailed.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Member applicant registered successfully.',
+  })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Email already belongs to an active account or another account type.',
+  })
+  async registerMemberForClub(@Body() dto: RegisterMemberForClubDto) {
+    const user = await this.usersService.registerMemberForClub(dto);
+    return {
+      message:
+        'Member application registered. Please take and pass the club test to receive login credentials by email.',
+      data: {
+        userId: user.id,
+        email: user.email,
+        clubId: dto.clubId,
+      },
+    };
+  }
+
+  @Get('creator-applications/pending')
+  @UseGuards(JwtAuthGuard, PermissionGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: 'Get pending leader applications for admin review',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pending leader applications retrieved successfully.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required.',
+  })
+  getPendingCreatorApplications(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+    @Query('status') status: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING',
+  ) {
+    return this.usersService.getPendingCreatorApplications(page, limit, status);
   }
 
   @Get(':id')

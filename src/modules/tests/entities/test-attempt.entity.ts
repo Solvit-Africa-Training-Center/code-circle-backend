@@ -60,6 +60,9 @@ export class TestAttempt {
   @Column({ type: 'text', nullable: true })
   feedback: string;
 
+  @Column({ type: 'text', nullable: true })
+  proctoringVideoUrl?: string;
+
   @CreateDateColumn()
   attemptedAt: Date;
 

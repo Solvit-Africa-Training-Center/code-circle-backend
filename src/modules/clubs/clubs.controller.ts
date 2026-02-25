@@ -33,11 +33,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@circle-backend/common/decorators/current-user.decorator';
 import type { CurrentUserPayload } from '../auth/strategies/jwt.strategy';
 import { CreateClubInputDto } from './dto/creatorId.dto';
+import { ClubsInsightsService } from './clubs-insights.service';
 
 @ApiTags('Clubs')
 @Controller('clubs')
 export class ClubsController {
-  constructor(private readonly clubsService: ClubsService) {}
+  constructor(
+    private readonly clubsService: ClubsService,
+    private readonly clubsInsightsService: ClubsInsightsService,
+  ) {}
 
   @Post()
   @ApiBearerAuth('JWT-auth')
@@ -141,6 +145,48 @@ export class ClubsController {
     };
   }
 
+  @Get(':id/stats')
+  @ApiOperation({ summary: 'Get club stats (members and projects)' })
+  @ApiParam({
+    name: 'id',
+    description: 'Club UUID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Club stats retrieved successfully',
+  })
+  async getStats(@Param('id', ParseUUIDPipe) id: string) {
+    const stats = await this.clubsInsightsService.getClubStats(id);
+    return {
+      message: 'Club stats retrieved successfully',
+      data: stats,
+    };
+  }
+
+  @Get(':id/members')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CREATOR', 'ADMIN')
+  @ApiOperation({ summary: 'Get active members of a club (Leader/Admin)' })
+  @ApiParam({
+    name: 'id',
+    description: 'Club UUID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Club members retrieved successfully',
+  })
+  async getMembers(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() currentUser: CurrentUserPayload,
+  ) {
+    const members = await this.clubsInsightsService.getClubMembers(id, currentUser);
+    return {
+      message: 'Club members retrieved successfully',
+      data: members,
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a club by ID' })
   @ApiParam({
@@ -239,3 +285,4 @@ export class ClubsController {
     return await this.clubsService.hardDelete(id);
   }
 }
+

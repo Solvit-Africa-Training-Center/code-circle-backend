@@ -10,7 +10,12 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -18,6 +23,8 @@ import {
   ApiParam,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { TestsService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
@@ -27,6 +34,8 @@ import { TestResponseDto } from './dto/test-response.dto';
 import { PaginationParams } from '../../common/decorators/api-properties';
 import { TestType, TestPurpose } from './enums/test-type.enum';
 import { Roles } from '@circle-backend/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @ApiTags('Tests')
 @Controller('tests')
@@ -34,6 +43,7 @@ export class TestsController {
   constructor(private readonly testsService: TestsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'CREATOR')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new test (Admin/Creator only)' })
@@ -52,6 +62,7 @@ export class TestsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'CREATOR')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all tests with pagination' })
@@ -96,7 +107,7 @@ export class TestsController {
 
   @Get('category/:categoryId/creator-test')
   @ApiOperation({
-    summary: 'Get CREATOR test with 10 random questions from pool',
+    summary: 'Get CREATOR test with 5 random questions from pool',
   })
   @ApiParam({ name: 'categoryId', description: 'Category UUID' })
   @ApiResponse({
@@ -114,9 +125,7 @@ export class TestsController {
   }
 
   @Get('club/:clubId/member-test')
-  @Roles('CREATOR')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get MEMBER test for a specific club' })
+  @ApiOperation({ summary: 'Get MEMBER test for a specific club (public)' })
   @ApiParam({
     name: 'clubId',
     description: 'Club UUID',
@@ -169,7 +178,54 @@ export class TestsController {
     };
   }
 
+  @Post('attempts/:attemptId/proctoring-video')
+  @UseInterceptors(
+    FileInterceptor('video', {
+      limits: { fileSize: 300 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        if (file.mimetype?.startsWith('video/')) {
+          cb(null, true);
+          return;
+        }
+        cb(new BadRequestException('Only video files are allowed'), false);
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['video'],
+      properties: {
+        video: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Upload proctoring video for a test attempt' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Proctoring video uploaded successfully',
+  })
+  async uploadProctoringVideo(
+    @Param('attemptId', ParseUUIDPipe) attemptId: string,
+    @UploadedFile() video: Express.Multer.File,
+  ) {
+    const attempt = await this.testsService.uploadProctoringVideo(
+      attemptId,
+      video,
+    );
+    return {
+      message: 'Proctoring video uploaded successfully',
+      data: attempt,
+    };
+  }
+
   @Get('attempts/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all test attempts (Admin only)' })
   @ApiQuery({ name: 'passed', required: false, type: Boolean })
@@ -199,6 +255,8 @@ export class TestsController {
   }
 
   @Get('user/:userId/attempts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all attempts for a specific user' })
   @ApiParam({
@@ -224,6 +282,8 @@ export class TestsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'CREATOR')
   @ApiOperation({ summary: 'Update a test (Admin/Creator only)' })
   @ApiParam({
     name: 'id',
@@ -246,6 +306,8 @@ export class TestsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Soft delete a test (Admin only)' })
   @ApiParam({

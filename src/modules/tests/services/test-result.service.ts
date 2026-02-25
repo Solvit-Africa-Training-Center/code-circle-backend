@@ -14,6 +14,12 @@ import { EmailService } from '../../auth/services/email.service';
 import { hash } from 'bcryptjs';
 import { Role } from '@circle-backend/modules/auth/entities/role.entity';
 import { UserRole } from '@circle-backend/modules/auth/entities/user-role.entity';
+import { ConfigService } from '@nestjs/config';
+import {
+  Membership,
+  MembershipRole,
+  MembershipStatus,
+} from '../../users/entities/membership.entity';
 
 @Injectable()
 export class TestResultService {
@@ -26,7 +32,10 @@ export class TestResultService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
     private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -98,7 +107,7 @@ export class TestResultService {
   ): Promise<void> {
     try {
       if (test.type === TestType.MEMBER_TEST) {
-        await this.handleMemberTestPass(user, score);
+        await this.handleMemberTestPass(user, test, score);
       } else if (test.type === TestType.CREATOR_TEST) {
         await this.handleCreatorTestPass(user, test, score);
       }
@@ -115,7 +124,11 @@ export class TestResultService {
    * MEMBER_TEST réussi :
    * → Activation immédiate + envoi credentials
    */
-  private async handleMemberTestPass(user: User, score: number): Promise<void> {
+  private async handleMemberTestPass(
+    user: User,
+    test: Test,
+    score: number,
+  ): Promise<void> {
     try {
       // 1. Générer le mot de passe temporaire
       const tempPassword = this.generateRandomPassword();
@@ -150,6 +163,30 @@ export class TestResultService {
         await this.userRoleRepository.save(userRole);
 
         this.logger.log(`MEMBER role assigned to user: ${user.id}`);
+      }
+
+      // Ensure the member is actually joined in backend for this club.
+      if (test.clubId) {
+        const existingMembership = await this.membershipRepository.findOne({
+          where: {
+            userId: user.id,
+            clubId: test.clubId,
+          },
+        });
+
+        if (existingMembership) {
+          existingMembership.status = MembershipStatus.ACTIVE;
+          existingMembership.role = MembershipRole.MEMBER;
+          await this.membershipRepository.save(existingMembership);
+        } else {
+          const membership = this.membershipRepository.create({
+            userId: user.id,
+            clubId: test.clubId,
+            role: MembershipRole.MEMBER,
+            status: MembershipStatus.ACTIVE,
+          });
+          await this.membershipRepository.save(membership);
+        }
       }
 
       this.logger.log(`MEMBER account activated for user: ${user.id}`);
@@ -235,6 +272,8 @@ user: User, test: Test, score: number,
         ),
       });
 
+      await this.notifyAdminsForCreatorApplication(user, test, score);
+
       this.logger.log(`Pending approval email sent to CREATOR: ${user.email}`);
     } catch (error) {
       this.logger.error(
@@ -243,6 +282,58 @@ user: User, test: Test, score: number,
       );
       throw error;
     }
+  }
+
+  private async notifyAdminsForCreatorApplication(
+    user: User,
+    test: Test,
+    score: number,
+  ): Promise<void> {
+    const recipientsValue =
+      this.configService.get<string>('ADMIN_APPLICATION_EMAILS') ??
+      this.configService.get<string>('ADMIN_EMAIL');
+
+    if (!recipientsValue) {
+      this.logger.warn(
+        'ADMIN_APPLICATION_EMAILS / ADMIN_EMAIL is not configured; admin notification skipped',
+      );
+      return;
+    }
+
+    const recipients = recipientsValue
+      .split(',')
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+    if (!recipients.length) {
+      return;
+    }
+
+    const categoryLabel = test.category?.name || test.categoryId || 'Unknown';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Leader Application Pending Approval</h2>
+        <p>A creator test application is waiting for review.</p>
+        <ul>
+          <li><strong>Name:</strong> ${user.name}</li>
+          <li><strong>Email:</strong> ${user.email}</li>
+          <li><strong>Score:</strong> ${score}%</li>
+          <li><strong>Category:</strong> ${categoryLabel}</li>
+          <li><strong>User ID:</strong> ${user.id}</li>
+        </ul>
+      </div>
+    `;
+
+    await Promise.all(
+      recipients.map((to) =>
+        this.emailService.sendEmail({
+          to,
+          subject: 'Leader Application Pending Review',
+          html,
+        }),
+      ),
+    );
   }
 
   /**
