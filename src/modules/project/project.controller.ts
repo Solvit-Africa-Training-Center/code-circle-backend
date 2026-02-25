@@ -110,9 +110,12 @@ export class ProjectController {
     description: 'Course projects retrieved successfully',
     type: [Project],
   })
-  async getCourseProjects(@Param('courseId') courseId: string) {
+  async getCourseProjects(
+    @Param('courseId') courseId: string,
+    @CurrentUser() user: User
+  ) {
     try {
-      const projects = await this.projectsService.getCourseProjects(courseId);
+      const projects = await this.projectsService.getCourseProjects(courseId, user.id);
       
       return {
         message: 'Projects retrieved successfully',

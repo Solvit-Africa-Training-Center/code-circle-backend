@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { CategoryController } from './controllers/category.controller';
 import { TestsController } from './tests.controller';
-
-import { TestService } from './services/test.service';
 import { TestsService } from './tests.service';
 
 import { Test } from './entities/test.entity';
@@ -20,6 +16,7 @@ import { Role } from '../auth/entities/role.entity';
 import { QuestionPool } from './entities/question-pool.entity';
 import { QuestionPoolService } from './services/questions-pool.service';
 import { QuestionPoolController } from './question-pool.controller';
+import { Membership } from '../users/entities/membership.entity';
 
 @Module({
   imports: [
@@ -29,6 +26,7 @@ import { QuestionPoolController } from './question-pool.controller';
       TestAttempt,
       Role,
       UserRole,
+      Membership,
       QuestionPool,
     ]),
     CategoriesModule,
@@ -36,13 +34,8 @@ import { QuestionPoolController } from './question-pool.controller';
     UsersModule,
     AuthModule,
   ],
-  controllers: [CategoryController, TestsController, QuestionPoolController],
-  providers: [
-    TestService,
-    TestsService,
-    TestResultService,
-    QuestionPoolService,
-  ],
-  exports: [TestsService, TestService, TestResultService],
+  controllers: [TestsController, QuestionPoolController],
+  providers: [TestsService, TestResultService, QuestionPoolService],
+  exports: [TestsService, TestResultService],
 })
 export class TestsModule {}

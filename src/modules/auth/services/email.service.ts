@@ -33,10 +33,12 @@ export class EmailService {
         `Email sent to ${options.to} with subject: ${options.subject}`,
       );
     } catch (error) {
+      const err = error as Error & { response?: string };
+      const details = err?.response || err?.message || 'Unknown mailer error';
       this.logger.error(
-        `Failed to send email to ${options.to}: ${error.message}`,
+        `Failed to send email to ${options.to}: ${details}`,
       );
-      throw new BadRequestException('Failed to send email');
+      throw new BadRequestException(`Failed to send email: ${details}`);
     }
   }
   private readonly logger = new Logger(EmailService.name);

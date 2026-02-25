@@ -59,20 +59,23 @@ export class CourseService {
         throw new NotFoundException(`Club with ID ${createCourseDto.clubId} not found`);
       }
 
-      const membership = await this.membershipRepository.findOne({
-        where: {
-          clubId: createCourseDto.clubId,
-          userId,
-          role: MembershipRole.CREATOR,
-          status: MembershipStatus.ACTIVE,
-        },
-      });
+      const isClubOwner = club.creatorId === userId;
+      if (!isClubOwner) {
+        const creatorMembership = await this.membershipRepository.findOne({
+          where: {
+            clubId: createCourseDto.clubId,
+            userId,
+            role: MembershipRole.CREATOR,
+            status: MembershipStatus.ACTIVE,
+          },
+        });
 
-    if (!membership) {
-      throw new ForbiddenException(
-        'Only the club creator can create courses',
-      );
-    }
+        if (!creatorMembership) {
+          throw new ForbiddenException(
+            'Only the club creator can create courses',
+          );
+        }
+      }
 
       const course = this.courseRepository.create({
         ...createCourseDto,
@@ -81,7 +84,10 @@ export class CourseService {
 
       return await this.courseRepository.save(course);
     } catch (error) {
-      throw new BadRequestException('Failed to create course');
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to create course');
     }
   }
 
@@ -96,28 +102,39 @@ export class CourseService {
         throw new NotFoundException(`Course with ID ${courseId} not found`);
       }
 
-      if (userId) {
-      const membership = await this.membershipRepository.findOne({
-        where: {
-          clubId: course.clubId,
-          userId,
-          status: MembershipStatus.ACTIVE,
-        },
-      });
+      // Published courses are readable by authenticated users with course read permission.
+      if (userId && course.status !== CourseStatus.PUBLISHED) {
+        const isCourseCreator = course.createdBy === userId;
+        if (!isCourseCreator) {
+          const club = await this.clubRepository.findOne({
+            where: { id: course.clubId },
+          });
 
-      if (!membership) {
-        throw new ForbiddenException(
-          'You must be an active member of the club to access this course',
-        );
+          const isClubCreator = club?.creatorId === userId;
+          if (!isClubCreator) {
+            const membership = await this.membershipRepository.findOne({
+              where: {
+                clubId: course.clubId,
+                userId,
+                status: MembershipStatus.ACTIVE,
+              },
+            });
+
+            if (!membership) {
+              throw new ForbiddenException(
+                'You must be an active member of the club to access this course',
+              );
+            }
+          }
+        }
       }
-    }
 
       return course;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof HttpException) {
         throw error;
       }
-      throw new BadRequestException('Failed to fetch course');
+      throw new InternalServerErrorException('Failed to fetch course');
     }
   }
 

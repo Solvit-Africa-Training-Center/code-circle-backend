@@ -7,9 +7,10 @@ import { ProjectTeam } from './entities/project-team.entity';
 import { Course } from '../course/entities/course.entity';
 import { Module as MyModule } from '../course/entities/module.entity';
 import { Enrollment } from '../course/entities/enrollment.entity';
+import { Membership } from '../users/entities/membership.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Project, ProjectTeam, Course, MyModule, Enrollment])],
+  imports: [TypeOrmModule.forFeature([Project, ProjectTeam, Course, MyModule, Enrollment, Membership])],
   controllers: [ProjectController],
   providers: [ProjectService],
   exports: [ProjectService],

@@ -38,6 +38,12 @@ export class ClubResponseDto {
   })
   description?: string;
 
+  @ApiPropertyOptional({
+    example: 'https://images.example.com/clubs/ai-masters.jpg',
+    description: 'Club cover image URL',
+  })
+  imageUrl?: string;
+
   @ApiProperty({
     example: true,
     description: 'Whether the club is active',
@@ -61,4 +67,10 @@ export class ClubResponseDto {
     description: 'Number of members in this club',
   })
   membersCount?: number;
+
+  @ApiPropertyOptional({
+    example: 7,
+    description: 'Number of projects in this club',
+  })
+  projectsCount?: number;
 }

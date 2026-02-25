@@ -31,7 +31,7 @@ export class AssignmentService {
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
     @InjectRepository(MyModule)
-    private readonly moduleRepository: Repository<MyModule>
+    private readonly moduleRepository: Repository<MyModule>,
   ) {}
 
   // ============= ASSIGNMENT MANAGEMENT =============
@@ -51,9 +51,10 @@ export class AssignmentService {
       if (!course) {
         throw new NotFoundException('Course not found or access denied');
       }
-      
-      if(createAssignmentDto.moduleId){
-        const module = await this.moduleRepository.findOne({
+
+      let module: MyModule | null = null;
+      if (createAssignmentDto.moduleId) {
+        module = await this.moduleRepository.findOne({
           where: {
             id: createAssignmentDto.moduleId,
             course: { id: course.id },
@@ -68,7 +69,7 @@ export class AssignmentService {
       const assignment = this.assignmentRepository.create({
         ...createAssignmentDto,
         course,
-        module,
+        module: module ?? undefined,
         createdBy: userId,
       });
 
@@ -103,14 +104,32 @@ export class AssignmentService {
     }
   }
 
-  async getAssignmentsByCourse(courseId: string): Promise<Assignment[]> {
+  async getAssignmentsByCourse(courseId: string, userId: string): Promise<Assignment[]> {
     try {
+      const course = await this.courseRepository.findOne({
+        where: { id: courseId },
+      });
+
+      if (!course) {
+        throw new NotFoundException(`Course with ID ${courseId} not found`);
+      }
+
+      const isOwner = course.createdBy === userId;
+      if (!isOwner) {
+        if (course.status !== 'published') {
+          throw new ForbiddenException('Course is not published');
+        }
+      }
+
       return await this.assignmentRepository.find({
         where: { courseId },
         order: { createdAt: 'DESC' },
       });
     } catch (error) {
-      throw new BadRequestException('Failed to fetch course assignments');
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch course assignments');
     }
   }
 
@@ -139,29 +158,45 @@ export class AssignmentService {
         );
       }
 
-      const course = await this.courseRepository.findOne({
-        where: {
-          id: updateAssignmentDto.courseId,
-          createdBy: userId,
-        },
-      });
+      if (updateAssignmentDto.courseId) {
+        const course = await this.courseRepository.findOne({
+          where: {
+            id: updateAssignmentDto.courseId,
+            createdBy: userId,
+          },
+        });
 
-      if (!course) {
-        throw new NotFoundException('Course not found or access denied');
+        if (!course) {
+          throw new NotFoundException('Course not found or access denied');
+        }
+
+        assignment.courseId = course.id;
       }
 
-      const module = await this.moduleRepository.findOne({
-        where: {
-          id: updateAssignmentDto.moduleId,
-          course: { id: course.id },
-        },
-      });
+      if (updateAssignmentDto.moduleId !== undefined) {
+        if (updateAssignmentDto.moduleId === null) {
+          assignment.moduleId = null as unknown as string;
+        } else {
+          const module = await this.moduleRepository.findOne({
+            where: {
+              id: updateAssignmentDto.moduleId,
+              course: { id: assignment.courseId },
+            },
+          });
 
-      if (!module) {
-        throw new NotFoundException('Module not found for this course');
+          if (!module) {
+            throw new NotFoundException('Module not found for this course');
+          }
+
+          assignment.moduleId = module.id;
+        }
       }
 
-      Object.assign(assignment, updateAssignmentDto);
+      Object.assign(assignment, {
+        ...updateAssignmentDto,
+        courseId: assignment.courseId,
+        moduleId: assignment.moduleId,
+      });
       return await this.assignmentRepository.save(assignment);
     } catch (error) {
       if (

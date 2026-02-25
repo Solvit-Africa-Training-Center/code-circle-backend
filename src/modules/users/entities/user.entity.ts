@@ -47,10 +47,10 @@ export class User {
   @Column({ type: 'text', nullable: true })
   bio?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   cv?: string; // Cloudinary URL
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   degree?: string; // Cloudinary URL
 
   @CreateDateColumn({ name: 'created_at' })

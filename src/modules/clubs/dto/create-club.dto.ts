@@ -37,4 +37,13 @@ export class CreateClubDto {
   @IsString()
   @MaxLength(1000)
   description?: string;
+
+  @ApiPropertyOptional({
+    example: 'https://images.example.com/clubs/ai-masters.jpg',
+    description: 'Club cover image URL',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  imageUrl?: string;
 }

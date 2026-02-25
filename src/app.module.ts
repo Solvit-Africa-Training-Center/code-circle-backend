@@ -12,6 +12,7 @@ import { CoursesModule } from './modules/course/course.module';
 import { AssignmentsModule } from './modules/assignment/assignment.module';
 import { QuizModule } from './modules/quiz/quiz.module';
 import { ProjectsModule } from './modules/project/project.module';
+import { CollaborationModule } from './modules/collaboration/collaboration.module';
 
 import { CommonModule } from './common/common.module';
 
@@ -32,6 +33,7 @@ import { CommonModule } from './common/common.module';
     AssignmentsModule,
     QuizModule,
     ProjectsModule,
+    CollaborationModule,
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

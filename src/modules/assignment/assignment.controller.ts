@@ -109,10 +109,13 @@ export class AssignmentController {
     description: 'Course assignments retrieved successfully',
     type: [Assignment],
   })
-  async getAssignmentsByCourse(@Param('courseId') courseId: string) {
+  async getAssignmentsByCourse(
+    @Param('courseId') courseId: string,
+    @CurrentUser() user: User
+  ) {
     try {
       const assignments =
-        await this.assignmentsService.getAssignmentsByCourse(courseId);
+        await this.assignmentsService.getAssignmentsByCourse(courseId, user.id);
 
       return {
         message: 'Assignments retrieved successfully',
