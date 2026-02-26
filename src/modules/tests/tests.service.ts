@@ -284,7 +284,7 @@ export class TestsService {
   }
 
   async findCreatorTestByCategory(categoryId: string): Promise<Test> {
-    // 1. Sélectionner 10 questions aléatoires du pool
+    //
     const poolQuestions = await this.questionPoolService.selectRandomQuestions(
       PoolType.CATEGORY,
       categoryId,
@@ -442,10 +442,6 @@ export class TestsService {
         throw new BadRequestException('answers are required');
       }
 
-      // ═══════════════════════════════════════════════════════
-      //       VALIDATIONS SELON LE PURPOSE
-      // ═══════════════════════════════════════════════════════
-
       if (submitTestDto.purpose === TestPurpose.CREATE_CLUB) {
         // ✅ Pour CREATOR : On a besoin de categoryId seulement
         if (!submitTestDto.categoryId) {
@@ -463,9 +459,6 @@ export class TestsService {
             `Category "${category.name}" is not active`,
           );
         }
-
-        // Note: La validation du nom du club se fera APRÈS le test
-        // quand l'utilisateur choisira le nom de son club
       } else if (submitTestDto.purpose === TestPurpose.JOIN_CLUB) {
         // ✅ Pour MEMBER : On a besoin de targetClubId
         if (!submitTestDto.targetClubId) {
@@ -474,7 +467,6 @@ export class TestsService {
           );
         }
 
-        // Vérifier que le club existe et est actif
         const club = await this.clubsService.findOne(
           submitTestDto.targetClubId,
         );
@@ -483,19 +475,11 @@ export class TestsService {
         }
       }
 
-      // ═══════════════════════════════════════════════════════
-      //       RÉCUPÉRATION ET VALIDATION DU TEST
-      // ═══════════════════════════════════════════════════════
-
       const test = await this.findOne(submitTestDto.testId);
 
       if (!test.isActive) {
         throw new BadRequestException('This test is not currently active');
       }
-
-      // ═══════════════════════════════════════════════════════
-      //              CALCUL DU SCORE
-      // ═══════════════════════════════════════════════════════
 
       let totalPoints = 0;
       let earnedPoints = 0;
@@ -511,10 +495,6 @@ export class TestsService {
 
       const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
       const passed = scorePercentage >= test.passingScore;
-
-      // ═══════════════════════════════════════════════════════
-      //          ENREGISTREMENT DE LA TENTATIVE
-      // ═══════════════════════════════════════════════════════
 
       const attempt = this.testAttemptRepository.create({
         userId: submitTestDto.userId,
@@ -535,10 +515,6 @@ export class TestsService {
       this.logger.log(
         `Test submitted: User ${submitTestDto.userId} - Purpose: ${submitTestDto.purpose} - Score: ${scorePercentage}% - Passed: ${passed}`,
       );
-
-      // ═══════════════════════════════════════════════════════
-      //    GESTION DU RÉSULTAT (Email + Status Update)
-      // ═══════════════════════════════════════════════════════
 
       console.log('🟢 Calling testResultService.handleTestResult...');
       await this.testResultService.handleTestResult(
