@@ -75,10 +75,8 @@ async function bootstrap() {
   const globalPrefix = configService.get<string>('API_PREFIX') || '/api/v1';
   app.setGlobalPrefix(globalPrefix);
 
-  // Swagger setup (only in non-production)
-  if (configService.get<string>('NODE_ENV') !== 'production') {
-    setupSwagger(app);
-  }
+  // Swagger setup (enabled in all environments)
+  setupSwagger(app);
 
   const port = parseInt(
     process.env.PORT || configService.get<string>('APP_PORT') || '8080',
@@ -90,10 +88,11 @@ async function bootstrap() {
     `🚀 Application is running on: ${await app.getUrl()}/${globalPrefix}`,
   );
 
-  if (configService.get<string>('NODE_ENV') !== 'production') {
-    logger.log(`📚 API Documentation: ${await app.getUrl()}/api-docs`);
-    logger.log(`📊 Health check: ${await app.getUrl()}/${globalPrefix}/health`);
-  }
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const swaggerPath = isProduction ? 'docs' : 'api-docs';
+
+  logger.log(`📚 API Documentation: ${await app.getUrl()}/${swaggerPath}`);
+  logger.log(`📊 Health check: ${await app.getUrl()}/${globalPrefix}/health`);
 }
 
 bootstrap().catch((error) => {
