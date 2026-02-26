@@ -80,8 +80,11 @@ async function bootstrap() {
     setupSwagger(app);
   }
 
-  const port = configService.get<number>('APP_PORT') || 8080;
-  await app.listen(port);
+  const port = parseInt(
+    process.env.PORT || configService.get<string>('APP_PORT') || '8080',
+    10,
+  );
+  await app.listen(port, '0.0.0.0');
 
   logger.log(
     `🚀 Application is running on: ${await app.getUrl()}/${globalPrefix}`,
