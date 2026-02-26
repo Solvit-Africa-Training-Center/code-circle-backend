@@ -35,6 +35,7 @@
     "db:refresh": "npm run migration:revert && npm run migration:run && npm run seed:run"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.31",
     "@google/generative-ai": "^0.24.1",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^11.0.1",
